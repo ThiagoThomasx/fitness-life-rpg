@@ -10,6 +10,7 @@ import { LastWorkout } from "@/components/dashboard/LastWorkout"
 import { getDailyMissions, buildMissionsInput, type DailyMission } from "@/lib/daily-missions"
 import { getWeeklyProgress, type WeeklyProgress } from "@/lib/weekly-progress"
 import { getTodayLog } from "@/lib/daily-log"
+import { getTodayNutritionLog, getNutritionGoal } from "@/lib/nutrition"
 import { BADGE_DEFINITIONS } from "@/lib/badges"
 import type { EarnedBadge } from "@/lib/badges"
 
@@ -165,6 +166,53 @@ function DiaryTodayCard() {
         </div>
       </div>
       <span style={{ color: "#6a6a6a", fontSize: "0.875rem" }}>›</span>
+    </section>
+  )
+}
+
+function NutritionTodayCard() {
+  const router = useRouter()
+  const [data, setData] = useState<{ calories: number; goal: number } | null>(null)
+
+  useEffect(() => {
+    const log = getTodayNutritionLog()
+    const goal = getNutritionGoal()
+    setData({ calories: log?.calories ?? 0, goal: goal.calories })
+  }, [])
+
+  if (!data) return null
+
+  const pct = data.goal > 0 ? Math.min((data.calories / data.goal) * 100, 100) : 0
+  const hasLog = data.calories > 0
+
+  return (
+    <section
+      onClick={() => router.push("/nutricao")}
+      style={{
+        background: hasLog ? "rgba(59,130,246,0.06)" : "#181818",
+        border: `1px solid ${hasLog ? "rgba(59,130,246,0.25)" : "rgba(255,255,255,0.06)"}`,
+        borderRadius: 16,
+        padding: "1rem 1.25rem",
+        display: "flex",
+        alignItems: "center",
+        gap: "1rem",
+        cursor: "pointer",
+      }}
+    >
+      <span style={{ fontSize: "1.75rem", flexShrink: 0 }}>🥗</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: "0.875rem", fontWeight: 700, color: hasLog ? "#3b82f6" : "#ffffff", marginBottom: "0.25rem" }}>
+          {hasLog ? `${data.calories} kcal registradas` : "Registrar nutrição de hoje"}
+        </div>
+        {hasLog ? (
+          <div style={{ height: 4, background: "#282828", borderRadius: 9999, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${pct}%`, background: "#3b82f6", borderRadius: 9999 }} />
+          </div>
+        ) : (
+          <div style={{ fontSize: "0.7rem", color: "#6a6a6a" }}>+15 XP ao completar</div>
+        )}
+      </div>
+      <span style={{ color: "#6a6a6a", fontSize: "0.875rem", flexShrink: 0 }}>›</span>
     </section>
   )
 }
@@ -393,6 +441,9 @@ export default function DashboardPage() {
 
       {/* 5. Diário de hoje */}
       <DiaryTodayCard />
+
+      {/* 5b. Nutrição de hoje */}
+      <NutritionTodayCard />
 
       {/* 6. Badges recentes */}
       {earnedBadges.length > 0 && <RecentBadgesCard badges={earnedBadges} />}

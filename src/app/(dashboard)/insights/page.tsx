@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useCharacterStore } from "@/stores/useCharacterStore"
 import { MOCK_CHARACTER } from "@/lib/mock/data"
 import { computeInsights, type InsightsData } from "@/lib/insights"
+import { useRouter } from "next/navigation"
 import {
   BarChart,
   Bar,
@@ -18,6 +19,7 @@ import {
   Pie,
   Cell,
 } from "recharts"
+import type { NutritionWeek } from "@/lib/insights"
 
 // ── design tokens ──────────────────────────────────────────────
 const C = {
@@ -388,23 +390,65 @@ function TagsSection({ data }: { data: InsightsData }) {
   )
 }
 
-function NutritionEmpty() {
-  return (
-    <section style={{
-      ...card(),
-      background: "rgba(59,130,246,0.04)",
-      border: "1px solid rgba(59,130,246,0.15)",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
-        <span style={{ fontSize: "2rem" }}>🥗</span>
-        <div>
-          <div style={{ fontSize: "0.875rem", fontWeight: 700, color: C.text, marginBottom: "0.2rem" }}>
-            Nutrição — em breve
+function NutritionSection({ weeks, goalCalories }: { weeks: NutritionWeek[]; goalCalories: number }) {
+  const router = useRouter()
+
+  if (weeks.length === 0) {
+    return (
+      <section style={{ ...card(), background: "rgba(59,130,246,0.04)", border: "1px solid rgba(59,130,246,0.15)", cursor: "pointer" }} onClick={() => router.push("/nutricao")}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
+          <span style={{ fontSize: "2rem" }}>🥗</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: "0.875rem", fontWeight: 700, color: C.text, marginBottom: "0.2rem" }}>Nutrição</div>
+            <div style={{ fontSize: "0.7rem", color: C.muted, lineHeight: 1.5 }}>
+              Registre suas refeições para ver insights de macros e calorias aqui.
+            </div>
           </div>
-          <div style={{ fontSize: "0.7rem", color: C.muted, lineHeight: 1.5 }}>
-            Registro de macros, calorias e hidratação chegam na próxima sprint.
-          </div>
+          <span style={{ color: C.muted }}>›</span>
         </div>
+      </section>
+    )
+  }
+
+  const chartData = weeks.map((w) => ({ week: w.week, kcal: w.avgCalories, proteína: w.totalProtein, carboidrato: w.totalCarbs, gordura: w.totalFat }))
+
+  return (
+    <section style={card()}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.875rem" }}>
+        <SectionLabel>Nutrição semanal</SectionLabel>
+        <button onClick={() => router.push("/nutricao")} style={{ fontSize: "0.7rem", color: "#3b82f6", background: "none", border: "none", cursor: "pointer", fontWeight: 700 }}>
+          Registrar →
+        </button>
+      </div>
+
+      <ResponsiveContainer width="100%" height={150}>
+        <BarChart data={chartData} barSize={18}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+          <XAxis dataKey="week" tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} unit=" kcal" />
+          <Tooltip
+            contentStyle={TooltipStyle}
+            cursor={{ fill: "rgba(255,255,255,0.04)" }}
+            formatter={(v) => [`${v} kcal`, "Média diária"]}
+          />
+          <Bar dataKey="kcal" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem", marginTop: "0.875rem" }}>
+        {[
+          { label: "Proteína total", key: "proteína" as const, color: "#ef4444", unit: "g" },
+          { label: "Carboidrato total", key: "carboidrato" as const, color: "#3b82f6", unit: "g" },
+          { label: "Gordura total", key: "gordura" as const, color: C.gold, unit: "g" },
+        ].map(({ label, key, color, unit }) => {
+          const total = chartData.reduce((s, w) => s + w[key], 0)
+          return (
+            <div key={label} style={{ background: "#121212", borderRadius: 10, padding: "0.625rem 0.5rem" }}>
+              <div style={{ fontSize: "0.55rem", color: C.muted, marginBottom: "0.2rem" }}>{label}</div>
+              <div style={{ fontSize: "1rem", fontWeight: 800, color }}>{total}{unit}</div>
+            </div>
+          )
+        })}
       </div>
     </section>
   )
@@ -457,7 +501,7 @@ export default function InsightsPage() {
       <PrsSection data={data} />
       <AttributesSection character={character} />
       <TagsSection data={data} />
-      <NutritionEmpty />
+      <NutritionSection weeks={data.nutritionWeeks} goalCalories={data.nutritionGoalCalories} />
     </div>
   )
 }

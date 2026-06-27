@@ -1,5 +1,6 @@
 import { getWorkoutHistory, type CompletedWorkout } from './workout-history'
 import { getDailyLogs } from './daily-log'
+import { getNutritionLogs, getNutritionGoal, type NutritionLog } from './nutrition'
 
 export interface WeekVolume {
   week: string
@@ -34,6 +35,15 @@ export interface RecentPr {
   date: string
 }
 
+export interface NutritionWeek {
+  week: string
+  avgCalories: number
+  totalProtein: number
+  totalCarbs: number
+  totalFat: number
+  days: number
+}
+
 export interface InsightsData {
   totalWorkouts: number
   totalXpWorkouts: number
@@ -45,6 +55,8 @@ export interface InsightsData {
   tagFrequency: TagFrequency[]
   dayFrequency: DayFrequency[]
   recentPrs: RecentPr[]
+  nutritionWeeks: NutritionWeek[]
+  nutritionGoalCalories: number
 }
 
 function getIsoWeek(date: Date): string {
@@ -158,6 +170,31 @@ export function computeInsights(): InsightsData {
     if (recentPrs.length >= 5) break
   }
 
+  // --- Nutrition weekly aggregation (last 8 weeks) ---
+  const nutLogs = getNutritionLogs()
+  const nutritionGoalCalories = getNutritionGoal().calories
+  const nutWeekMap = new Map<string, { calories: number[]; protein: number[]; carbs: number[]; fat: number[] }>()
+  for (const log of nutLogs) {
+    const week = getIsoWeek(new Date(log.date))
+    const entry = nutWeekMap.get(week) ?? { calories: [], protein: [], carbs: [], fat: [] }
+    entry.calories.push(log.calories)
+    entry.protein.push(log.protein_g)
+    entry.carbs.push(log.carbs_g)
+    entry.fat.push(log.fat_g)
+    nutWeekMap.set(week, entry)
+  }
+  const nutritionWeeks: NutritionWeek[] = Array.from(nutWeekMap.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(-8)
+    .map(([week, v]) => ({
+      week: week.replace(/\d{4}-/, ''),
+      avgCalories: Math.round(v.calories.reduce((s, c) => s + c, 0) / v.calories.length),
+      totalProtein: Math.round(v.protein.reduce((s, c) => s + c, 0)),
+      totalCarbs: Math.round(v.carbs.reduce((s, c) => s + c, 0)),
+      totalFat: Math.round(v.fat.reduce((s, c) => s + c, 0)),
+      days: v.calories.length,
+    }))
+
   return {
     totalWorkouts,
     totalXpWorkouts,
@@ -169,5 +206,7 @@ export function computeInsights(): InsightsData {
     tagFrequency,
     dayFrequency,
     recentPrs,
+    nutritionWeeks,
+    nutritionGoalCalories,
   }
 }

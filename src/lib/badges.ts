@@ -9,6 +9,8 @@ export interface BadgeDef {
     | 'level'
     | 'diary_count'
     | 'attribute_value'
+    | 'nutrition_count'
+    | 'nutrition_streak'
   requirementValue: number
   requirementAttribute?: 'strength' | 'agility' | 'dexterity' | 'constitution' | 'vitality'
 }
@@ -122,6 +124,23 @@ export const BADGE_DEFINITIONS: BadgeDef[] = [
     requirementType: 'diary_count',
     requirementValue: 30,
   },
+  // Nutrition milestones
+  {
+    id: 'badge-first-nutrition',
+    name: 'Nutri Iniciante',
+    description: 'Registre sua primeira refeição',
+    icon: '🥗',
+    requirementType: 'nutrition_count',
+    requirementValue: 1,
+  },
+  {
+    id: 'badge-nutrition-streak-7',
+    name: 'Nutricionista',
+    description: 'Registre nutrição por 7 dias consecutivos',
+    icon: '🥦',
+    requirementType: 'nutrition_streak',
+    requirementValue: 7,
+  },
   // Attribute milestones
   {
     id: 'badge-strength-15',
@@ -219,6 +238,8 @@ export interface BadgeCheckContext {
   dexterity: number
   constitution: number
   vitality: number
+  nutritionCount?: number
+  nutritionStreak?: number
 }
 
 export function checkAndEarnBadges(ctx: BadgeCheckContext): BadgeDef[] {
@@ -241,6 +262,12 @@ export function checkAndEarnBadges(ctx: BadgeCheckContext): BadgeDef[] {
         break
       case 'diary_count':
         qualified = ctx.diaryCount >= badge.requirementValue
+        break
+      case 'nutrition_count':
+        qualified = (ctx.nutritionCount ?? 0) >= badge.requirementValue
+        break
+      case 'nutrition_streak':
+        qualified = (ctx.nutritionStreak ?? 0) >= badge.requirementValue
         break
       case 'attribute_value': {
         const attrKey = badge.requirementAttribute
