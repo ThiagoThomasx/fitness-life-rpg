@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/env"
 import { MOCK_CHARACTER } from "@/lib/mock/data"
+import { LastWorkout } from "@/components/dashboard/LastWorkout"
 import type { Character } from "@/types/database"
 
 async function getCharacter(userId: string): Promise<Character | null> {
@@ -137,6 +138,9 @@ export default async function DashboardPage() {
           />
         </div>
       </section>
+
+      {/* Last workout */}
+      <LastWorkout />
 
       {/* Attributes */}
       <section style={{

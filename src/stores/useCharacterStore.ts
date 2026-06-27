@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { devtools, persist, createJSONStorage } from 'zustand/middleware'
 import type { Character, XpTransaction } from '@/types/database'
 
 interface CharacterState {
@@ -24,6 +24,8 @@ export interface XpGainResult {
   intensity_multiplier: number
   consistency_multiplier: number
   bonus: number
+  prsCount: number
+  breakdown: Array<{ label: string; amount: number }>
   level_up: boolean
   old_level: number
   new_level: number
@@ -38,49 +40,71 @@ const INITIAL_STATE: CharacterState = {
   error: null,
 }
 
+const safeStorage = {
+  getItem: (name: string) => {
+    if (typeof window === 'undefined') return null
+    return window.localStorage.getItem(name)
+  },
+  setItem: (name: string, value: string) => {
+    if (typeof window === 'undefined') return
+    try { window.localStorage.setItem(name, value) } catch {}
+  },
+  removeItem: (name: string) => {
+    if (typeof window === 'undefined') return
+    window.localStorage.removeItem(name)
+  },
+}
+
 export const useCharacterStore = create<CharacterState & CharacterActions>()(
   devtools(
-    (set) => ({
-      ...INITIAL_STATE,
+    persist(
+      (set) => ({
+        ...INITIAL_STATE,
 
-      setCharacter: (character) =>
-        set({ character, error: null }, false, 'character/set'),
+        setCharacter: (character) =>
+          set({ character, error: null }, false, 'character/set'),
 
-      clearCharacter: () =>
-        set(INITIAL_STATE, false, 'character/clear'),
+        clearCharacter: () =>
+          set(INITIAL_STATE, false, 'character/clear'),
 
-      addTransaction: (tx) =>
-        set(
-          (state) => ({
-            recentTransactions: [tx, ...state.recentTransactions].slice(0, 20),
-          }),
-          false,
-          'character/addTransaction'
-        ),
+        addTransaction: (tx) =>
+          set(
+            (state) => ({
+              recentTransactions: [tx, ...state.recentTransactions].slice(0, 20),
+            }),
+            false,
+            'character/addTransaction'
+          ),
 
-      setLoading: (isLoading) =>
-        set({ isLoading }, false, 'character/setLoading'),
+        setLoading: (isLoading) =>
+          set({ isLoading }, false, 'character/setLoading'),
 
-      setError: (error) =>
-        set({ error }, false, 'character/setError'),
+        setError: (error) =>
+          set({ error }, false, 'character/setError'),
 
-      applyXpGain: (result) =>
-        set(
-          (state) => {
-            if (!state.character) return state
-            return {
-              character: {
-                ...state.character,
-                level: result.new_level,
-                current_xp: result.new_current_xp,
-                total_xp: result.new_total_xp,
-              },
-            }
-          },
-          false,
-          'character/applyXpGain'
-        ),
-    }),
+        applyXpGain: (result) =>
+          set(
+            (state) => {
+              if (!state.character) return state
+              return {
+                character: {
+                  ...state.character,
+                  level: result.new_level,
+                  current_xp: result.new_current_xp,
+                  total_xp: result.new_total_xp,
+                },
+              }
+            },
+            false,
+            'character/applyXpGain'
+          ),
+      }),
+      {
+        name: 'lrpg-fit:character',
+        storage: createJSONStorage(() => safeStorage),
+        partialize: (state) => ({ character: state.character }),
+      }
+    ),
     { name: 'CharacterStore' }
   )
 )

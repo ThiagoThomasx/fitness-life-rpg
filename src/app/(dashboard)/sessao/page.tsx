@@ -4,11 +4,21 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSessionStore, formatElapsed } from "@/stores/useSessionStore"
 import { useCharacterStore } from "@/stores/useCharacterStore"
-import { MOCK_CHARACTER, MOCK_EXERCISES } from "@/lib/mock/data"
+import { MOCK_CHARACTER, MOCK_EXERCISES, MOCK_WORKOUTS } from "@/lib/mock/data"
 import { calculateXpGain } from "@/lib/workout"
 import { MOCK_WORKOUT_TYPES } from "@/lib/mock/data"
+import { getExercisePersonalBest, saveCompletedWorkout } from "@/lib/workout-history"
+import type { CompletedWorkout } from "@/lib/workout-history"
 import type { Exercise } from "@/types/database"
 import type { XpGainResult } from "@/stores/useCharacterStore"
+
+const CATEGORY_COLORS: Record<string, string> = {
+  strength: "#C0392B",
+  cardio: "#2980B9",
+  agility: "#E67E22",
+  flexibility: "#16A085",
+  dexterity: "#8E44AD",
+}
 
 // ─── Timer hook ───────────────────────────────────────────────────────────────
 
@@ -106,18 +116,20 @@ function SetRow({
   index,
   weight,
   reps,
+  isPr,
   onRemove,
 }: {
   index: number
   weight: number
   reps: number
+  isPr: boolean
   onRemove: () => void
 }) {
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "2rem 1fr 1fr auto",
+        gridTemplateColumns: "2rem 1fr 1fr auto auto",
         alignItems: "center",
         gap: "0.5rem",
         padding: "0.5rem 0",
@@ -127,6 +139,11 @@ function SetRow({
       <span style={{ fontSize: "0.75rem", color: "#6a6a6a", textAlign: "center" }}>{index + 1}</span>
       <span style={{ fontSize: "0.875rem", color: "#ffffff", textAlign: "center" }}>{weight} kg</span>
       <span style={{ fontSize: "0.875rem", color: "#ffffff", textAlign: "center" }}>{reps} reps</span>
+      {isPr ? (
+        <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#f59e0b", background: "rgba(245,158,11,0.15)", padding: "1px 6px", borderRadius: 9999 }}>PR</span>
+      ) : (
+        <span />
+      )}
       <button
         onClick={onRemove}
         style={{ background: "none", border: "none", color: "#6a6a6a", cursor: "pointer", fontSize: "1rem", padding: "0 0.25rem" }}
@@ -231,11 +248,12 @@ function XpResultModal({ result, onConfirm }: { result: XpGainResult; onConfirm:
         }}
       >
         <div style={{ fontSize: "3rem", marginBottom: "0.75rem" }}>
-          {result.level_up ? "🎉" : "⚡"}
+          {result.level_up ? "🎉" : result.prsCount > 0 ? "🏆" : "⚡"}
         </div>
         <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#ffffff", marginBottom: "0.25rem" }}>
           Treino Concluído!
         </h2>
+
         {result.level_up && (
           <div
             style={{
@@ -244,15 +262,32 @@ function XpResultModal({ result, onConfirm }: { result: XpGainResult; onConfirm:
               borderRadius: 10,
               padding: "0.5rem 1rem",
               marginTop: "0.75rem",
-              marginBottom: "0.75rem",
               color: "#f59e0b",
               fontWeight: 700,
               fontSize: "0.875rem",
             }}
           >
-            🏆 LEVEL UP! {result.old_level} → {result.new_level}
+            🏅 LEVEL UP! {result.old_level} → {result.new_level}
           </div>
         )}
+
+        {result.prsCount > 0 && (
+          <div
+            style={{
+              background: "rgba(245,158,11,0.1)",
+              border: "1px solid rgba(245,158,11,0.3)",
+              borderRadius: 10,
+              padding: "0.5rem 1rem",
+              marginTop: "0.75rem",
+              color: "#f59e0b",
+              fontWeight: 700,
+              fontSize: "0.875rem",
+            }}
+          >
+            🎯 {result.prsCount} Recorde{result.prsCount > 1 ? "s" : ""} Pessoal{result.prsCount > 1 ? "is" : ""}!
+          </div>
+        )}
+
         <div
           style={{
             background: "rgba(29,185,84,0.1)",
@@ -265,10 +300,16 @@ function XpResultModal({ result, onConfirm }: { result: XpGainResult; onConfirm:
           <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "#1db954" }}>
             +{result.xp_earned} XP
           </div>
-          <div style={{ fontSize: "0.75rem", color: "#6a6a6a", marginTop: "0.25rem" }}>
-            Base {result.base_xp} XP · ×{result.intensity_multiplier.toFixed(1)} intensidade
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", marginTop: "0.5rem" }}>
+            {result.breakdown.map((item) => (
+              <div key={item.label} style={{ fontSize: "0.75rem", color: "#6a6a6a", display: "flex", justifyContent: "space-between" }}>
+                <span>{item.label}</span>
+                <span style={{ color: "#b3b3b3" }}>+{item.amount}</span>
+              </div>
+            ))}
           </div>
         </div>
+
         <button
           onClick={onConfirm}
           style={{
@@ -308,6 +349,7 @@ export default function SessaoPage() {
   const { character, applyXpGain } = useCharacterStore()
   const [showPicker, setShowPicker] = useState(false)
   const [xpResult, setXpResult] = useState<XpGainResult | null>(null)
+  const [prExerciseIds, setPrExerciseIds] = useState<Set<string>>(new Set())
   const hasSession = activeSession !== null
 
   useTimer(hasSession && xpResult === null)
@@ -353,7 +395,50 @@ export default function SessaoPage() {
     const workoutType =
       MOCK_WORKOUT_TYPES.find((wt) => wt.id === workoutTypeId) ?? MOCK_WORKOUT_TYPES[0]
     const char = character ?? MOCK_CHARACTER
-    const result = calculateXpGain(workoutType, totalSets, elapsedSeconds, char)
+
+    // Detect PRs by comparing max weight per exercise to personal best
+    let prsCount = 0
+    const prIds = new Set<string>()
+    for (const activeSet of activeSets) {
+      if (activeSet.sets.length === 0) continue
+      const pb = getExercisePersonalBest(activeSet.exercise.id)
+      const maxWeight = activeSet.sets.reduce((max, s) => Math.max(max, s.weight_kg), 0)
+      if (pb > 0 && maxWeight > pb) {
+        prsCount++
+        prIds.add(activeSet.exercise.id)
+      }
+    }
+    setPrExerciseIds(prIds)
+
+    const result = calculateXpGain(workoutType, totalSets, elapsedSeconds, char, prsCount)
+
+    // Persist workout to history
+    const mockWorkout = MOCK_WORKOUTS.find((w) => w.id === activeSession!.workout_id)
+    const workoutColor = mockWorkout?.color ?? CATEGORY_COLORS[workoutType.category] ?? "#1db954"
+
+    const completedWorkout: CompletedWorkout = {
+      id: `cw-${Date.now()}`,
+      workoutId: activeSession?.workout_id ?? "",
+      workoutName: mockWorkout?.name ?? workoutType.name,
+      workoutColor,
+      category: workoutType.category,
+      startedAt: activeSession?.started_at ?? new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+      durationSeconds: elapsedSeconds,
+      xpEarned: result.xp_earned,
+      exercises: activeSets.map((s) => ({
+        exerciseId: s.exercise.id,
+        exerciseName: s.exercise.name,
+        sets: s.sets.map((set) => ({
+          weight_kg: set.weight_kg,
+          reps: set.reps,
+          isPr: prIds.has(s.exercise.id),
+        })),
+      })),
+      prsCount,
+    }
+    saveCompletedWorkout(completedWorkout)
+
     setXpResult(result)
   }
 
@@ -398,22 +483,38 @@ export default function SessaoPage() {
             {totalSets} série{totalSets !== 1 ? "s" : ""} registrada{totalSets !== 1 ? "s" : ""}
           </div>
         </div>
-        <button
-          onClick={handleFinish}
-          disabled={totalSets === 0}
-          style={{
-            background: totalSets === 0 ? "#282828" : "#1db954",
-            color: totalSets === 0 ? "#6a6a6a" : "#000",
-            border: "none",
-            borderRadius: 12,
-            padding: "0.75rem 1.25rem",
-            fontSize: "0.875rem",
-            fontWeight: 700,
-            cursor: totalSets === 0 ? "default" : "pointer",
-          }}
-        >
-          Finalizar
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", alignItems: "flex-end" }}>
+          <button
+            onClick={handleFinish}
+            disabled={totalSets === 0}
+            style={{
+              background: totalSets === 0 ? "#282828" : "#1db954",
+              color: totalSets === 0 ? "#6a6a6a" : "#000",
+              border: "none",
+              borderRadius: 12,
+              padding: "0.75rem 1.25rem",
+              fontSize: "0.875rem",
+              fontWeight: 700,
+              cursor: totalSets === 0 ? "default" : "pointer",
+            }}
+          >
+            Finalizar
+          </button>
+          <button
+            onClick={() => { endSession(); router.push("/treinos") }}
+            style={{
+              background: "none",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 12,
+              padding: "0.5rem 1rem",
+              fontSize: "0.75rem",
+              color: "#6a6a6a",
+              cursor: "pointer",
+            }}
+          >
+            Cancelar
+          </button>
+        </div>
       </div>
 
       {/* Exercises */}
@@ -447,7 +548,7 @@ export default function SessaoPage() {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "2rem 1fr 1fr auto",
+                  gridTemplateColumns: "2rem 1fr 1fr auto auto",
                   gap: "0.5rem",
                   padding: "0.25rem 0",
                   fontSize: "0.7rem",
@@ -461,6 +562,7 @@ export default function SessaoPage() {
                 <span style={{ textAlign: "center" }}>Peso</span>
                 <span style={{ textAlign: "center" }}>Reps</span>
                 <span />
+                <span />
               </div>
               {activeSet.sets.map((s, i) => (
                 <SetRow
@@ -468,6 +570,7 @@ export default function SessaoPage() {
                   index={i}
                   weight={s.weight_kg}
                   reps={s.reps}
+                  isPr={prExerciseIds.has(activeSet.exercise.id)}
                   onRemove={() => removeSet(activeSet.exercise.id, i)}
                 />
               ))}
