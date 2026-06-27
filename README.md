@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Life RPG — Módulo Fit
 
-## Getting Started
+Um app gamificado de fitness onde treinar, registrar refeições e escrever no diário rendem XP, níveis e atributos como em um RPG.
 
-First, run the development server:
+## Funcionalidades
+
+- **Dashboard** — visão geral de XP, nível, atributos e missões diárias
+- **Treinos** — biblioteca de treinos, sessão ativa com cronômetro e detecção de PR
+- **Histórico** — registros de treinos completados com evolução de carga
+- **Diário** — entradas diárias com tags automáticas e XP
+- **Nutrição** — metas de macros, registro diário e streak de dias
+- **Insights** — gráficos de frequência, evolução de carga e progresso
+- **Perfil** — atributos, badges e conquistas
+- **Dados & Backup** — exportar/importar/resetar dados locais com segurança
+
+## Tecnologias
+
+- **Next.js 14** (App Router)
+- **TypeScript**
+- **Zustand** — gerenciamento de estado com persistência local
+- **Recharts** — gráficos
+- **localStorage** — persistência de dados (sem banco de dados obrigatório)
+
+## Rodando localmente
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+O app funciona em **modo local/mock** sem nenhuma configuração adicional.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Build de produção
 
-## Learn More
+```bash
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Veja [`docs/DEPLOY.md`](docs/DEPLOY.md) para instruções de deploy na Vercel ou em servidor próprio.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## QA
 
-## Deploy on Vercel
+Veja [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) para o checklist de validação antes do deploy.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Dados locais
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Todos os dados ficam no `localStorage` do browser, organizados pelas chaves:
+
+| Chave | Conteúdo |
+|---|---|
+| `lrpg-fit:character` | Personagem, XP e nível |
+| `lrpg-fit:active-session` | Sessão de treino ativa |
+| `lrpg-fit:workout-history` | Histórico de treinos completados |
+| `lrpg-fit:badges` | Conquistas ganhas |
+| `lrpg-fit:daily-logs` | Entradas do diário |
+| `lrpg-fit:reward-events` | Histórico de recompensas |
+| `lrpg-fit:nutrition-goal` | Metas de macros |
+| `lrpg-fit:nutrition-logs` | Registros nutricionais |
+
+Use a página **Dados & Backup** (`/configuracoes`) para exportar um `.json` com todos os dados, importar um backup anterior ou resetar tudo com confirmação.

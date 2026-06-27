@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect } from "react"
 import { useCharacterStore } from "@/stores/useCharacterStore"
 import { useBadgeStore } from "@/stores/useBadgeStore"
@@ -111,6 +112,31 @@ export default function PerfilPage() {
             )
           })}
         </div>
+      </section>
+
+      {/* Data & settings link */}
+      <section>
+        <Link
+          href="/configuracoes"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            padding: "0.875rem 1rem",
+            background: "var(--color-bg-elevated)",
+            border: "1px solid var(--color-border-subtle)",
+            borderRadius: "var(--radius-xl)",
+            textDecoration: "none",
+            color: "var(--color-text-primary)",
+          }}
+        >
+          <span style={{ fontSize: "1.25rem" }} aria-hidden="true">⚙️</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-bold)" }}>Dados & Backup</div>
+            <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>Exportar, importar e resetar dados locais</div>
+          </div>
+          <span style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>›</span>
+        </Link>
       </section>
 
       {/* Badges */}
