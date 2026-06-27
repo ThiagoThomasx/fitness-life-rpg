@@ -16,6 +16,8 @@ interface CharacterActions {
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   applyXpGain: (result: XpGainResult) => void
+  applyAttributeGains: (gains: Partial<Pick<Character, 'strength' | 'agility' | 'dexterity' | 'constitution' | 'vitality'>>) => void
+  applyDiaryXp: (xp: number) => void
 }
 
 export interface XpGainResult {
@@ -97,6 +99,39 @@ export const useCharacterStore = create<CharacterState & CharacterActions>()(
             },
             false,
             'character/applyXpGain'
+          ),
+
+        applyAttributeGains: (gains) =>
+          set(
+            (state) => {
+              if (!state.character) return state
+              return { character: { ...state.character, ...gains } }
+            },
+            false,
+            'character/applyAttributeGains'
+          ),
+
+        applyDiaryXp: (xp) =>
+          set(
+            (state) => {
+              if (!state.character) return state
+              let newCurrentXp = state.character.current_xp + xp
+              let newLevel = state.character.level
+              while (newCurrentXp >= xpToNextLevel(newLevel)) {
+                newCurrentXp -= xpToNextLevel(newLevel)
+                newLevel++
+              }
+              return {
+                character: {
+                  ...state.character,
+                  current_xp: newCurrentXp,
+                  total_xp: state.character.total_xp + xp,
+                  level: newLevel,
+                },
+              }
+            },
+            false,
+            'character/applyDiaryXp'
           ),
       }),
       {

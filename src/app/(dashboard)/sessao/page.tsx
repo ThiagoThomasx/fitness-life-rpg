@@ -7,10 +7,16 @@ import { useCharacterStore } from "@/stores/useCharacterStore"
 import { MOCK_CHARACTER, MOCK_EXERCISES, MOCK_WORKOUTS } from "@/lib/mock/data"
 import { calculateXpGain } from "@/lib/workout"
 import { MOCK_WORKOUT_TYPES } from "@/lib/mock/data"
-import { getExercisePersonalBest, saveCompletedWorkout } from "@/lib/workout-history"
+import { getExercisePersonalBest, saveCompletedWorkout, getWorkoutHistory } from "@/lib/workout-history"
 import type { CompletedWorkout } from "@/lib/workout-history"
 import type { Exercise } from "@/types/database"
 import type { XpGainResult } from "@/stores/useCharacterStore"
+import { calculateAttributeGains } from "@/lib/attributes"
+import { checkAndEarnBadges } from "@/lib/badges"
+import { getDiaryCount } from "@/lib/daily-log"
+import { addRewardEvent } from "@/lib/reward-events"
+import { useRewardStore } from "@/stores/useRewardStore"
+import { useBadgeStore } from "@/stores/useBadgeStore"
 
 const CATEGORY_COLORS: Record<string, string> = {
   strength: "#C0392B",
@@ -346,7 +352,9 @@ export default function SessaoPage() {
     endSession,
   } = useSessionStore()
 
-  const { character, applyXpGain } = useCharacterStore()
+  const { character, applyXpGain, applyAttributeGains } = useCharacterStore()
+  const pushReward = useRewardStore((s) => s.pushReward)
+  const refreshBadges = useBadgeStore((s) => s.refreshBadges)
   const [showPicker, setShowPicker] = useState(false)
   const [xpResult, setXpResult] = useState<XpGainResult | null>(null)
   const [prExerciseIds, setPrExerciseIds] = useState<Set<string>>(new Set())
@@ -444,7 +452,76 @@ export default function SessaoPage() {
 
   function handleConfirmResult() {
     if (!xpResult) return
+    const char = character ?? MOCK_CHARACTER
+
+    // Apply XP
     applyXpGain(xpResult)
+
+    // Apply attribute gains
+    const workoutTypeId = activeSets[0]?.exercise.workout_type_id ?? "wt-1"
+    const workoutType = MOCK_WORKOUT_TYPES.find((wt) => wt.id === workoutTypeId) ?? MOCK_WORKOUT_TYPES[0]
+    const attrResult = calculateAttributeGains(char, workoutType.category)
+    if (Object.keys(attrResult.updated).length > 0) {
+      applyAttributeGains(attrResult.updated)
+    }
+
+    // Fire attribute level-up rewards
+    for (const g of attrResult.gained) {
+      if (g.leveledUp) {
+        const ev = addRewardEvent({
+          type: 'attribute_up',
+          title: 'Atributo Aumentou!',
+          subtitle: g.label,
+          value: `${Math.floor(g.before)} → ${Math.floor(g.after)}`,
+          icon: '📈',
+        })
+        pushReward(ev)
+      }
+    }
+
+    // Fire XP/level-up rewards
+    if (xpResult.level_up) {
+      const ev = addRewardEvent({
+        type: 'level_up',
+        title: 'Level Up!',
+        subtitle: `Nível ${xpResult.old_level} → ${xpResult.new_level}`,
+        icon: '🎉',
+      })
+      pushReward(ev)
+    }
+
+    // Check and earn badges
+    const history = getWorkoutHistory()
+    const totalPrs = history.reduce((acc, w) => acc + (w.prsCount ?? 0), 0) + xpResult.prsCount
+    const updatedChar = {
+      ...char,
+      ...attrResult.updated,
+      level: xpResult.new_level,
+    }
+    const newBadges = checkAndEarnBadges({
+      workoutCount: history.length + 1,
+      totalPrs,
+      level: updatedChar.level,
+      diaryCount: getDiaryCount(),
+      strength: updatedChar.strength,
+      agility: updatedChar.agility,
+      dexterity: updatedChar.dexterity,
+      constitution: updatedChar.constitution,
+      vitality: updatedChar.vitality,
+    })
+
+    for (const badge of newBadges) {
+      const ev = addRewardEvent({
+        type: 'badge',
+        title: 'Badge Desbloqueada!',
+        subtitle: badge.description,
+        value: badge.name,
+        icon: badge.icon,
+      })
+      pushReward(ev)
+    }
+
+    refreshBadges()
     endSession()
     router.push("/dashboard")
   }
