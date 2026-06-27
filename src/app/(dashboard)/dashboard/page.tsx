@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
+import { isSupabaseConfigured } from "@/lib/env"
+import { MOCK_CHARACTER } from "@/lib/mock/data"
 import type { Character } from "@/types/database"
 
 async function getCharacter(userId: string): Promise<Character | null> {
@@ -8,7 +10,7 @@ async function getCharacter(userId: string): Promise<Character | null> {
     .select("*")
     .eq("user_id", userId)
     .single()
-  return data
+  return data as Character | null
 }
 
 function xpToNextLevel(level: number): number {
@@ -24,12 +26,19 @@ const ATTRIBUTES = [
 ]
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  let userId: string
+  let character: Character | null
 
-  if (!user) return null
+  if (isSupabaseConfigured) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+    userId = user.id
+    character = await getCharacter(userId)
+  } else {
+    character = MOCK_CHARACTER
+  }
 
-  const character = await getCharacter(user.id)
   const needed = character ? xpToNextLevel(character.level) : 100
   const progress = character ? Math.min(character.current_xp / needed, 1) : 0
 
@@ -43,6 +52,19 @@ export default async function DashboardPage() {
 
   return (
     <div style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: "1rem", maxWidth: 600, margin: "0 auto" }}>
+      {!isSupabaseConfigured && (
+        <div style={{
+          background: "rgba(245,158,11,0.1)",
+          border: "1px solid rgba(245,158,11,0.3)",
+          borderRadius: 8,
+          padding: "0.75rem 1rem",
+          fontSize: "0.75rem",
+          color: "#f59e0b",
+        }}>
+          Modo local — dados mockados. Configure Supabase para dados reais.
+        </div>
+      )}
+
       {/* Hero card */}
       <section style={{
         background: "#181818",
@@ -52,7 +74,6 @@ export default async function DashboardPage() {
         position: "relative",
         overflow: "hidden",
       }}>
-        {/* top gradient bar */}
         <div style={{
           position: "absolute",
           top: 0,
@@ -95,7 +116,6 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* XP progress bar */}
         <div style={{
           marginTop: "1rem",
           height: 6,

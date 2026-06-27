@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
+import { isSupabaseConfigured } from "@/lib/env"
+import { MOCK_USER } from "@/lib/mock/data"
 import { redirect } from "next/navigation"
 import TopBar from "@/components/layout/TopBar"
 import BottomNav from "@/components/layout/BottomNav"
@@ -8,10 +10,16 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  let user: typeof MOCK_USER | null = null
 
-  if (!user) redirect("/auth/login")
+  if (isSupabaseConfigured) {
+    const supabase = await createClient()
+    const { data } = await supabase.auth.getUser()
+    user = data.user as typeof MOCK_USER | null
+    if (!user) redirect("/auth/login")
+  } else {
+    user = MOCK_USER
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
