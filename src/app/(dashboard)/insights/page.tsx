@@ -20,6 +20,7 @@ import {
   Cell,
 } from "recharts"
 import type { NutritionWeek } from "@/lib/insights"
+import { SkeletonPageLoader } from "@/components/ui/Skeleton"
 
 // ── design tokens ──────────────────────────────────────────────
 const C = {
@@ -390,7 +391,7 @@ function TagsSection({ data }: { data: InsightsData }) {
   )
 }
 
-function NutritionSection({ weeks, goalCalories }: { weeks: NutritionWeek[]; goalCalories: number }) {
+function NutritionSection({ weeks }: { weeks: NutritionWeek[]; goalCalories: number }) {
   const router = useRouter()
 
   if (weeks.length === 0) {
@@ -467,11 +468,7 @@ export default function InsightsPage() {
   const totalXp = Math.floor(character.total_xp)
 
   if (!data) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 200, color: C.muted }}>
-        Carregando insights…
-      </div>
-    )
+    return <SkeletonPageLoader />
   }
 
   return (

@@ -1,6 +1,6 @@
-import { getWorkoutHistory, type CompletedWorkout } from './workout-history'
+import { getWorkoutHistory } from './workout-history'
 import { getDailyLogs } from './daily-log'
-import { getNutritionLogs, getNutritionGoal, type NutritionLog } from './nutrition'
+import { getNutritionLogs, getNutritionGoal } from './nutrition'
 
 export interface WeekVolume {
   week: string
