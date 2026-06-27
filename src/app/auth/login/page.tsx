@@ -55,13 +55,10 @@ export default function LoginPage() {
     if (error) setMessage({ type: "error", text: error.message })
   }
 
-  async function handleMockLogin() {
+  function handleMockLogin() {
     setLoading(true)
-    const supabase = createClient()
-    await supabase.auth.signInWithPassword({ email: "hero@fitrpg.local", password: "mock" })
     router.push("/dashboard")
     router.refresh()
-    setLoading(false)
   }
 
   return (

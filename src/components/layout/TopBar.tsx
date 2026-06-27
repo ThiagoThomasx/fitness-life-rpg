@@ -2,6 +2,7 @@
 
 import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
+import { isSupabaseConfigured } from "@/lib/env"
 import { useRouter } from "next/navigation"
 
 interface TopBarProps {
@@ -12,8 +13,10 @@ export default function TopBar({ user }: TopBarProps) {
   const router = useRouter()
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    if (isSupabaseConfigured) {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    }
     router.push("/auth/login")
     router.refresh()
   }
