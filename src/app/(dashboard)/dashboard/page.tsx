@@ -16,6 +16,9 @@ import { BADGE_DEFINITIONS } from "@/lib/badges"
 import { LevelUpModal } from "@/components/ui/LevelUpModal"
 import { SkeletonCard } from "@/components/ui/Skeleton"
 import type { EarnedBadge } from "@/lib/badges"
+import { getPreferences } from "@/lib/preferences"
+import { getTodayRecommendation, type WorkoutRecommendation } from "@/lib/recommendations"
+import { OnboardingModal } from "@/components/onboarding/OnboardingModal"
 
 const ATTRIBUTES = [
   { key: "strength" as const, label: "FOR", icon: "💪" },
@@ -374,6 +377,53 @@ function WeeklyPlanWidget({ planProgress }: { planProgress: WeeklyPlanProgress }
   )
 }
 
+function RecommendationWidget({ rec }: { rec: WorkoutRecommendation }) {
+  const router = useRouter()
+  return (
+    <section
+      className="card card--interactive"
+      onClick={() => router.push("/treinos")}
+      role="button"
+      tabIndex={0}
+      aria-label={`Treino recomendado: ${rec.workout.name}`}
+      onKeyDown={(e) => e.key === "Enter" && router.push("/treinos")}
+      style={{
+        background: "rgba(29,185,84,0.05)",
+        borderColor: "rgba(29,185,84,0.2)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+        <span style={{ fontSize: "1.5rem", flexShrink: 0 }} aria-hidden="true">
+          {rec.workout.workout_type.icon ?? "🏋️"}
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: "0.65rem",
+            color: "var(--color-accent)",
+            fontWeight: "var(--font-bold)",
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+            marginBottom: 2,
+          }}>
+            ✨ Recomendado para hoje
+          </div>
+          <div style={{
+            fontSize: "var(--text-sm)",
+            fontWeight: "var(--font-bold)",
+            color: "var(--color-text-primary)",
+          }}>
+            {rec.workout.name}
+          </div>
+          <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", marginTop: 2 }}>
+            {rec.reason} · ~{rec.workout.estimated_minutes}min
+          </div>
+        </div>
+        <span style={{ color: "var(--color-accent)", flexShrink: 0 }} aria-hidden="true">›</span>
+      </div>
+    </section>
+  )
+}
+
 export default function DashboardPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
   const { earnedBadges, refreshBadges } = useBadgeStore()
@@ -383,6 +433,8 @@ export default function DashboardPage() {
   const [totalWorkouts, setTotalWorkouts] = useState(0)
   const [levelUpLevel, setLevelUpLevel] = useState<number | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [todayRec, setTodayRec] = useState<WorkoutRecommendation | null>(null)
   const router = useRouter()
 
   const prevLevel = typeof window !== "undefined"
@@ -399,6 +451,12 @@ export default function DashboardPage() {
     setWeeklyProgress(getWeeklyProgress())
     setPlanProgress(getWeeklyPlanProgress())
     setTotalWorkouts(input.totalWorkouts)
+    const prefs = getPreferences()
+    if (!prefs.onboardingCompleted) {
+      setShowOnboarding(true)
+    } else {
+      setTodayRec(getTodayRecommendation(prefs))
+    }
     setLoaded(true)
   }, [])
 
@@ -420,6 +478,13 @@ export default function DashboardPage() {
     <>
       {levelUpLevel && (
         <LevelUpModal level={levelUpLevel} onClose={() => setLevelUpLevel(null)} />
+      )}
+      {showOnboarding && (
+        <OnboardingModal onComplete={() => {
+          setShowOnboarding(false)
+          const prefs = getPreferences()
+          setTodayRec(getTodayRecommendation(prefs))
+        }} />
       )}
 
       <div className="page page--tight">
@@ -527,6 +592,9 @@ export default function DashboardPage() {
 
         {/* 4. Weekly plan widget */}
         {planProgress && <WeeklyPlanWidget planProgress={planProgress} />}
+
+        {/* 4b. Today recommendation */}
+        {todayRec && <RecommendationWidget rec={todayRec} />}
 
         {/* 5. Last workout */}
         <LastWorkout />

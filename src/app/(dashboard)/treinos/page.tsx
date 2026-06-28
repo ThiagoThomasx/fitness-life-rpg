@@ -8,12 +8,14 @@ import { categoryColor } from "@/lib/theme-colors"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { getCustomWorkouts, saveCustomWorkout, deleteCustomWorkout, toMockWorkoutShape } from "@/lib/custom-workouts"
 import type { WorkoutSession } from "@/types/database"
+import { getPreferences } from "@/lib/preferences"
+import { getWorkoutRecommendations } from "@/lib/recommendations"
 
 type AnyWorkout = MockWorkout & { isCustom?: boolean }
 
 // ─── Workout card ─────────────────────────────────────────────────────────────
 
-function WorkoutCard({ workout, onStart, onDelete }: { workout: AnyWorkout; onStart: () => void; onDelete?: () => void }) {
+function WorkoutCard({ workout, onStart, onDelete, isRecommended }: { workout: AnyWorkout; onStart: () => void; onDelete?: () => void; isRecommended?: boolean }) {
   const colors = categoryColor(workout.workout_type.category)
 
   return (
@@ -28,6 +30,11 @@ function WorkoutCard({ workout, onStart, onDelete }: { workout: AnyWorkout; onSt
           {workout.isCustom && (
             <span className="badge-pill" style={{ background: "rgba(139,92,246,0.12)", color: "#8b5cf6", border: "1px solid rgba(139,92,246,0.25)", marginLeft: "auto" }}>
               Personalizado
+            </span>
+          )}
+          {isRecommended && !workout.isCustom && (
+            <span className="badge-pill" style={{ background: "rgba(29,185,84,0.12)", color: "#1db954", border: "1px solid rgba(29,185,84,0.3)", marginLeft: "auto" }}>
+              ✨ Para você
             </span>
           )}
         </div>
@@ -181,10 +188,14 @@ export default function TreinosPage() {
   const [customWorkouts, setCustomWorkouts] = useState<AnyWorkout[]>([])
   const [showCreate, setShowCreate] = useState(false)
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all')
+  const [recommendedIds, setRecommendedIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const cws = getCustomWorkouts()
     setCustomWorkouts(cws.map((cw) => toMockWorkoutShape(cw, MOCK_EXERCISES) as AnyWorkout))
+    const prefs = getPreferences()
+    const recs = getWorkoutRecommendations(prefs, 3)
+    setRecommendedIds(new Set(recs.map((r) => r.workout.id)))
   }, [])
 
   function handleStart(workout: AnyWorkout) {
@@ -273,6 +284,7 @@ export default function TreinosPage() {
             workout={workout}
             onStart={() => handleStart(workout)}
             onDelete={workout.isCustom ? () => handleDeleteCustom(workout.id) : undefined}
+            isRecommended={recommendedIds.has(workout.id)}
           />
         ))
       )}

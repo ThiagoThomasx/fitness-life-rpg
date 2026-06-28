@@ -13,6 +13,7 @@ export const STORAGE_KEYS = [
   'lrpg-fit:custom-workouts',
   'lrpg-fit:weekly-plan',
   'lrpg-fit:campaigns',
+  'lrpg-fit:preferences',
 ] as const
 
 export type StorageKey = typeof STORAGE_KEYS[number]

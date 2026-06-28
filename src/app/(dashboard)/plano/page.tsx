@@ -19,6 +19,8 @@ import {
 } from "@/lib/campaigns"
 import type { WeeklyPlan, WeeklyGoals, Campaign, WeeklyPlanProgress } from "@/types/planning"
 import type { CampaignType } from "@/types/planning"
+import { getPreferences, GOAL_LABELS, GOAL_ICONS } from "@/lib/preferences"
+import { getWeeklyRoutineSuggestion, type WeeklyRoutineSuggestion } from "@/lib/recommendations"
 
 const FOCUS_SUGGESTIONS = [
   "Consistência é minha prioridade",
@@ -181,6 +183,9 @@ export default function PlanoPage() {
   const [showNewCampaign, setShowNewCampaign] = useState(false)
   const [selectedCampaignType, setSelectedCampaignType] = useState<CampaignType>("gain_consistency")
   const [prevCompletedAt, setPrevCompletedAt] = useState<string | null>(null)
+  const [routine, setRoutine] = useState<WeeklyRoutineSuggestion | null>(null)
+  const [goalLabel, setGoalLabel] = useState<string>("")
+  const [goalIcon, setGoalIcon] = useState<string>("")
 
   const load = useCallback(() => {
     const currentPlan = getCurrentWeekPlan()
@@ -189,6 +194,11 @@ export default function PlanoPage() {
     setPlan(currentPlan)
     setProgress(prog)
     setCampaigns(synced)
+
+    const prefs = getPreferences()
+    setRoutine(getWeeklyRoutineSuggestion(prefs))
+    setGoalLabel(GOAL_LABELS[prefs.goal])
+    setGoalIcon(GOAL_ICONS[prefs.goal])
 
     if (currentPlan) {
       setFocus(currentPlan.focus)
@@ -396,6 +406,79 @@ export default function PlanoPage() {
             <div style={{ textAlign: "center", padding: "1rem", color: "var(--color-text-muted)", fontSize: "0.75rem" }}>
               Defina seu plano acima para acompanhar o progresso da semana e ganhar <strong>+{PLAN_XP_REWARD} XP</strong> ao concluir!
             </div>
+          )}
+
+          {/* Suggested routine */}
+          {routine && (
+            <section className="card">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+                <h3 className="section-label" style={{ marginBottom: 0 }}>Rotina sugerida</h3>
+                <span style={{
+                  fontSize: "0.65rem", color: "var(--color-accent)",
+                  background: "rgba(29,185,84,0.1)", border: "1px solid rgba(29,185,84,0.25)",
+                  borderRadius: 9999, padding: "2px 8px", fontWeight: "var(--font-bold)",
+                }}>
+                  {goalIcon} {goalLabel}
+                </span>
+              </div>
+              <p style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", fontStyle: "italic", marginBottom: "1rem" }}>
+                {routine.focusSuggestion}
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.375rem", marginBottom: "0.875rem" }}>
+                {routine.days.map((d) => (
+                  <div key={d.dayIndex} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 10,
+                      background: d.isRest ? "var(--color-bg-subtle)" : "rgba(29,185,84,0.12)",
+                      border: `1px solid ${d.isRest ? "var(--color-border-subtle)" : "rgba(29,185,84,0.25)"}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: "1rem",
+                    }}>
+                      {d.workoutIcon}
+                    </div>
+                    <span style={{
+                      fontSize: "0.55rem",
+                      color: d.isRest ? "var(--color-text-muted)" : "var(--color-text-secondary)",
+                      textAlign: "center", lineHeight: 1.2,
+                    }}>
+                      {d.dayLabel}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                {routine.days.filter((d) => !d.isRest).map((d) => (
+                  <div key={d.dayIndex} style={{
+                    display: "flex", alignItems: "center", gap: "0.625rem",
+                    fontSize: "0.7rem", color: "var(--color-text-secondary)",
+                  }}>
+                    <span style={{ fontWeight: "var(--font-bold)", width: 28, flexShrink: 0 }}>{d.dayLabel}</span>
+                    <span>{d.workoutIcon}</span>
+                    <span>{d.suggestion}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{
+                marginTop: "0.875rem",
+                padding: "0.625rem 0.75rem",
+                background: "var(--color-bg-subtle)",
+                borderRadius: 8,
+                fontSize: "0.7rem",
+                color: "var(--color-text-muted)",
+              }}>
+                💡 {routine.goalNote}
+              </div>
+              <a
+                href="/preferencias"
+                style={{
+                  display: "block", textAlign: "center", marginTop: "0.75rem",
+                  fontSize: "0.7rem", color: "var(--color-accent)",
+                  textDecoration: "none",
+                }}
+              >
+                Ajustar preferências →
+              </a>
+            </section>
           )}
         </div>
       )}

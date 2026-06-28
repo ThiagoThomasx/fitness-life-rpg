@@ -5,6 +5,7 @@ import { useCharacterStore } from "@/stores/useCharacterStore"
 import { MOCK_CHARACTER } from "@/lib/mock/data"
 import { computeInsights, type InsightsData } from "@/lib/insights"
 import { useRouter } from "next/navigation"
+import { getPreferences, GOAL_LABELS, GOAL_ICONS } from "@/lib/preferences"
 import {
   BarChart,
   Bar,
@@ -456,6 +457,63 @@ function NutritionSection({ weeks }: { weeks: NutritionWeek[]; goalCalories: num
 }
 
 // ── page ───────────────────────────────────────────────────────
+function PersonalizationBanner() {
+  const [goal, setGoal] = useState<{ label: string; icon: string } | null>(null)
+
+  useEffect(() => {
+    const prefs = getPreferences()
+    if (prefs.onboardingCompleted) {
+      setGoal({ label: GOAL_LABELS[prefs.goal], icon: GOAL_ICONS[prefs.goal] })
+    }
+  }, [])
+
+  if (!goal) {
+    return (
+      <a
+        href="/preferencias"
+        style={{
+          display: "flex", alignItems: "center", gap: "0.75rem",
+          padding: "0.75rem 1rem",
+          background: "rgba(29,185,84,0.06)",
+          border: "1px solid rgba(29,185,84,0.2)",
+          borderRadius: 12,
+          textDecoration: "none",
+        }}
+      >
+        <span style={{ fontSize: "1.25rem" }}>✨</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: "0.75rem", fontWeight: 700, color: C.accent }}>
+            Personalize seus insights
+          </div>
+          <div style={{ fontSize: "0.65rem", color: C.muted, marginTop: 2 }}>
+            Defina suas preferências para ver dados mais relevantes
+          </div>
+        </div>
+        <span style={{ color: C.accent }}>›</span>
+      </a>
+    )
+  }
+
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: "0.75rem",
+      padding: "0.75rem 1rem",
+      background: "rgba(29,185,84,0.06)",
+      border: "1px solid rgba(29,185,84,0.15)",
+      borderRadius: 12,
+    }}>
+      <span style={{ fontSize: "1.25rem" }}>{goal.icon}</span>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: "0.7rem", color: C.muted }}>Seu objetivo</div>
+        <div style={{ fontSize: "0.875rem", fontWeight: 700, color: C.accent }}>{goal.label}</div>
+      </div>
+      <a href="/preferencias" style={{ fontSize: "0.65rem", color: C.muted, textDecoration: "none" }}>
+        Editar →
+      </a>
+    </div>
+  )
+}
+
 export default function InsightsPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
   const [data, setData] = useState<InsightsData | null>(null)
@@ -490,6 +548,7 @@ export default function InsightsPage() {
         </p>
       </div>
 
+      <PersonalizationBanner />
       <SummarySection data={data} totalXp={totalXp} />
       <WeekVolumeSection data={data} />
       <ExerciseLoadSection data={data} />

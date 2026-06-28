@@ -94,6 +94,7 @@ export default function ConfiguracoesPage() {
     "lrpg-fit:reward-events": "Eventos de recompensa",
     "lrpg-fit:nutrition-goal": "Metas de nutrição",
     "lrpg-fit:nutrition-logs": "Registros nutricionais",
+    "lrpg-fit:preferences": "Preferências pessoais",
   }
 
   return (
@@ -104,6 +105,30 @@ export default function ConfiguracoesPage() {
       <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", marginBottom: "0" }}>
         Gerencie seus dados locais com segurança.
       </p>
+
+      {/* Quick link to preferences */}
+      <a
+        href="/preferencias"
+        style={{
+          display: "flex", alignItems: "center", gap: "0.75rem",
+          padding: "0.875rem 1rem",
+          background: "rgba(29,185,84,0.06)",
+          border: "1px solid rgba(29,185,84,0.2)",
+          borderRadius: "var(--radius-md)",
+          textDecoration: "none",
+        }}
+      >
+        <span style={{ fontSize: "1.375rem" }}>⚙️</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-bold)", color: "var(--color-accent)" }}>
+            Preferências pessoais
+          </div>
+          <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", marginTop: 2 }}>
+            Objetivo, equipamentos, dias preferidos e estilo de treino
+          </div>
+        </div>
+        <span style={{ color: "var(--color-accent)" }}>›</span>
+      </a>
 
       {message && (
         <div
