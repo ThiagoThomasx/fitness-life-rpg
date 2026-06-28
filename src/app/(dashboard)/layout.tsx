@@ -2,8 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured } from "@/lib/env"
 import { MOCK_USER } from "@/lib/mock/data"
 import { redirect } from "next/navigation"
-import TopBar from "@/components/layout/TopBar"
-import BottomNav from "@/components/layout/BottomNav"
+import AppSidebar from "@/components/layout/AppSidebar"
 import { RewardToast } from "@/components/rewards/RewardToast"
 
 export default async function DashboardLayout({
@@ -23,13 +22,33 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
-      <TopBar user={user} />
-      <main style={{ flex: 1, paddingTop: "56px", paddingBottom: "96px", overflowY: "auto" }}>
+    <div className="app-shell">
+      <AppSidebar userEmail={user?.email} />
+      <main className="app-main">
         {children}
       </main>
       <RewardToast />
-      <BottomNav />
+
+      <style jsx>{`
+        .app-shell {
+          display: flex;
+          min-height: 100dvh;
+        }
+        .app-main {
+          flex: 1;
+          min-width: 0;
+          overflow-y: auto;
+          /* Desktop: offset for sidebar */
+          margin-left: 220px;
+        }
+        @media (max-width: 767px) {
+          .app-main {
+            margin-left: 0;
+            /* Mobile: offset for hamburger button */
+            padding-top: 52px;
+          }
+        }
+      `}</style>
     </div>
   )
 }
