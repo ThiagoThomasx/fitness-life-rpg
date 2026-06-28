@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation"
 import { useCharacterStore, xpProgress, xpToNextLevel } from "@/stores/useCharacterStore"
 import { useBadgeStore } from "@/stores/useBadgeStore"
 import { MOCK_CHARACTER } from "@/lib/mock/data"
-import { isSupabaseConfigured } from "@/lib/env"
 import { LastWorkout } from "@/components/dashboard/LastWorkout"
-import { getDailyMissions, buildMissionsInput, type DailyMission } from "@/lib/daily-missions"
+import { getDailyMissions, buildMissionsInput, completeMission, type DailyMission } from "@/lib/daily-missions"
 import { getWeeklyProgress, type WeeklyProgress } from "@/lib/weekly-progress"
 import { getTodayLog } from "@/lib/daily-log"
 import { getTodayNutritionLog, getNutritionGoal } from "@/lib/nutrition"
@@ -24,9 +23,13 @@ const ATTRIBUTES = [
   { key: "vitality" as const, label: "VIT", icon: "❤️" },
 ]
 
-function MissionCard({ mission }: { mission: DailyMission }) {
+const AUTO_MISSIONS = new Set(['diary-today', 'workout-this-week', 'workout-today', 'sleep-7h', 'mood-good'])
+
+function MissionCard({ mission, onComplete }: { mission: DailyMission; onComplete?: (id: string) => void }) {
   const isDone = mission.status === "done"
   const isLocked = mission.status === "locked"
+  const canManualComplete = !isDone && !isLocked && !AUTO_MISSIONS.has(mission.id)
+
   return (
     <div
       className="card card--sm"
@@ -52,14 +55,24 @@ function MissionCard({ mission }: { mission: DailyMission }) {
           {mission.description}
         </div>
       </div>
-      <div style={{
-        fontSize: "0.7rem",
-        fontWeight: "var(--font-bold)",
-        color: isDone ? "var(--color-accent)" : "var(--color-text-muted)",
-        flexShrink: 0,
-      }}>
-        {isDone ? "✓" : `+${mission.xpReward} XP`}
-      </div>
+      {isDone ? (
+        <span style={{ fontSize: "1rem", color: "var(--color-accent)", flexShrink: 0 }}>✓</span>
+      ) : canManualComplete ? (
+        <button
+          onClick={() => onComplete?.(mission.id)}
+          style={{
+            background: "rgba(29,185,84,0.12)", border: "1px solid rgba(29,185,84,0.3)",
+            borderRadius: 9999, padding: "3px 10px", fontSize: "0.65rem", fontWeight: 700,
+            color: "#1db954", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
+          }}
+        >
+          +{mission.xpReward} XP
+        </button>
+      ) : (
+        <span style={{ fontSize: "0.7rem", fontWeight: "var(--font-bold)", color: "var(--color-text-muted)", flexShrink: 0 }}>
+          +{mission.xpReward} XP
+        </span>
+      )}
     </div>
   )
 }
@@ -356,12 +369,6 @@ export default function DashboardPage() {
       )}
 
       <div className="page page--tight">
-        {!isSupabaseConfigured && (
-          <div className="alert-banner" role="status">
-            Modo local — dados persistidos no navegador.
-          </div>
-        )}
-
         {/* 1. Character header */}
         <section className="card card--accent-top" style={{ paddingTop: "1.25rem" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "1rem", marginBottom: "1rem" }}>
@@ -439,9 +446,24 @@ export default function DashboardPage() {
           <SkeletonCard height="140px" />
         ) : missions.length > 0 ? (
           <section>
-            <h3 className="section-label">Missões do dia</h3>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+              <h3 className="section-label" style={{ marginBottom: 0 }}>Missões do dia</h3>
+              <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>
+                {missions.filter((m) => m.status === "done").length}/{missions.filter((m) => m.status !== "locked").length} completas
+              </span>
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              {missions.map((m) => <MissionCard key={m.id} mission={m} />)}
+              {missions.map((m) => (
+                <MissionCard
+                  key={m.id}
+                  mission={m}
+                  onComplete={(id) => {
+                    completeMission(id)
+                    const input = buildMissionsInput()
+                    setMissions(getDailyMissions(input))
+                  }}
+                />
+              ))}
             </div>
           </section>
         ) : null}

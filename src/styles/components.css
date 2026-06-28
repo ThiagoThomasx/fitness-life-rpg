@@ -234,8 +234,50 @@
   margin: 0 auto;
 }
 
+@media (min-width: 768px) {
+  .page {
+    max-width: 760px;
+    padding: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .page {
+    max-width: 960px;
+    padding: var(--space-6) var(--space-8);
+  }
+}
+
+.page--wide {
+  max-width: 600px;
+}
+
+@media (min-width: 768px) {
+  .page--wide {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page--wide {
+    max-width: 1200px;
+  }
+}
+
 .page--tight {
   gap: var(--space-3);
+}
+
+/* Desktop 2-column grid helper */
+.grid-2-col {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .grid-2-col {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 /* Stat row */

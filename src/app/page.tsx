@@ -59,7 +59,7 @@ export default function Home() {
         </p>
 
         <Link
-          href="/auth/login"
+          href="/dashboard"
           style={{
             display: "inline-flex",
             alignItems: "center",

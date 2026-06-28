@@ -54,7 +54,7 @@ function ExercisePicker({
         position: "fixed",
         inset: 0,
         background: "rgba(0,0,0,0.75)",
-        zIndex: 50,
+        zIndex: 200,
         display: "flex",
         alignItems: "flex-end",
         padding: 0,
