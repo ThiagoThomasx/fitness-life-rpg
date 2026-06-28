@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState, useEffect, useCallback } from "react"
+import { useSearchParams } from "next/navigation"
 import {
   downloadBackup,
   importBackup,
@@ -16,6 +17,7 @@ type Panel = "idle" | "import-confirm" | "reset-confirm"
 export default function ConfiguracoesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const resetInputRef = useRef<HTMLInputElement>(null)
+  const searchParams = useSearchParams()
   const [panel, setPanel] = useState<Panel>("idle")
   const [status, setStatus] = useState<StorageStatus | null>(null)
   const [importFile, setImportFile] = useState<File | null>(null)
@@ -28,7 +30,13 @@ export default function ConfiguracoesPage() {
 
   useEffect(() => {
     refreshStatus()
-  }, [refreshStatus])
+    if (searchParams.get("resetado") === "true") {
+      setMessage({ type: "ok", text: "Todos os dados foram apagados. O app está limpo." })
+      const url = new URL(window.location.href)
+      url.searchParams.delete("resetado")
+      window.history.replaceState({}, "", url.toString())
+    }
+  }, [refreshStatus, searchParams])
 
   function showMessage(type: "ok" | "err", text: string) {
     setMessage({ type, text })
@@ -79,8 +87,8 @@ export default function ConfiguracoesPage() {
   function handleResetConfirm() {
     if (resetText.trim().toLowerCase() !== "resetar") return
     resetAllData()
-    // Reload so Zustand stores (in-memory) also reset to initial state
-    window.location.href = "/dashboard"
+    // Full page reload clears all in-memory Zustand stores; redirect back here to show success
+    window.location.href = "/configuracoes?resetado=true"
   }
 
   const keyLabels: Record<string, string> = {

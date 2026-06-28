@@ -25,7 +25,7 @@ export default async function DashboardLayout({
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
       <TopBar user={user} />
-      <main style={{ flex: 1, paddingTop: "56px", paddingBottom: "64px", overflowY: "auto" }}>
+      <main style={{ flex: 1, paddingTop: "56px", paddingBottom: "96px", overflowY: "auto" }}>
         {children}
       </main>
       <RewardToast />
