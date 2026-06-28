@@ -22,32 +22,15 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="app-shell">
+    <div style={{ display: "flex", minHeight: "100dvh" }}>
       <AppSidebar userEmail={user?.email} />
-      <main className="app-main">
+      <main style={{ flex: 1, minWidth: 0, overflowY: "auto" }} className="app-main">
         {children}
       </main>
       <RewardToast />
-
-      <style jsx>{`
-        .app-shell {
-          display: flex;
-          min-height: 100dvh;
-        }
-        .app-main {
-          flex: 1;
-          min-width: 0;
-          overflow-y: auto;
-          /* Desktop: offset for sidebar */
-          margin-left: 220px;
-        }
-        @media (max-width: 767px) {
-          .app-main {
-            margin-left: 0;
-            /* Mobile: offset for hamburger button */
-            padding-top: 52px;
-          }
-        }
+      <style>{`
+        .app-main { margin-left: 220px; }
+        @media (max-width: 767px) { .app-main { margin-left: 0; padding-top: 52px; } }
       `}</style>
     </div>
   )
