@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Full bleed background for maskable safe zone -->
+  <rect width="512" height="512" fill="#121212"/>
+  <!-- Dumbbell (centered within safe zone ~144px inset) -->
+  <g fill="#1db954">
+    <rect x="80" y="220" width="64" height="72" rx="10"/>
+    <rect x="144" y="238" width="44" height="36" rx="8"/>
+    <rect x="188" y="246" width="136" height="20" rx="10"/>
+    <rect x="324" y="238" width="44" height="36" rx="8"/>
+    <rect x="368" y="220" width="64" height="72" rx="10"/>
+  </g>
+  <polygon points="256,96 267,126 300,126 274,144 285,174 256,156 227,174 238,144 212,126 245,126" fill="#f59e0b" opacity="0.9"/>
+</svg>

@@ -1,0 +1,53 @@
+{
+  "name": "Fitness Life RPG",
+  "short_name": "FitnessRPG",
+  "description": "Transforme seus treinos em aventura. App RPG local-first para fitness.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121212",
+  "theme_color": "#1db954",
+  "lang": "pt-BR",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Ver seu progresso e stats",
+      "url": "/dashboard"
+    },
+    {
+      "name": "Treinos",
+      "short_name": "Treinos",
+      "description": "Registrar treino de hoje",
+      "url": "/treinos"
+    },
+    {
+      "name": "Diário",
+      "short_name": "Diário",
+      "description": "Escrever no diário",
+      "url": "/diario"
+    },
+    {
+      "name": "Nutrição",
+      "short_name": "Nutrição",
+      "description": "Registrar refeições",
+      "url": "/nutricao"
+    }
+  ],
+  "categories": ["health", "fitness", "lifestyle"]
+}

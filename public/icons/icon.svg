@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#121212"/>
+  <!-- Dumbbell icon -->
+  <g fill="#1db954">
+    <!-- Left weight -->
+    <rect x="60" y="216" width="72" height="80" rx="12"/>
+    <!-- Left bar connector -->
+    <rect x="132" y="236" width="48" height="40" rx="8"/>
+    <!-- Center bar -->
+    <rect x="180" y="244" width="152" height="24" rx="12"/>
+    <!-- Right bar connector -->
+    <rect x="332" y="236" width="48" height="40" rx="8"/>
+    <!-- Right weight -->
+    <rect x="380" y="216" width="72" height="80" rx="12"/>
+  </g>
+  <!-- Star / XP accent -->
+  <polygon points="256,80 268,112 304,112 276,132 288,164 256,144 224,164 236,132 208,112 244,112" fill="#f59e0b" opacity="0.9"/>
+</svg>
