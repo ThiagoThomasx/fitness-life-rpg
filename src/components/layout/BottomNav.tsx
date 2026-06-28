@@ -27,6 +27,7 @@ export default function BottomNav() {
           >
             <span className="nav-icon" aria-hidden="true">{item.icon}</span>
             <span className="nav-label">{item.label}</span>
+            {isActive && <span className="nav-dot" aria-hidden="true" />}
           </Link>
         )
       })}
@@ -38,36 +39,70 @@ export default function BottomNav() {
           left: 0;
           right: 0;
           height: var(--bottomnav-height);
-          background: var(--color-bg-elevated);
-          border-top: 1px solid var(--color-border-subtle);
+          background: rgba(18, 18, 18, 0.92);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-top: 1px solid rgba(255, 255, 255, 0.07);
           display: flex;
           align-items: stretch;
           z-index: 100;
         }
+
         .nav-item {
           flex: 1;
+          position: relative;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 2px;
+          gap: 3px;
           text-decoration: none;
-          color: var(--color-text-muted);
-          transition: color var(--duration-fast) var(--ease-out);
+          color: #5a5a5a;
+          transition: color 120ms cubic-bezier(0.16, 1, 0.3, 1);
           -webkit-tap-highlight-color: transparent;
+          padding-bottom: 4px;
         }
-        .nav-item:hover,
+
+        .nav-item:hover {
+          color: #b3b3b3;
+        }
+
         .nav-item--active {
-          color: var(--color-accent);
+          color: #ffffff;
         }
+
         .nav-icon {
-          font-size: 1.25rem;
+          font-size: 1.2rem;
           line-height: 1;
+          transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1);
         }
+
+        .nav-item--active .nav-icon {
+          transform: translateY(-1px);
+        }
+
         .nav-label {
-          font-size: 0.625rem;
-          font-weight: var(--font-medium);
+          font-size: 0.6rem;
+          font-weight: 600;
           letter-spacing: 0.02em;
+          transition: color 120ms ease;
+        }
+
+        .nav-dot {
+          position: absolute;
+          bottom: 6px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 3px;
+          height: 3px;
+          border-radius: 50%;
+          background: #1db954;
+          animation: dot-appear 120ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes dot-appear {
+          from { opacity: 0; transform: translateX(-50%) scale(0); }
+          to   { opacity: 1; transform: translateX(-50%) scale(1); }
         }
       `}</style>
     </nav>

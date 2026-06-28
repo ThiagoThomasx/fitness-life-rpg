@@ -50,7 +50,7 @@ const LABEL_STYLE: React.CSSProperties = {
   marginBottom: "0.375rem",
 }
 
-// ─── Workout card ─────────────────────────────────────────────────────────────
+// ─── Workout track row ───────────────────────────────────────────────────────
 
 function WorkoutCard({
   workout,
@@ -70,64 +70,76 @@ function WorkoutCard({
   const colors = categoryColor(workout.workout_type.category)
 
   return (
-    <article className="card" style={{ padding: 0, overflow: "hidden" }}>
-      <div style={{ height: 3, background: colors.fill }} />
-      <div style={{ padding: "1rem 1.25rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.375rem" }}>
-          <span style={{ fontSize: "1.125rem" }} aria-hidden="true">{workout.workout_type.icon ?? "🏋️"}</span>
-          <span className="badge-pill" style={{ background: colors.bg, color: colors.text, border: `1px solid ${colors.border}`, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+    <article className="workout-row" role="row">
+      {/* Thumbnail */}
+      <div
+        className="workout-row__thumbnail"
+        style={{ background: `linear-gradient(135deg, ${colors.fill}33, ${colors.fill}11)` }}
+      >
+        <span aria-hidden="true" style={{ fontSize: "1.5rem" }}>
+          {workout.workout_type.icon ?? "🏋️"}
+        </span>
+        <div className="workout-row__play-btn" onClick={onStart} aria-hidden="true">
+          <div className="workout-row__play-icon">▶</div>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="workout-row__info">
+        <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", marginBottom: 1 }}>
+          <span
+            className="workout-row__category"
+            style={{ color: colors.text }}
+          >
             {workout.workout_type.name}
           </span>
           {workout.isCustom && (
-            <span className="badge-pill" style={{ background: "rgba(139,92,246,0.12)", color: "#8b5cf6", border: "1px solid rgba(139,92,246,0.25)" }}>
-              Personalizado
-            </span>
+            <span style={{
+              fontSize: "0.55rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em",
+              color: "#8b5cf6", padding: "1px 5px", borderRadius: 4,
+              background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.2)",
+            }}>Custom</span>
           )}
           {isRecommended && !workout.isCustom && (
-            <span className="badge-pill" style={{ background: "rgba(29,185,84,0.12)", color: "#1db954", border: "1px solid rgba(29,185,84,0.3)", marginLeft: "auto" }}>
-              ✨ Para você
-            </span>
+            <span className="badge-recommended">✨ para você</span>
           )}
         </div>
-
-        <h3 style={{ fontSize: "var(--text-base)", fontWeight: "var(--font-bold)", color: "var(--color-text-primary)", marginBottom: "0.5rem" }}>
-          {workout.name}
-        </h3>
-
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem", marginBottom: "1rem" }}>
-          {workout.exercises.map((ex) => (
-            <span key={ex.id} style={{
-              fontSize: "var(--text-xs)", color: "var(--color-text-secondary)",
-              background: "var(--color-bg-highlight)", padding: "2px 0.5rem", borderRadius: 6,
-            }}>{ex.name}</span>
-          ))}
+        <div className="workout-row__name">{workout.name}</div>
+        <div className="workout-row__meta">
+          ~{workout.estimated_minutes}min&nbsp;·&nbsp;+{workout.workout_type.base_xp} XP&nbsp;·&nbsp;{workout.exercises.length} exercícios
         </div>
+      </div>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
-            ~{workout.estimated_minutes}min · +{workout.workout_type.base_xp} XP · {workout.exercises.length} exercícios
-          </span>
-          <div style={{ display: "flex", gap: "0.375rem" }}>
-            {onDuplicate && (
-              <button className="btn btn--ghost" onClick={onDuplicate}
-                style={{ fontSize: "var(--text-xs)", padding: "0.375rem 0.625rem" }}
-                title="Duplicar treino">⧉</button>
-            )}
-            {onEdit && (
-              <button className="btn btn--ghost" onClick={onEdit}
-                style={{ fontSize: "var(--text-xs)", padding: "0.375rem 0.625rem" }}
-                title="Editar treino">✏️</button>
-            )}
-            {onDelete && (
-              <button className="btn btn--ghost" onClick={onDelete}
-                style={{ fontSize: "var(--text-xs)", padding: "0.375rem 0.625rem" }}
-                aria-label={`Excluir treino ${workout.name}`}>🗑️</button>
-            )}
-            <button className="btn btn--primary" onClick={onStart} aria-label={`Iniciar treino ${workout.name}`}>
-              Iniciar
-            </button>
-          </div>
-        </div>
+      {/* Actions */}
+      <div className="workout-row__actions">
+        {onDuplicate && (
+          <button
+            className="workout-row__icon-btn"
+            onClick={(e) => { e.stopPropagation(); onDuplicate() }}
+            title="Duplicar treino"
+          >⧉</button>
+        )}
+        {onEdit && (
+          <button
+            className="workout-row__icon-btn"
+            onClick={(e) => { e.stopPropagation(); onEdit() }}
+            title="Editar treino"
+          >✏️</button>
+        )}
+        {onDelete && (
+          <button
+            className="workout-row__icon-btn"
+            onClick={(e) => { e.stopPropagation(); onDelete() }}
+            aria-label={`Excluir treino ${workout.name}`}
+          >🗑️</button>
+        )}
+        <button
+          className="workout-row__start-btn"
+          onClick={onStart}
+          aria-label={`Iniciar treino ${workout.name}`}
+        >
+          Iniciar
+        </button>
       </div>
     </article>
   )
@@ -770,62 +782,86 @@ export default function TreinosPage() {
   }
 
   return (
-    <div className="page">
-      {/* Header */}
+    <div className="page" style={{ gap: "1.25rem" }}>
+      {/* ─── Top bar ────────────────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <h2 style={{ fontSize: "var(--text-xl)", fontWeight: "var(--font-bold)", color: "var(--color-text-primary)" }}>
-          Meus Treinos
-        </h2>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        <h1 style={{ fontSize: "var(--text-2xl)", fontWeight: "var(--font-bold)", color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}>
+          Treinos
+        </h1>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
           {activeSession && (
             <button className="btn btn--ghost" onClick={() => router.push("/sessao")}
-              style={{ fontSize: "var(--text-xs)", padding: "0.375rem 0.875rem", borderRadius: 9999 }}>
-              ▶ Sessão Ativa
+              style={{ fontSize: "var(--text-xs)", padding: "0.375rem 0.875rem", borderRadius: 9999, color: "#1db954", borderColor: "rgba(29,185,84,0.3)" }}>
+              ▶ Ativo
             </button>
           )}
           <button className="btn btn--ghost" onClick={() => setShowLibrary(true)}
-            style={{ fontSize: "var(--text-xs)", padding: "0.375rem 0.875rem" }}>
-            📚 Biblioteca
-          </button>
-          <button className="btn btn--primary" onClick={() => { setEditingWorkout(null); setShowBuilder(true) }}
-            style={{ fontSize: "var(--text-xs)", padding: "0.375rem 0.875rem" }}>
-            + Criar
+            style={{ fontSize: "var(--text-xs)", padding: "0.375rem 0.875rem", borderRadius: 9999 }}>
+            Biblioteca
           </button>
         </div>
       </div>
 
-      {/* Time filter */}
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+      {/* ─── New workout CTA ─────────────────────────────────────────── */}
+      <button
+        className="fab-create btn--full"
+        onClick={() => { setEditingWorkout(null); setShowBuilder(true) }}
+      >
+        <span style={{ fontSize: "1rem" }}>+</span>
+        Criar treino
+      </button>
+
+      {/* ─── Duration filter ─────────────────────────────────────────── */}
+      <div style={{ display: "flex", gap: "0.375rem", flexWrap: "wrap" }}>
         {timeFilters.map((f) => (
           <button key={f.key} onClick={() => setTimeFilter(f.key)}
             style={{
-              padding: "0.375rem 0.875rem", borderRadius: 9999, fontSize: "var(--text-xs)",
-              fontWeight: 600, cursor: "pointer", border: "1px solid",
+              padding: "0.3rem 0.75rem", borderRadius: 9999, fontSize: "var(--text-xs)",
+              fontWeight: 600, cursor: "pointer", border: "1px solid", transition: "all 120ms ease",
               background: timeFilter === f.key ? "rgba(29,185,84,0.15)" : "rgba(255,255,255,0.04)",
-              borderColor: timeFilter === f.key ? "rgba(29,185,84,0.4)" : "rgba(255,255,255,0.08)",
-              color: timeFilter === f.key ? "#1db954" : "#b3b3b3",
+              borderColor: timeFilter === f.key ? "rgba(29,185,84,0.45)" : "rgba(255,255,255,0.08)",
+              color: timeFilter === f.key ? "#1db954" : "#6a6a6a",
             }}>
             {f.label}
           </button>
         ))}
       </div>
 
-      {/* Workout list */}
-      {visible.length === 0 ? (
-        <EmptyState icon="🏋️" title="Nenhum treino neste filtro" description="Ajuste o filtro de duração ou crie um treino personalizado." />
-      ) : (
-        visible.map((workout) => (
-          <WorkoutCard
-            key={workout.id}
-            workout={workout}
-            onStart={() => handleStart(workout)}
-            onDelete={workout.isCustom ? () => handleDeleteCustom(workout.id) : undefined}
-            onEdit={workout.isCustom ? () => handleEdit(workout) : undefined}
-            onDuplicate={workout.isCustom ? () => handleDuplicate(workout.id) : undefined}
-            isRecommended={recommendedIds.has(workout.id)}
-          />
-        ))
-      )}
+      {/* ─── Workout list ─────────────────────────────────────────────── */}
+      <section>
+        <div className="section-header">
+          <h2 className="section-header__title">Meus Treinos</h2>
+          <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
+            {visible.length} {visible.length === 1 ? "treino" : "treinos"}
+          </span>
+        </div>
+
+        {visible.length === 0 ? (
+          <EmptyState icon="🏋️" title="Nenhum treino neste filtro" description="Ajuste o filtro de duração ou crie um treino personalizado." />
+        ) : (
+          <div style={{
+            background: "var(--color-surface-1)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: "var(--radius-xl)",
+            overflow: "hidden",
+          }}>
+            {visible.map((workout, idx) => (
+              <div key={workout.id} style={{
+                borderTop: idx === 0 ? "none" : "1px solid rgba(255,255,255,0.04)",
+              }}>
+                <WorkoutCard
+                  workout={workout}
+                  onStart={() => handleStart(workout)}
+                  onDelete={workout.isCustom ? () => handleDeleteCustom(workout.id) : undefined}
+                  onEdit={workout.isCustom ? () => handleEdit(workout) : undefined}
+                  onDuplicate={workout.isCustom ? () => handleDuplicate(workout.id) : undefined}
+                  isRecommended={recommendedIds.has(workout.id)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {showBuilder && (
         <WorkoutBuilderModal

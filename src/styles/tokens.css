@@ -7,6 +7,13 @@
   --color-bg-highlight: #282828;
   --color-bg-press: #333333;
 
+  /* Surface hierarchy (Spotify-style) */
+  --color-surface-0: #121212;
+  --color-surface-1: #1a1a1a;
+  --color-surface-2: #202020;
+  --color-surface-3: #282828;
+  --color-surface-4: #323232;
+
   --color-text-primary: #ffffff;
   --color-text-secondary: #b3b3b3;
   --color-text-muted: #6a6a6a;
