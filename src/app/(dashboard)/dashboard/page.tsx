@@ -8,6 +8,8 @@ import { MOCK_CHARACTER } from "@/lib/mock/data"
 import { LastWorkout } from "@/components/dashboard/LastWorkout"
 import { getDailyMissions, buildMissionsInput, completeMission, type DailyMission } from "@/lib/daily-missions"
 import { getWeeklyProgress, type WeeklyProgress } from "@/lib/weekly-progress"
+import { getWeeklyPlanProgress } from "@/lib/weekly-plan"
+import type { WeeklyPlanProgress } from "@/types/planning"
 import { getTodayLog } from "@/lib/daily-log"
 import { getTodayNutritionLog, getNutritionGoal } from "@/lib/nutrition"
 import { BADGE_DEFINITIONS } from "@/lib/badges"
@@ -322,11 +324,62 @@ function NextMilestoneCard({ totalWorkouts }: { totalWorkouts: number }) {
   )
 }
 
+function WeeklyPlanWidget({ planProgress }: { planProgress: WeeklyPlanProgress }) {
+  const router = useRouter()
+  const { plan, actual, completionPct } = planProgress
+  return (
+    <section
+      className="card card--interactive"
+      onClick={() => router.push("/plano")}
+      role="button"
+      tabIndex={0}
+      aria-label="Ver plano semanal"
+      onKeyDown={(e) => e.key === "Enter" && router.push("/plano")}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.625rem" }}>
+        <h3 className="section-label" style={{ marginBottom: 0 }}>Plano da semana</h3>
+        <span style={{ fontSize: "0.7rem", fontWeight: "var(--font-bold)", color: completionPct >= 100 ? "#1db954" : "var(--color-accent)" }}>
+          {completionPct}% {completionPct >= 100 ? "✅" : ""}
+        </span>
+      </div>
+      {plan.focus && (
+        <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", fontStyle: "italic", marginBottom: "0.5rem" }}>
+          &ldquo;{plan.focus}&rdquo;
+        </div>
+      )}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.375rem" }}>
+        {[
+          { icon: "💪", label: "Treinos", cur: actual.workouts, tgt: plan.goals.workouts },
+          { icon: "📓", label: "Diário", cur: actual.diary, tgt: plan.goals.diary },
+          { icon: "🥗", label: "Nutrição", cur: actual.nutrition, tgt: plan.goals.nutrition },
+          { icon: "⚡", label: "Missões", cur: actual.missions, tgt: plan.goals.missions },
+        ].map(({ icon, label, cur, tgt }) => {
+          const pct = Math.min(Math.round((cur / Math.max(tgt, 1)) * 100), 100)
+          return (
+            <div key={label} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>{icon} {label}</span>
+                <span style={{ fontSize: "0.65rem", fontWeight: "var(--font-bold)", color: pct >= 100 ? "#1db954" : "var(--color-text-muted)" }}>
+                  {cur}/{tgt}
+                </span>
+              </div>
+              <div style={{ height: 4, borderRadius: 9999, background: "var(--color-border-subtle)", overflow: "hidden" }}>
+                <div style={{ height: "100%", borderRadius: 9999, background: pct >= 100 ? "#1db954" : "var(--color-accent)", width: `${pct}%` }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 export default function DashboardPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
   const { earnedBadges, refreshBadges } = useBadgeStore()
   const [missions, setMissions] = useState<DailyMission[]>([])
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress | null>(null)
+  const [planProgress, setPlanProgress] = useState<WeeklyPlanProgress | null>(null)
   const [totalWorkouts, setTotalWorkouts] = useState(0)
   const [levelUpLevel, setLevelUpLevel] = useState<number | null>(null)
   const [loaded, setLoaded] = useState(false)
@@ -344,6 +397,7 @@ export default function DashboardPage() {
     const input = buildMissionsInput()
     setMissions(getDailyMissions(input))
     setWeeklyProgress(getWeeklyProgress())
+    setPlanProgress(getWeeklyPlanProgress())
     setTotalWorkouts(input.totalWorkouts)
     setLoaded(true)
   }, [])
@@ -471,17 +525,20 @@ export default function DashboardPage() {
         {/* 3. Weekly progress */}
         {!loaded ? <SkeletonCard height="120px" /> : weeklyProgress ? <WeeklyCard progress={weeklyProgress} /> : null}
 
-        {/* 4. Last workout */}
+        {/* 4. Weekly plan widget */}
+        {planProgress && <WeeklyPlanWidget planProgress={planProgress} />}
+
+        {/* 5. Last workout */}
         <LastWorkout />
 
-        {/* 5. Today cards */}
+        {/* 6. Today cards */}
         <DiaryTodayCard />
         <NutritionTodayCard />
 
-        {/* 6. Recent badges */}
+        {/* 7. Recent badges */}
         {earnedBadges.length > 0 && <RecentBadgesCard badges={earnedBadges} />}
 
-        {/* 7. Next milestone */}
+        {/* 8. Next milestone */}
         <NextMilestoneCard totalWorkouts={totalWorkouts} />
 
         {/* CTAs */}

@@ -11,6 +11,8 @@ export interface BadgeDef {
     | 'attribute_value'
     | 'nutrition_count'
     | 'nutrition_streak'
+    | 'plan_count'
+    | 'campaign_count'
   requirementValue: number
   requirementAttribute?: 'strength' | 'agility' | 'dexterity' | 'constitution' | 'vitality'
 }
@@ -187,6 +189,39 @@ export const BADGE_DEFINITIONS: BadgeDef[] = [
     requirementValue: 15,
     requirementAttribute: 'vitality',
   },
+  // Planning milestones
+  {
+    id: 'badge-first-plan',
+    name: 'Estrategista',
+    description: 'Crie seu primeiro plano semanal',
+    icon: '📅',
+    requirementType: 'plan_count',
+    requirementValue: 1,
+  },
+  {
+    id: 'badge-plan-4',
+    name: 'Planejador',
+    description: 'Complete 4 planos semanais',
+    icon: '📋',
+    requirementType: 'plan_count',
+    requirementValue: 4,
+  },
+  {
+    id: 'badge-first-campaign',
+    name: 'Em Campanha',
+    description: 'Inicie sua primeira campanha de longo prazo',
+    icon: '🏹',
+    requirementType: 'campaign_count',
+    requirementValue: 1,
+  },
+  {
+    id: 'badge-campaign-complete',
+    name: 'Conquistador',
+    description: 'Conclua uma campanha de longo prazo',
+    icon: '🏆',
+    requirementType: 'campaign_count',
+    requirementValue: 1,
+  },
 ]
 
 export interface EarnedBadge {
@@ -240,6 +275,9 @@ export interface BadgeCheckContext {
   vitality: number
   nutritionCount?: number
   nutritionStreak?: number
+  planCount?: number
+  campaignCount?: number
+  completedCampaignCount?: number
 }
 
 export function checkAndEarnBadges(ctx: BadgeCheckContext): BadgeDef[] {
@@ -268,6 +306,16 @@ export function checkAndEarnBadges(ctx: BadgeCheckContext): BadgeDef[] {
         break
       case 'nutrition_streak':
         qualified = (ctx.nutritionStreak ?? 0) >= badge.requirementValue
+        break
+      case 'plan_count':
+        qualified = (ctx.planCount ?? 0) >= badge.requirementValue
+        break
+      case 'campaign_count':
+        if (badge.id === 'badge-campaign-complete') {
+          qualified = (ctx.completedCampaignCount ?? 0) >= badge.requirementValue
+        } else {
+          qualified = (ctx.campaignCount ?? 0) >= badge.requirementValue
+        }
         break
       case 'attribute_value': {
         const attrKey = badge.requirementAttribute

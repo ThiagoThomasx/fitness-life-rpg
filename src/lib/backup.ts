@@ -9,6 +9,10 @@ export const STORAGE_KEYS = [
   'lrpg-fit:reward-events',
   'lrpg-fit:nutrition-goal',
   'lrpg-fit:nutrition-logs',
+  'lrpg-fit:missions-completed',
+  'lrpg-fit:custom-workouts',
+  'lrpg-fit:weekly-plan',
+  'lrpg-fit:campaigns',
 ] as const
 
 export type StorageKey = typeof STORAGE_KEYS[number]
