@@ -16,7 +16,6 @@ type Panel = "idle" | "import-confirm" | "reset-confirm"
 export default function ConfiguracoesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const resetInputRef = useRef<HTMLInputElement>(null)
-  const searchParams = useSearchParams()
   const [panel, setPanel] = useState<Panel>("idle")
   const [status, setStatus] = useState<StorageStatus | null>(null)
   const [importFile, setImportFile] = useState<File | null>(null)
