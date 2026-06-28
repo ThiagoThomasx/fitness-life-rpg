@@ -1,7 +1,6 @@
 "use client"
 
 import { useRef, useState, useEffect, useCallback } from "react"
-import { useSearchParams } from "next/navigation"
 import {
   downloadBackup,
   importBackup,
@@ -30,13 +29,14 @@ export default function ConfiguracoesPage() {
 
   useEffect(() => {
     refreshStatus()
-    if (searchParams.get("resetado") === "true") {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("resetado") === "true") {
       setMessage({ type: "ok", text: "Todos os dados foram apagados. O app está limpo." })
       const url = new URL(window.location.href)
       url.searchParams.delete("resetado")
       window.history.replaceState({}, "", url.toString())
     }
-  }, [refreshStatus, searchParams])
+  }, [refreshStatus])
 
   function showMessage(type: "ok" | "err", text: string) {
     setMessage({ type, text })
