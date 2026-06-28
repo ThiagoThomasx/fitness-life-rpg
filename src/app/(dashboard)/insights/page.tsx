@@ -534,7 +534,7 @@ function AttributesSection({ character }: { character: ReturnType<typeof useChar
         {data.map((attr) => {
           const pct = Math.min((attr.value / maxVal) * 100, 100)
           return (
-            <div key={attr.name}>
+            <div key={attr.label}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.375rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <span style={{ fontSize: "0.875rem" }}>{attr.icon}</span>
