@@ -92,7 +92,7 @@ export default function AppSidebar({ userEmail }: AppSidebarProps) {
     ? userEmail.length > 22 ? userEmail.slice(0, 22) + "…" : userEmail
     : "Usuário"
 
-  const SidebarInner = () => (
+  const sidebarContent = (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Header */}
       <div style={{
@@ -252,7 +252,7 @@ export default function AppSidebar({ userEmail }: AppSidebarProps) {
         }}
         className="sidebar-desktop"
       >
-        <SidebarInner />
+        {sidebarContent}
       </aside>
 
       {/* Mobile hamburger */}
@@ -339,7 +339,7 @@ export default function AppSidebar({ userEmail }: AppSidebarProps) {
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
-        <SidebarInner />
+        {sidebarContent}
       </aside>
 
       <style jsx global>{`
