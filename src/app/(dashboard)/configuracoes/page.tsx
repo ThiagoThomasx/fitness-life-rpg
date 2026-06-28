@@ -94,7 +94,15 @@ export default function ConfiguracoesPage() {
     "lrpg-fit:reward-events": "Eventos de recompensa",
     "lrpg-fit:nutrition-goal": "Metas de nutrição",
     "lrpg-fit:nutrition-logs": "Registros nutricionais",
+    "lrpg-fit:missions-completed": "Missões concluídas",
+    "lrpg-fit:custom-workouts": "Treinos personalizados",
+    "lrpg-fit:custom-exercises": "Exercícios personalizados",
+    "lrpg-fit:weekly-plan": "Plano semanal",
+    "lrpg-fit:campaigns": "Campanhas",
     "lrpg-fit:preferences": "Preferências pessoais",
+    "lrpg-fit:avatar": "Avatar do personagem",
+    "lrpg-fit:char-name": "Nome do personagem",
+    "rpg_last_seen_level": "Último nível visto",
   }
 
   return (

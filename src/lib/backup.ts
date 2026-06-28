@@ -15,6 +15,9 @@ export const STORAGE_KEYS = [
   'lrpg-fit:weekly-plan',
   'lrpg-fit:campaigns',
   'lrpg-fit:preferences',
+  'lrpg-fit:avatar',
+  'lrpg-fit:char-name',
+  'rpg_last_seen_level',
 ] as const
 
 export type StorageKey = typeof STORAGE_KEYS[number]
