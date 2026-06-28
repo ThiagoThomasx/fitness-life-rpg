@@ -12,16 +12,13 @@ import {
   PLAN_XP_REWARD,
 } from "@/lib/weekly-plan"
 import {
-  getCampaigns,
   createCampaign,
   abandonCampaign,
-  deleteCampaign,
   syncCampaignProgress,
   CAMPAIGN_TEMPLATES,
 } from "@/lib/campaigns"
 import type { WeeklyPlan, WeeklyGoals, Campaign, WeeklyPlanProgress } from "@/types/planning"
 import type { CampaignType } from "@/types/planning"
-import { MOCK_CHARACTER } from "@/lib/mock/data"
 
 const FOCUS_SUGGESTIONS = [
   "Consistência é minha prioridade",
@@ -171,7 +168,6 @@ function CampaignCard({ campaign, onAbandon }: { campaign: Campaign; onAbandon: 
 }
 
 export default function PlanoPage() {
-  const character = useCharacterStore((s) => s.character) ?? MOCK_CHARACTER
   const applyDiaryXp = useCharacterStore((s) => s.applyDiaryXp)
   const pushReward = useRewardStore((s) => s.pushReward)
 
