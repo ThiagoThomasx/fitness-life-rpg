@@ -248,12 +248,98 @@ export default function PlanoPage() {
   const weekLabel = formatWeekLabel(weekStart)
   const hasPlan = !!plan
 
+  const pct = progress ? Math.round(progress.completionPct) : 0
+  const completedGoals = progress
+    ? Object.values(progress.actual).filter((v, i) => {
+        const keys = ["workouts", "diary", "nutrition", "missions"] as const
+        return v >= (plan?.goals[keys[i]] ?? 0)
+      }).length
+    : 0
+  const totalGoals = 4
+
   return (
     <div className="page-container">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Plano</h1>
-          <p className="page-subtitle">{weekLabel}</p>
+      {/* Premium plan header card */}
+      <div style={{
+        background: "linear-gradient(135deg, #1a1a1a 0%, #1f1f1f 100%)",
+        border: "1px solid rgba(255,255,255,0.07)",
+        borderRadius: 16,
+        padding: "1.25rem 1.25rem 1rem",
+        marginBottom: "1rem",
+        position: "relative",
+        overflow: "hidden",
+      }}>
+        {/* Background accent blur */}
+        <div style={{
+          position: "absolute", top: -24, right: -24,
+          width: 120, height: 120,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(29,185,84,0.12) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Top row: label + ring */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {/* Eyebrow */}
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 5,
+              fontSize: "0.6875rem", fontWeight: 600,
+              color: "#1db954", letterSpacing: "0.06em",
+              textTransform: "uppercase", marginBottom: 6,
+            }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+              </svg>
+              Plano semanal
+            </span>
+
+            {/* Week label */}
+            <h1 style={{
+              fontSize: "1.25rem", fontWeight: 700,
+              color: "var(--color-text-primary)",
+              lineHeight: 1.2, margin: 0,
+            }}>
+              {weekLabel}
+            </h1>
+
+            {/* Goal tag */}
+            {goalLabel && (
+              <span style={{
+                display: "inline-block", marginTop: 8,
+                fontSize: "0.75rem", fontWeight: 500,
+                color: "var(--color-text-muted)",
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 6, padding: "2px 8px",
+              }}>
+                {goalIcon} {goalLabel}
+              </span>
+            )}
+          </div>
+
+          {/* Progress ring */}
+          {progress && (
+            <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+              <div style={{ position: "relative", width: 52, height: 52 }}>
+                <ProgressRing pct={pct} size={52} />
+                <span style={{
+                  position: "absolute", inset: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "0.6875rem", fontWeight: 700,
+                  color: pct >= 100 ? "#1db954" : "var(--color-text-primary)",
+                }}>
+                  {pct}%
+                </span>
+              </div>
+              <span style={{ fontSize: "0.625rem", color: "var(--color-text-muted)", fontWeight: 500 }}>
+                {completedGoals}/{totalGoals} metas
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

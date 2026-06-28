@@ -25,26 +25,18 @@ const NAV_ITEMS = [
     label: "Treinos",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M6.5 6.5h11" />
-        <path d="M6.5 17.5h11" />
-        <path d="M3 9.5h18" />
-        <path d="M3 14.5h18" />
-        <path d="M3 9.5v5" />
-        <path d="M21 9.5v5" />
-        <path d="M6.5 6.5v11" />
-        <path d="M17.5 6.5v11" />
+        <path d="M6.5 6.5h11" /><path d="M6.5 17.5h11" />
+        <path d="M3 9.5h18" /><path d="M3 14.5h18" />
+        <path d="M3 9.5v5" /><path d="M21 9.5v5" />
+        <path d="M6.5 6.5v11" /><path d="M17.5 6.5v11" />
       </svg>
     ),
     iconActive: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M6.5 6.5h11" />
-        <path d="M6.5 17.5h11" />
-        <path d="M3 9.5h18" />
-        <path d="M3 14.5h18" />
-        <path d="M3 9.5v5" />
-        <path d="M21 9.5v5" />
-        <path d="M6.5 6.5v11" />
-        <path d="M17.5 6.5v11" />
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M6.5 6.5h11" /><path d="M6.5 17.5h11" />
+        <path d="M3 9.5h18" /><path d="M3 14.5h18" />
+        <path d="M3 9.5v5" /><path d="M21 9.5v5" />
+        <path d="M6.5 6.5v11" /><path d="M17.5 6.5v11" />
       </svg>
     ),
   },
@@ -60,7 +52,7 @@ const NAV_ITEMS = [
       </svg>
     ),
     iconActive: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="3" y="4" width="18" height="18" rx="2" />
         <line x1="16" y1="2" x2="16" y2="6" />
         <line x1="8" y1="2" x2="8" y2="6" />
@@ -82,7 +74,7 @@ const NAV_ITEMS = [
       </svg>
     ),
     iconActive: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <line x1="18" y1="20" x2="18" y2="10" />
         <line x1="12" y1="20" x2="12" y2="4" />
         <line x1="6" y1="20" x2="6" y2="14" />
@@ -100,7 +92,7 @@ const NAV_ITEMS = [
       </svg>
     ),
     iconActive: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
         <circle cx="12" cy="7" r="4" />
       </svg>
@@ -122,13 +114,11 @@ export default function BottomNav() {
             className={`nav-item${isActive ? " nav-item--active" : ""}`}
             aria-current={isActive ? "page" : undefined}
           >
-            <span
-              className="nav-icon"
-              style={isActive ? { color: "#1db954", transform: "translateY(-1px)" } : undefined}
-            >
+            <span className="nav-icon">
               {isActive ? item.iconActive : item.icon}
             </span>
             <span className="nav-label">{item.label}</span>
+            {isActive && <span className="nav-dot" aria-hidden="true" />}
           </Link>
         )
       })}
@@ -139,75 +129,89 @@ export default function BottomNav() {
           bottom: 0;
           left: 0;
           right: 0;
-          height: var(--bottomnav-height, 64px);
+          height: calc(64px + env(safe-area-inset-bottom, 0px));
           padding-bottom: env(safe-area-inset-bottom, 0px);
-          background: rgba(14, 14, 14, 0.96);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
-          display: flex;
+          background: rgba(12, 12, 12, 0.97);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-top: 1px solid rgba(255, 255, 255, 0.07);
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
           align-items: stretch;
           z-index: 100;
         }
 
         .nav-item {
-          flex: 1;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 4px;
-          padding: 8px 4px 6px;
-          min-height: 48px;
+          gap: 3px;
+          padding: 8px 2px 10px;
           text-decoration: none;
-          color: rgba(255, 255, 255, 0.38);
+          color: rgba(255, 255, 255, 0.35);
           transition: color 150ms ease;
           -webkit-tap-highlight-color: transparent;
           user-select: none;
           position: relative;
+          overflow: hidden;
         }
 
-        .nav-item::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: 12px;
-          background: transparent;
-          transition: background 150ms ease;
-        }
-
-        .nav-item:active::before {
-          background: rgba(255, 255, 255, 0.04);
+        .nav-item:active {
+          background: rgba(255, 255, 255, 0.03);
         }
 
         .nav-item--active {
-          color: #ffffff;
+          color: #1db954;
         }
 
         .nav-icon {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 28px;
-          height: 28px;
-          border-radius: 8px;
-          transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1);
-          position: relative;
-          z-index: 1;
+          width: 26px;
+          height: 26px;
+          flex-shrink: 0;
+          transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .nav-item--active .nav-icon {
+          transform: translateY(-1px);
         }
 
         .nav-label {
-          font-size: 0.625rem;
+          font-size: 0.6875rem;
           font-weight: 500;
-          letter-spacing: 0.01em;
+          letter-spacing: 0.005em;
           line-height: 1;
-          position: relative;
-          z-index: 1;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+          padding: 0 4px;
+          box-sizing: border-box;
         }
 
         .nav-item--active .nav-label {
-          color: #ffffff;
           font-weight: 600;
+          color: #1db954;
+        }
+
+        .nav-dot {
+          position: absolute;
+          bottom: 6px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background: #1db954;
+          animation: dotIn 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes dotIn {
+          from { transform: translateX(-50%) scale(0); opacity: 0; }
+          to { transform: translateX(-50%) scale(1); opacity: 1; }
         }
       `}</style>
     </nav>

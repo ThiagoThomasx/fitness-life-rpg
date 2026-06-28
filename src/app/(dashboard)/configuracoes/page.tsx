@@ -79,10 +79,8 @@ export default function ConfiguracoesPage() {
   function handleResetConfirm() {
     if (resetText.trim().toLowerCase() !== "resetar") return
     resetAllData()
-    showMessage("ok", "Todos os dados foram apagados.")
-    setPanel("idle")
-    setResetText("")
-    refreshStatus()
+    // Reload so Zustand stores (in-memory) also reset to initial state
+    window.location.href = "/dashboard"
   }
 
   const keyLabels: Record<string, string> = {
