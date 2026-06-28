@@ -20,61 +20,428 @@ import { getPreferences } from "@/lib/preferences"
 import { getTodayRecommendation, type WorkoutRecommendation } from "@/lib/recommendations"
 import { OnboardingModal } from "@/components/onboarding/OnboardingModal"
 
+// ── tokens ─────────────────────────────────────────────────────
+const C = {
+  bg0: "#121212",
+  bg1: "#1a1a1a",
+  bg2: "#202020",
+  bg3: "#282828",
+  border: "rgba(255,255,255,0.06)",
+  accent: "#1db954",
+  accentHover: "#1ed760",
+  accentMuted: "rgba(29,185,84,0.12)",
+  gold: "#f59e0b",
+  goldMuted: "rgba(245,158,11,0.12)",
+  purple: "#8b5cf6",
+  purpleMuted: "rgba(139,92,246,0.12)",
+  blue: "#3b82f6",
+  muted: "#6a6a6a",
+  text: "#ffffff",
+  sub: "#b3b3b3",
+}
+
 const ATTRIBUTES = [
-  { key: "strength" as const, label: "FOR", icon: "💪" },
-  { key: "agility" as const, label: "AGI", icon: "⚡" },
-  { key: "dexterity" as const, label: "DES", icon: "🎯" },
-  { key: "constitution" as const, label: "CON", icon: "🛡️" },
-  { key: "vitality" as const, label: "VIT", icon: "❤️" },
+  { key: "strength" as const, label: "FOR", icon: "💪", color: "#ef4444" },
+  { key: "agility" as const, label: "AGI", icon: "⚡", color: C.gold },
+  { key: "dexterity" as const, label: "DES", icon: "🎯", color: C.blue },
+  { key: "constitution" as const, label: "CON", icon: "🛡️", color: C.purple },
+  { key: "vitality" as const, label: "VIT", icon: "❤️", color: "#ec4899" },
 ]
 
-const AUTO_MISSIONS = new Set(['diary-today', 'workout-this-week', 'workout-today', 'sleep-7h', 'mood-good'])
+const AUTO_MISSIONS = new Set(["diary-today", "workout-this-week", "workout-today", "sleep-7h", "mood-good"])
 
+// ── greeting ────────────────────────────────────────────────────
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return "Bom dia"
+  if (hour < 18) return "Boa tarde"
+  return "Boa noite"
+}
+
+// ── hero section ───────────────────────────────────────────────
+function HeroSection({
+  character,
+  progress,
+  needed,
+  weeklyProgress,
+}: {
+  character: typeof MOCK_CHARACTER
+  progress: number
+  needed: number
+  weeklyProgress: WeeklyProgress | null
+}) {
+  return (
+    <section style={{
+      position: "relative",
+      overflow: "hidden",
+      borderRadius: 20,
+      background: C.bg1,
+      border: `1px solid ${C.border}`,
+    }}>
+      {/* Gradient backdrop */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "linear-gradient(140deg, rgba(29,185,84,0.2) 0%, transparent 55%)",
+        pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "absolute",
+        top: -60,
+        right: -60,
+        width: 200,
+        height: 200,
+        borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(29,185,84,0.1) 0%, transparent 70%)",
+        pointerEvents: "none",
+      }} />
+
+      <div style={{ position: "relative", padding: "1.5rem 1.25rem 1.25rem" }}>
+        {/* Top row: greeting + avatar */}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem", marginBottom: "1.25rem" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: "0.65rem", color: C.accent, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+              {getGreeting()}, herói
+            </div>
+            <h2 style={{ fontSize: "1.625rem", fontWeight: 800, color: C.text, margin: 0, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+              {character.name}
+            </h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: 6 }}>
+              <span style={{
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                color: C.purple,
+                background: "rgba(139,92,246,0.15)",
+                border: "1px solid rgba(139,92,246,0.25)",
+                borderRadius: 9999,
+                padding: "2px 10px",
+                letterSpacing: "0.04em",
+              }}>
+                Nv {character.level}
+              </span>
+              <span style={{ fontSize: "0.7rem", color: C.muted }}>
+                {Math.floor(character.current_xp)} / {needed} XP
+              </span>
+            </div>
+          </div>
+
+          {/* Avatar */}
+          <div style={{
+            width: 56,
+            height: 56,
+            borderRadius: 16,
+            background: `linear-gradient(135deg, rgba(29,185,84,0.5), ${C.bg3})`,
+            border: "1px solid rgba(29,185,84,0.25)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "1.75rem",
+            flexShrink: 0,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+          }}>
+            ⚔️
+          </div>
+        </div>
+
+        {/* XP progress bar */}
+        <div style={{ marginBottom: "1.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.375rem" }}>
+            <span style={{ fontSize: "0.65rem", color: C.muted, textTransform: "uppercase", letterSpacing: "0.06em" }}>Progresso XP</span>
+            <span style={{ fontSize: "0.65rem", color: C.accent, fontWeight: 700 }}>{Math.round(progress * 100)}%</span>
+          </div>
+          <div style={{ height: 6, background: C.bg3, borderRadius: 9999, overflow: "hidden" }}>
+            <div style={{
+              height: "100%",
+              width: `${progress * 100}%`,
+              background: `linear-gradient(90deg, ${C.accent}, ${C.accentHover})`,
+              borderRadius: 9999,
+              transition: "width 0.6s cubic-bezier(0.16,1,0.3,1)",
+            }} />
+          </div>
+        </div>
+
+        {/* Attributes */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.375rem" }}>
+          {ATTRIBUTES.map((attr) => {
+            const raw = character[attr.key] as number
+            const display = Math.floor(raw)
+            const frac = raw - Math.floor(raw)
+            return (
+              <div key={attr.key} style={{
+                background: C.bg3,
+                border: `1px solid ${C.border}`,
+                borderRadius: 10,
+                padding: "0.5rem 0.25rem",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 3,
+              }}>
+                <span style={{ fontSize: "0.875rem" }}>{attr.icon}</span>
+                <span style={{ fontSize: "1rem", fontWeight: 800, color: C.text }}>{display}</span>
+                <div style={{ width: "80%", height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 9999, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${frac * 100}%`, background: attr.color, borderRadius: 9999 }} />
+                </div>
+                <span style={{ fontSize: "0.55rem", color: C.muted }}>{attr.label}</span>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Week streak pills */}
+        {weeklyProgress && (
+          <div style={{
+            marginTop: "1rem",
+            paddingTop: "1rem",
+            borderTop: `1px solid ${C.border}`,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}>
+            <div style={{ display: "flex", gap: "0.25rem" }}>
+              {weeklyProgress.days.map((day) => {
+                const isToday = day.date === new Date().toISOString().slice(0, 10)
+                return (
+                  <div key={day.date} style={{
+                    width: 28, height: 28, borderRadius: 8,
+                    background: day.hasWorkout ? C.accent : day.hasDiary ? "rgba(29,185,84,0.25)" : C.bg3,
+                    border: isToday ? `2px solid ${C.accent}` : `1px solid ${C.border}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "0.65rem",
+                  }}>
+                    {day.hasWorkout ? "💪" : day.hasDiary ? "📓" : ""}
+                  </div>
+                )
+              })}
+            </div>
+            <div style={{ display: "flex", gap: "0.75rem" }}>
+              <span style={{ fontSize: "0.7rem", color: C.sub }}>
+                🏋️ {weeklyProgress.workoutCount}/{weeklyProgress.workoutTarget}
+              </span>
+              <span style={{ fontSize: "0.7rem", color: C.accent, fontWeight: 700 }}>
+                +{weeklyProgress.totalXp} XP
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+// ── quick actions ──────────────────────────────────────────────
+function QuickActions() {
+  const router = useRouter()
+
+  const actions = [
+    { icon: "🏋️", label: "Treinar", href: "/treinos", color: C.accent, bg: C.accentMuted },
+    { icon: "📓", label: "Diário", href: "/diario", color: C.gold, bg: C.goldMuted },
+    { icon: "📊", label: "Insights", href: "/insights", color: C.purple, bg: C.purpleMuted },
+    { icon: "🥗", label: "Nutrição", href: "/nutricao", color: C.blue, bg: "rgba(59,130,246,0.12)" },
+    { icon: "📅", label: "Plano", href: "/plano", color: "#ec4899", bg: "rgba(236,72,153,0.12)" },
+  ]
+
+  return (
+    <div style={{
+      display: "flex",
+      gap: "0.625rem",
+      overflowX: "auto",
+      paddingBottom: "2px",
+      scrollbarWidth: "none",
+      msOverflowStyle: "none",
+    } as React.CSSProperties}>
+      {actions.map((a) => (
+        <button
+          key={a.label}
+          onClick={() => router.push(a.href)}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.375rem",
+            padding: "0.875rem 1rem",
+            background: a.bg,
+            border: `1px solid ${C.border}`,
+            borderRadius: 14,
+            cursor: "pointer",
+            minWidth: 72,
+            flexShrink: 0,
+            transition: "transform 0.1s, border-color 0.15s",
+          }}
+        >
+          <span style={{ fontSize: "1.375rem" }}>{a.icon}</span>
+          <span style={{ fontSize: "0.65rem", fontWeight: 700, color: a.color, whiteSpace: "nowrap" }}>{a.label}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── progress cards ─────────────────────────────────────────────
+function ProgressCards({
+  weeklyProgress,
+  totalWorkouts,
+  totalXp,
+}: {
+  weeklyProgress: WeeklyProgress | null
+  totalWorkouts: number
+  totalXp: number
+}) {
+  const cards = [
+    {
+      icon: "🏋️", label: "Treinos na semana",
+      value: weeklyProgress ? `${weeklyProgress.workoutCount}/${weeklyProgress.workoutTarget}` : "–",
+      color: C.accent, tint: C.accentMuted,
+    },
+    {
+      icon: "⭐", label: "XP na semana",
+      value: weeklyProgress ? `+${weeklyProgress.totalXp}` : "–",
+      color: C.gold, tint: C.goldMuted,
+    },
+    {
+      icon: "🎯", label: "Total de treinos",
+      value: totalWorkouts,
+      color: C.purple, tint: C.purpleMuted,
+    },
+    {
+      icon: "⚡", label: "XP acumulado",
+      value: Math.floor(totalXp).toLocaleString("pt-BR"),
+      color: C.blue, tint: "rgba(59,130,246,0.12)",
+    },
+  ]
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+      {cards.map((c) => (
+        <div key={c.label} style={{
+          background: C.bg2,
+          border: `1px solid ${C.border}`,
+          borderRadius: 14,
+          padding: "0.875rem",
+          position: "relative",
+          overflow: "hidden",
+        }}>
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0, height: 2,
+            background: c.color, opacity: 0.7,
+            borderRadius: "14px 14px 0 0",
+          }} />
+          <div style={{
+            width: 30, height: 30, borderRadius: 9,
+            background: c.tint,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "0.875rem",
+            marginBottom: "0.5rem",
+          }}>
+            {c.icon}
+          </div>
+          <div style={{ fontSize: "1.375rem", fontWeight: 800, color: C.text, lineHeight: 1 }}>
+            {c.value}
+          </div>
+          <div style={{ fontSize: "0.6rem", color: C.muted, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            {c.label}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── recommendation ─────────────────────────────────────────────
+function RecommendationWidget({ rec }: { rec: WorkoutRecommendation }) {
+  const router = useRouter()
+  return (
+    <section
+      onClick={() => router.push("/treinos")}
+      role="button"
+      tabIndex={0}
+      aria-label={`Treino recomendado: ${rec.workout.name}`}
+      onKeyDown={(e) => e.key === "Enter" && router.push("/treinos")}
+      style={{
+        background: `linear-gradient(135deg, rgba(29,185,84,0.12), rgba(29,185,84,0.04))`,
+        border: "1px solid rgba(29,185,84,0.25)",
+        borderRadius: 16,
+        padding: "1rem 1.25rem",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        gap: "1rem",
+      }}
+    >
+      <div style={{
+        width: 48, height: 48, borderRadius: 14,
+        background: C.accentMuted,
+        border: "1px solid rgba(29,185,84,0.2)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: "1.375rem",
+        flexShrink: 0,
+      }}>
+        {rec.workout.workout_type.icon ?? "🏋️"}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: "0.6rem", color: C.accent, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+          ✨ Recomendado para hoje
+        </div>
+        <div style={{ fontSize: "0.9rem", fontWeight: 700, color: C.text, marginBottom: 2 }}>{rec.workout.name}</div>
+        <div style={{ fontSize: "0.7rem", color: C.muted }}>{rec.reason} · ~{rec.workout.estimated_minutes}min</div>
+      </div>
+      <span style={{ color: C.accent, fontSize: "1.125rem" }}>›</span>
+    </section>
+  )
+}
+
+// ── missions ───────────────────────────────────────────────────
 function MissionCard({ mission, onComplete }: { mission: DailyMission; onComplete?: (id: string) => void }) {
   const isDone = mission.status === "done"
   const isLocked = mission.status === "locked"
   const canManualComplete = !isDone && !isLocked && !AUTO_MISSIONS.has(mission.id)
 
   return (
-    <div
-      className="card card--sm"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.75rem",
-        background: isDone ? "rgba(29,185,84,0.06)" : undefined,
-        borderColor: isDone ? "rgba(29,185,84,0.2)" : undefined,
-        opacity: isLocked ? 0.4 : 1,
-      }}
-    >
-      <span style={{ fontSize: "1.375rem", flexShrink: 0 }} aria-hidden="true">{mission.icon}</span>
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "0.75rem",
+      background: isDone ? "rgba(29,185,84,0.06)" : C.bg2,
+      border: `1px solid ${isDone ? "rgba(29,185,84,0.2)" : C.border}`,
+      borderRadius: 12,
+      padding: "0.75rem 1rem",
+      opacity: isLocked ? 0.4 : 1,
+    }}>
+      <span style={{ fontSize: "1.25rem", flexShrink: 0 }}>{mission.icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontSize: "var(--text-sm)",
-          fontWeight: "var(--font-semibold)",
-          color: isDone ? "var(--color-accent)" : "var(--color-text-primary)",
+          fontSize: "0.825rem",
+          fontWeight: 700,
+          color: isDone ? C.accent : C.text,
         }}>
           {mission.title}
         </div>
-        <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", marginTop: 2 }}>
+        <div style={{ fontSize: "0.68rem", color: C.muted, marginTop: 2 }}>
           {mission.description}
         </div>
       </div>
       {isDone ? (
-        <span style={{ fontSize: "1rem", color: "var(--color-accent)", flexShrink: 0 }}>✓</span>
+        <span style={{ fontSize: "1rem", color: C.accent, flexShrink: 0 }}>✓</span>
       ) : canManualComplete ? (
         <button
           onClick={() => onComplete?.(mission.id)}
           style={{
-            background: "rgba(29,185,84,0.12)", border: "1px solid rgba(29,185,84,0.3)",
-            borderRadius: 9999, padding: "3px 10px", fontSize: "0.65rem", fontWeight: 700,
-            color: "#1db954", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
+            background: C.accentMuted,
+            border: "1px solid rgba(29,185,84,0.3)",
+            borderRadius: 9999,
+            padding: "4px 12px",
+            fontSize: "0.65rem",
+            fontWeight: 700,
+            color: C.accent,
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
           }}
         >
           +{mission.xpReward} XP
         </button>
       ) : (
-        <span style={{ fontSize: "0.7rem", fontWeight: "var(--font-bold)", color: "var(--color-text-muted)", flexShrink: 0 }}>
+        <span style={{ fontSize: "0.7rem", fontWeight: 700, color: C.muted, flexShrink: 0 }}>
           +{mission.xpReward} XP
         </span>
       )}
@@ -82,64 +449,72 @@ function MissionCard({ mission, onComplete }: { mission: DailyMission; onComplet
   )
 }
 
-function WeeklyCard({ progress }: { progress: WeeklyProgress }) {
-  const today = new Date().toISOString().slice(0, 10)
+// ── weekly plan widget ─────────────────────────────────────────
+function WeeklyPlanWidget({ planProgress }: { planProgress: WeeklyPlanProgress }) {
+  const router = useRouter()
+  const { plan, actual, completionPct } = planProgress
+
   return (
-    <section className="card">
+    <section
+      onClick={() => router.push("/plano")}
+      role="button"
+      tabIndex={0}
+      aria-label="Ver plano semanal"
+      onKeyDown={(e) => e.key === "Enter" && router.push("/plano")}
+      style={{
+        background: C.bg1,
+        border: `1px solid ${C.border}`,
+        borderRadius: 16,
+        padding: "1.125rem 1.25rem",
+        cursor: "pointer",
+      }}
+    >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-        <h3 className="section-label" style={{ marginBottom: 0 }}>Semana atual</h3>
-        <span style={{ fontSize: "0.7rem", color: "var(--color-accent)", fontWeight: "var(--font-bold)" }}>
-          +{progress.totalXp} XP
+        <div>
+          <div style={{ fontSize: "0.65rem", color: C.muted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>Plano da semana</div>
+          {plan.focus && (
+            <div style={{ fontSize: "0.72rem", color: C.sub, fontStyle: "italic" }}>&ldquo;{plan.focus}&rdquo;</div>
+          )}
+        </div>
+        <span style={{
+          fontSize: "0.875rem",
+          fontWeight: 800,
+          color: completionPct >= 100 ? C.accent : C.gold,
+          background: completionPct >= 100 ? C.accentMuted : C.goldMuted,
+          border: `1px solid ${completionPct >= 100 ? "rgba(29,185,84,0.25)" : "rgba(245,158,11,0.25)"}`,
+          borderRadius: 9999,
+          padding: "3px 12px",
+        }}>
+          {completionPct}% {completionPct >= 100 ? "✅" : ""}
         </span>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.375rem", marginBottom: "0.625rem" }}>
-        {progress.days.map((day) => {
-          const isToday = day.date === today
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+        {[
+          { icon: "💪", label: "Treinos", cur: actual.workouts, tgt: plan.goals.workouts },
+          { icon: "📓", label: "Diário", cur: actual.diary, tgt: plan.goals.diary },
+          { icon: "🥗", label: "Nutrição", cur: actual.nutrition, tgt: plan.goals.nutrition },
+          { icon: "⚡", label: "Missões", cur: actual.missions, tgt: plan.goals.missions },
+        ].map(({ icon, label, cur, tgt }) => {
+          const pct = Math.min(Math.round((cur / Math.max(tgt, 1)) * 100), 100)
           return (
-            <div key={day.date} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.25rem" }}>
-              <div
-                aria-label={`${day.label}: ${day.hasWorkout ? "treino" : day.hasDiary ? "diário" : "sem atividade"}`}
-                style={{
-                  width: 32, height: 32,
-                  borderRadius: 8,
-                  background: day.hasWorkout
-                    ? "var(--color-accent)"
-                    : day.hasDiary
-                    ? "rgba(29,185,84,0.25)"
-                    : "rgba(255,255,255,0.04)",
-                  border: isToday ? "2px solid var(--color-accent)" : "1px solid var(--color-border-subtle)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "0.7rem",
-                  transition: "background var(--duration-normal)",
-                }}
-              >
-                {day.hasWorkout ? "💪" : day.hasDiary ? "📓" : ""}
+            <div key={label} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "0.65rem", color: C.muted }}>{icon} {label}</span>
+                <span style={{ fontSize: "0.65rem", fontWeight: 700, color: pct >= 100 ? C.accent : C.muted }}>{cur}/{tgt}</span>
               </div>
-              <span style={{
-                fontSize: "0.55rem",
-                color: isToday ? "var(--color-text-primary)" : "var(--color-text-muted)",
-                fontWeight: isToday ? "var(--font-bold)" : "var(--font-normal)",
-              }}>
-                {day.label}
-              </span>
+              <div style={{ height: 4, borderRadius: 9999, background: C.bg3, overflow: "hidden" }}>
+                <div style={{ height: "100%", borderRadius: 9999, background: pct >= 100 ? C.accent : C.purple, width: `${pct}%` }} />
+              </div>
             </div>
           )
         })}
-      </div>
-
-      <div style={{ display: "flex", gap: "1rem" }}>
-        <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)" }}>
-          🏋️ {progress.workoutCount}/{progress.workoutTarget} treinos
-        </span>
-        <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-secondary)" }}>
-          📓 {progress.diaryCount} diários
-        </span>
       </div>
     </section>
   )
 }
 
+// ── today cards ────────────────────────────────────────────────
 function DiaryTodayCard() {
   const router = useRouter()
   const [hasDiary, setHasDiary] = useState<boolean | null>(null)
@@ -151,8 +526,7 @@ function DiaryTodayCard() {
   if (hasDiary === null) return <SkeletonCard height="72px" />
 
   return (
-    <section
-      className="card card--interactive"
+    <div
       onClick={() => router.push("/diario")}
       role="button"
       tabIndex={0}
@@ -161,26 +535,25 @@ function DiaryTodayCard() {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "1rem",
-        background: hasDiary ? "rgba(29,185,84,0.06)" : undefined,
-        borderColor: hasDiary ? "rgba(29,185,84,0.25)" : undefined,
+        gap: "0.875rem",
+        background: hasDiary ? "rgba(29,185,84,0.06)" : C.bg2,
+        border: `1px solid ${hasDiary ? "rgba(29,185,84,0.25)" : C.border}`,
+        borderRadius: 14,
+        padding: "0.875rem 1rem",
+        cursor: "pointer",
       }}
     >
-      <span style={{ fontSize: "1.75rem" }} aria-hidden="true">📓</span>
+      <span style={{ fontSize: "1.5rem" }}>📓</span>
       <div style={{ flex: 1 }}>
-        <div style={{
-          fontSize: "var(--text-sm)",
-          fontWeight: "var(--font-bold)",
-          color: hasDiary ? "var(--color-accent)" : "var(--color-text-primary)",
-        }}>
+        <div style={{ fontSize: "0.825rem", fontWeight: 700, color: hasDiary ? C.accent : C.text }}>
           {hasDiary ? "Diário preenchido hoje ✓" : "Preencher diário de hoje"}
         </div>
-        <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", marginTop: 2 }}>
+        <div style={{ fontSize: "0.68rem", color: C.muted, marginTop: 2 }}>
           {hasDiary ? "Clique para editar" : "+10 XP ao completar"}
         </div>
       </div>
-      <span style={{ color: "var(--color-text-muted)" }} aria-hidden="true">›</span>
-    </section>
+      <span style={{ color: C.muted }}>›</span>
+    </div>
   )
 }
 
@@ -202,78 +575,72 @@ function NutritionTodayCard() {
   const hasLog = (data?.calories ?? 0) > 0
 
   return (
-    <section
-      className="card card--interactive"
+    <div
       onClick={() => router.push("/nutricao")}
       role="button"
       tabIndex={0}
-      aria-label={hasLog ? `${data?.calories} kcal registradas — clique para editar` : "Registrar nutrição de hoje"}
+      aria-label={hasLog ? `${data?.calories} kcal registradas` : "Registrar nutrição de hoje"}
       onKeyDown={(e) => e.key === "Enter" && router.push("/nutricao")}
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "1rem",
-        background: hasLog ? "rgba(59,130,246,0.06)" : undefined,
-        borderColor: hasLog ? "rgba(59,130,246,0.25)" : undefined,
+        gap: "0.875rem",
+        background: hasLog ? "rgba(59,130,246,0.06)" : C.bg2,
+        border: `1px solid ${hasLog ? "rgba(59,130,246,0.25)" : C.border}`,
+        borderRadius: 14,
+        padding: "0.875rem 1rem",
+        cursor: "pointer",
       }}
     >
-      <span style={{ fontSize: "1.75rem", flexShrink: 0 }} aria-hidden="true">🥗</span>
+      <span style={{ fontSize: "1.5rem" }}>🥗</span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontSize: "var(--text-sm)",
-          fontWeight: "var(--font-bold)",
-          color: hasLog ? "#3b82f6" : "var(--color-text-primary)",
-          marginBottom: "0.25rem",
-        }}>
+        <div style={{ fontSize: "0.825rem", fontWeight: 700, color: hasLog ? "#3b82f6" : C.text, marginBottom: hasLog ? 4 : 2 }}>
           {hasLog ? `${data?.calories} kcal registradas` : "Registrar nutrição de hoje"}
         </div>
         {hasLog ? (
-          <div
-            className="progress-track progress-track--thin"
-            role="progressbar"
-            aria-valuenow={pct}
-            aria-valuemax={100}
-            aria-label="Progresso calórico"
-          >
-            <div className="progress-fill" style={{ width: `${pct}%`, background: "#3b82f6" }} />
+          <div style={{ height: 4, background: C.bg3, borderRadius: 9999, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${pct}%`, background: "#3b82f6", borderRadius: 9999 }} />
           </div>
         ) : (
-          <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>+15 XP ao completar</div>
+          <div style={{ fontSize: "0.68rem", color: C.muted }}>+15 XP ao completar</div>
         )}
       </div>
-      <span style={{ color: "var(--color-text-muted)", flexShrink: 0 }} aria-hidden="true">›</span>
-    </section>
+      <span style={{ color: C.muted }}>›</span>
+    </div>
   )
 }
 
+// ── badges ─────────────────────────────────────────────────────
 function RecentBadgesCard({ badges }: { badges: EarnedBadge[] }) {
   const recent = badges.slice(0, 4)
   if (recent.length === 0) return null
 
   return (
-    <section className="card">
-      <h3 className="section-label">Badges recentes</h3>
+    <section style={{
+      background: C.bg1,
+      border: `1px solid ${C.border}`,
+      borderRadius: 16,
+      padding: "1.125rem 1.25rem",
+    }}>
+      <div style={{ fontSize: "0.65rem", color: C.muted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.875rem" }}>
+        Badges recentes
+      </div>
       <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
         {recent.map((eb) => {
           const def = BADGE_DEFINITIONS.find((b) => b.id === eb.badgeId)
           if (!def) return null
           return (
-            <div key={eb.badgeId} style={{
-              display: "flex", flexDirection: "column",
-              alignItems: "center", gap: "0.375rem", minWidth: 60,
-            }}>
+            <div key={eb.badgeId} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.375rem", minWidth: 60 }}>
               <div style={{
                 width: 44, height: 44, borderRadius: 12,
-                background: "var(--color-xp-muted)",
+                background: C.goldMuted,
                 border: "1px solid rgba(245,158,11,0.25)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: "1.375rem",
               }}>
                 {def.icon}
               </div>
-              <span style={{ fontSize: "0.6rem", color: "var(--color-text-secondary)", textAlign: "center", lineHeight: 1.2, maxWidth: 60 }}>
-                {def.name}
-              </span>
+              <span style={{ fontSize: "0.58rem", color: C.sub, textAlign: "center", lineHeight: 1.2, maxWidth: 60 }}>{def.name}</span>
             </div>
           )
         })}
@@ -282,6 +649,7 @@ function RecentBadgesCard({ badges }: { badges: EarnedBadge[] }) {
   )
 }
 
+// ── milestone ──────────────────────────────────────────────────
 function NextMilestoneCard({ totalWorkouts }: { totalWorkouts: number }) {
   const milestones = [
     { at: 1, label: "Primeiro treino", icon: "🥇" },
@@ -296,30 +664,29 @@ function NextMilestoneCard({ totalWorkouts }: { totalWorkouts: number }) {
   const pct = (totalWorkouts / next.at) * 100
 
   return (
-    <section className="card">
-      <h3 className="section-label">Próximo marco</h3>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-        <span style={{ fontSize: "1.5rem" }} aria-hidden="true">{next.icon}</span>
+    <section style={{
+      background: C.bg1,
+      border: `1px solid ${C.border}`,
+      borderRadius: 16,
+      padding: "1.125rem 1.25rem",
+    }}>
+      <div style={{ fontSize: "0.65rem", color: C.muted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.875rem" }}>
+        Próximo marco
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
+        <span style={{ fontSize: "1.5rem" }}>{next.icon}</span>
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.375rem" }}>
-            <span style={{ fontSize: "var(--text-sm)", color: "var(--color-text-primary)", fontWeight: "var(--font-semibold)" }}>
-              {next.label}
-            </span>
-            <span style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
-              {totalWorkouts}/{next.at}
-            </span>
+            <span style={{ fontSize: "0.825rem", fontWeight: 700, color: C.text }}>{next.label}</span>
+            <span style={{ fontSize: "0.72rem", color: C.muted }}>{totalWorkouts}/{next.at}</span>
           </div>
-          <div
-            className="progress-track"
-            role="progressbar"
-            aria-valuenow={totalWorkouts}
-            aria-valuemax={next.at}
-            aria-label={`Progresso para ${next.label}`}
-          >
-            <div
-              className="progress-fill progress-fill--accent"
-              style={{ width: `${Math.min(pct, 100)}%` }}
-            />
+          <div style={{ height: 6, background: C.bg3, borderRadius: 9999, overflow: "hidden" }}>
+            <div style={{
+              height: "100%",
+              width: `${Math.min(pct, 100)}%`,
+              background: `linear-gradient(90deg, ${C.accent}, ${C.accentHover})`,
+              borderRadius: 9999,
+            }} />
           </div>
         </div>
       </div>
@@ -327,103 +694,7 @@ function NextMilestoneCard({ totalWorkouts }: { totalWorkouts: number }) {
   )
 }
 
-function WeeklyPlanWidget({ planProgress }: { planProgress: WeeklyPlanProgress }) {
-  const router = useRouter()
-  const { plan, actual, completionPct } = planProgress
-  return (
-    <section
-      className="card card--interactive"
-      onClick={() => router.push("/plano")}
-      role="button"
-      tabIndex={0}
-      aria-label="Ver plano semanal"
-      onKeyDown={(e) => e.key === "Enter" && router.push("/plano")}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.625rem" }}>
-        <h3 className="section-label" style={{ marginBottom: 0 }}>Plano da semana</h3>
-        <span style={{ fontSize: "0.7rem", fontWeight: "var(--font-bold)", color: completionPct >= 100 ? "#1db954" : "var(--color-accent)" }}>
-          {completionPct}% {completionPct >= 100 ? "✅" : ""}
-        </span>
-      </div>
-      {plan.focus && (
-        <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", fontStyle: "italic", marginBottom: "0.5rem" }}>
-          &ldquo;{plan.focus}&rdquo;
-        </div>
-      )}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.375rem" }}>
-        {[
-          { icon: "💪", label: "Treinos", cur: actual.workouts, tgt: plan.goals.workouts },
-          { icon: "📓", label: "Diário", cur: actual.diary, tgt: plan.goals.diary },
-          { icon: "🥗", label: "Nutrição", cur: actual.nutrition, tgt: plan.goals.nutrition },
-          { icon: "⚡", label: "Missões", cur: actual.missions, tgt: plan.goals.missions },
-        ].map(({ icon, label, cur, tgt }) => {
-          const pct = Math.min(Math.round((cur / Math.max(tgt, 1)) * 100), 100)
-          return (
-            <div key={label} style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>{icon} {label}</span>
-                <span style={{ fontSize: "0.65rem", fontWeight: "var(--font-bold)", color: pct >= 100 ? "#1db954" : "var(--color-text-muted)" }}>
-                  {cur}/{tgt}
-                </span>
-              </div>
-              <div style={{ height: 4, borderRadius: 9999, background: "var(--color-border-subtle)", overflow: "hidden" }}>
-                <div style={{ height: "100%", borderRadius: 9999, background: pct >= 100 ? "#1db954" : "var(--color-accent)", width: `${pct}%` }} />
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </section>
-  )
-}
-
-function RecommendationWidget({ rec }: { rec: WorkoutRecommendation }) {
-  const router = useRouter()
-  return (
-    <section
-      className="card card--interactive"
-      onClick={() => router.push("/treinos")}
-      role="button"
-      tabIndex={0}
-      aria-label={`Treino recomendado: ${rec.workout.name}`}
-      onKeyDown={(e) => e.key === "Enter" && router.push("/treinos")}
-      style={{
-        background: "rgba(29,185,84,0.05)",
-        borderColor: "rgba(29,185,84,0.2)",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
-        <span style={{ fontSize: "1.5rem", flexShrink: 0 }} aria-hidden="true">
-          {rec.workout.workout_type.icon ?? "🏋️"}
-        </span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: "0.65rem",
-            color: "var(--color-accent)",
-            fontWeight: "var(--font-bold)",
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            marginBottom: 2,
-          }}>
-            ✨ Recomendado para hoje
-          </div>
-          <div style={{
-            fontSize: "var(--text-sm)",
-            fontWeight: "var(--font-bold)",
-            color: "var(--color-text-primary)",
-          }}>
-            {rec.workout.name}
-          </div>
-          <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", marginTop: 2 }}>
-            {rec.reason} · ~{rec.workout.estimated_minutes}min
-          </div>
-        </div>
-        <span style={{ color: "var(--color-accent)", flexShrink: 0 }} aria-hidden="true">›</span>
-      </div>
-    </section>
-  )
-}
-
+// ── page ───────────────────────────────────────────────────────
 export default function DashboardPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
   const { earnedBadges, refreshBadges } = useBadgeStore()
@@ -476,9 +747,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      {levelUpLevel && (
-        <LevelUpModal level={levelUpLevel} onClose={() => setLevelUpLevel(null)} />
-      )}
+      {levelUpLevel && <LevelUpModal level={levelUpLevel} onClose={() => setLevelUpLevel(null)} />}
       {showOnboarding && (
         <OnboardingModal onComplete={() => {
           setShowOnboarding(false)
@@ -487,87 +756,50 @@ export default function DashboardPage() {
         }} />
       )}
 
-      <div className="page page--tight">
-        {/* 1. Character header */}
-        <section className="card card--accent-top" style={{ paddingTop: "1.25rem" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "1rem", marginBottom: "1rem" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-              <span className="badge-pill badge-pill--level">Nv {character.level}</span>
-              <h2 style={{ fontSize: "var(--text-xl)", fontWeight: "var(--font-bold)", color: "var(--color-text-primary)", margin: 0 }}>
-                {character.name}
-              </h2>
-              <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-secondary)", margin: 0 }}>
-                {Math.floor(character.current_xp)} / {needed} XP
-              </p>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                XP Total
-              </div>
-              <div style={{ fontSize: "var(--text-lg)", fontWeight: "var(--font-bold)", color: "var(--color-xp)" }}>
-                {Math.floor(character.total_xp).toLocaleString("pt-BR")}
-              </div>
-            </div>
-          </div>
+      <div style={{
+        padding: "1rem",
+        paddingBottom: "2rem",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.875rem",
+        maxWidth: 720,
+        margin: "0 auto",
+      }}>
+        {/* 1. Hero */}
+        <HeroSection
+          character={character}
+          progress={progress}
+          needed={needed}
+          weeklyProgress={weeklyProgress}
+        />
 
-          <div
-            className="progress-track"
-            style={{ marginBottom: "1rem" }}
-          >
-            <div
-              className="progress-fill progress-fill--accent"
-              role="progressbar"
-              aria-valuenow={character.current_xp}
-              aria-valuemax={needed}
-              aria-label="Progresso de XP"
-              style={{ width: `${progress * 100}%` }}
-            />
-          </div>
+        {/* 2. Quick actions */}
+        <QuickActions />
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.5rem" }}>
-            {ATTRIBUTES.map((attr) => {
-              const raw = character[attr.key] as number
-              const display = Math.floor(raw)
-              const fractional = raw - Math.floor(raw)
-              return (
-                <div key={attr.key} style={{
-                  background: "var(--color-bg-base)",
-                  border: "1px solid var(--color-border-subtle)",
-                  borderRadius: 10,
-                  padding: "0.5rem 0.375rem",
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: "0.2rem",
-                }}>
-                  <span style={{ fontSize: "1rem" }} aria-hidden="true">{attr.icon}</span>
-                  <span style={{ fontSize: "var(--text-lg)", fontWeight: "var(--font-bold)", color: "var(--color-text-primary)" }}>
-                    {display}
-                  </span>
-                  <div
-                    className="progress-track progress-track--thin"
-                    style={{ width: "100%" }}
-                    aria-hidden="true"
-                  >
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${fractional * 100}%`, background: "var(--color-accent)" }}
-                    />
-                  </div>
-                  <span style={{ fontSize: "0.55rem", color: "var(--color-text-muted)", textAlign: "center" }}>
-                    {attr.label}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        </section>
+        {/* 3. Progress cards */}
+        {!loaded ? (
+          <SkeletonCard height="160px" />
+        ) : (
+          <ProgressCards
+            weeklyProgress={weeklyProgress}
+            totalWorkouts={totalWorkouts}
+            totalXp={character.total_xp}
+          />
+        )}
 
-        {/* 2. Missions */}
+        {/* 4. Recommendation */}
+        {todayRec && <RecommendationWidget rec={todayRec} />}
+
+        {/* 5. Missions */}
         {!loaded ? (
           <SkeletonCard height="140px" />
-        ) : missions.length > 0 ? (
+        ) : missions.length > 0 && (
           <section>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-              <h3 className="section-label" style={{ marginBottom: 0 }}>Missões do dia</h3>
-              <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.625rem" }}>
+              <div style={{ fontSize: "0.65rem", color: C.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>
+                Missões do dia
+              </div>
+              <span style={{ fontSize: "0.65rem", color: C.muted }}>
                 {missions.filter((m) => m.status === "done").length}/{missions.filter((m) => m.status !== "locked").length} completas
               </span>
             </div>
@@ -585,41 +817,68 @@ export default function DashboardPage() {
               ))}
             </div>
           </section>
-        ) : null}
+        )}
 
-        {/* 3. Weekly progress */}
-        {!loaded ? <SkeletonCard height="120px" /> : weeklyProgress ? <WeeklyCard progress={weeklyProgress} /> : null}
-
-        {/* 4. Weekly plan widget */}
+        {/* 6. Weekly plan */}
         {planProgress && <WeeklyPlanWidget planProgress={planProgress} />}
 
-        {/* 4b. Today recommendation */}
-        {todayRec && <RecommendationWidget rec={todayRec} />}
-
-        {/* 5. Last workout */}
+        {/* 7. Last workout */}
         <LastWorkout />
 
-        {/* 6. Today cards */}
-        <DiaryTodayCard />
-        <NutritionTodayCard />
+        {/* 8. Today: diary + nutrition as track rows */}
+        <section style={{
+          background: C.bg1,
+          border: `1px solid ${C.border}`,
+          borderRadius: 16,
+          overflow: "hidden",
+        }}>
+          <div style={{ padding: "1rem 1.25rem 0.625rem" }}>
+            <div style={{ fontSize: "0.65rem", color: C.muted, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 700 }}>
+              Hoje
+            </div>
+          </div>
+          <div style={{ padding: "0 0.75rem 0.75rem", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+            <DiaryTodayCard />
+            <NutritionTodayCard />
+          </div>
+        </section>
 
-        {/* 7. Recent badges */}
+        {/* 9. Badges */}
         {earnedBadges.length > 0 && <RecentBadgesCard badges={earnedBadges} />}
 
-        {/* 8. Next milestone */}
+        {/* 10. Milestone */}
         <NextMilestoneCard totalWorkouts={totalWorkouts} />
 
-        {/* CTAs */}
+        {/* 11. CTA */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
           <button
-            className="btn btn--primary btn--lg"
             onClick={() => router.push("/treinos")}
+            style={{
+              padding: "0.875rem",
+              background: C.accent,
+              color: "#000",
+              fontWeight: 800,
+              fontSize: "0.875rem",
+              border: "none",
+              borderRadius: 14,
+              cursor: "pointer",
+              letterSpacing: "-0.01em",
+            }}
           >
             🏋️ Treinar agora
           </button>
           <button
-            className="btn btn--ghost btn--lg"
             onClick={() => router.push("/diario")}
+            style={{
+              padding: "0.875rem",
+              background: C.bg2,
+              color: C.text,
+              fontWeight: 700,
+              fontSize: "0.875rem",
+              border: `1px solid ${C.border}`,
+              borderRadius: 14,
+              cursor: "pointer",
+            }}
           >
             📓 Abrir diário
           </button>
