@@ -11,6 +11,7 @@ export const STORAGE_KEYS = [
   'lrpg-fit:nutrition-logs',
   'lrpg-fit:missions-completed',
   'lrpg-fit:custom-workouts',
+  'lrpg-fit:custom-exercises',
   'lrpg-fit:weekly-plan',
   'lrpg-fit:campaigns',
   'lrpg-fit:preferences',

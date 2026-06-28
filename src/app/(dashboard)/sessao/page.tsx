@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSessionStore, formatElapsed } from "@/stores/useSessionStore"
 import { useCharacterStore } from "@/stores/useCharacterStore"
-import { MOCK_CHARACTER, MOCK_EXERCISES, MOCK_WORKOUTS } from "@/lib/mock/data"
+import { MOCK_CHARACTER, MOCK_WORKOUTS } from "@/lib/mock/data"
 import { calculateXpGain } from "@/lib/workout"
 import { MOCK_WORKOUT_TYPES } from "@/lib/mock/data"
 import { getExercisePersonalBest, saveCompletedWorkout, getWorkoutHistory } from "@/lib/workout-history"
@@ -17,6 +17,8 @@ import { getDiaryCount } from "@/lib/daily-log"
 import { addRewardEvent } from "@/lib/reward-events"
 import { useRewardStore } from "@/stores/useRewardStore"
 import { useBadgeStore } from "@/stores/useBadgeStore"
+import { getCustomWorkouts, getAllExercises, type ExerciseTarget } from "@/lib/custom-workouts"
+import { suggestProgression } from "@/lib/progression"
 
 const CATEGORY_COLORS: Record<string, string> = {
   strength: "#C0392B",
@@ -82,7 +84,7 @@ function ExercisePicker({
           </button>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          {MOCK_EXERCISES.map((ex) => {
+          {getAllExercises().map((ex) => {
             const added = alreadyAdded.includes(ex.id)
             return (
               <button
@@ -162,9 +164,17 @@ function SetRow({
 
 // ─── Add set form ─────────────────────────────────────────────────────────────
 
-function AddSetForm({ onAdd }: { onAdd: (weight: number, reps: number) => void }) {
-  const [weight, setWeight] = useState("60")
-  const [reps, setReps] = useState("10")
+function AddSetForm({
+  onAdd,
+  defaultWeight,
+  defaultReps,
+}: {
+  onAdd: (weight: number, reps: number) => void
+  defaultWeight?: number | null
+  defaultReps?: number
+}) {
+  const [weight, setWeight] = useState(defaultWeight ? String(defaultWeight) : "60")
+  const [reps, setReps] = useState(defaultReps ? String(defaultReps) : "10")
 
   function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -358,7 +368,14 @@ export default function SessaoPage() {
   const [showPicker, setShowPicker] = useState(false)
   const [xpResult, setXpResult] = useState<XpGainResult | null>(null)
   const [prExerciseIds, setPrExerciseIds] = useState<Set<string>>(new Set())
+  const [workoutTargets, setWorkoutTargets] = useState<ExerciseTarget[]>([])
   const hasSession = activeSession !== null
+
+  useEffect(() => {
+    if (!activeSession?.workout_id) return
+    const custom = getCustomWorkouts().find((w) => w.id === activeSession.workout_id)
+    setWorkoutTargets(custom?.targets ?? [])
+  }, [activeSession?.workout_id])
 
   useTimer(hasSession && xpResult === null)
 
@@ -422,12 +439,13 @@ export default function SessaoPage() {
 
     // Persist workout to history
     const mockWorkout = MOCK_WORKOUTS.find((w) => w.id === activeSession!.workout_id)
+    const customWorkout = getCustomWorkouts().find((w) => w.id === activeSession!.workout_id)
     const workoutColor = mockWorkout?.color ?? CATEGORY_COLORS[workoutType.category] ?? "#1db954"
 
     const completedWorkout: CompletedWorkout = {
       id: `cw-${Date.now()}`,
       workoutId: activeSession?.workout_id ?? "",
-      workoutName: mockWorkout?.name ?? workoutType.name,
+      workoutName: mockWorkout?.name ?? customWorkout?.name ?? workoutType.name,
       workoutColor,
       category: workoutType.category,
       startedAt: activeSession?.started_at ?? new Date().toISOString(),
@@ -595,77 +613,108 @@ export default function SessaoPage() {
       </div>
 
       {/* Exercises */}
-      {activeSets.map((activeSet) => (
-        <div
-          key={activeSet.exercise.id}
-          style={{
-            background: "#181818",
-            border: "1px solid rgba(255,255,255,0.06)",
-            borderRadius: 16,
-            padding: "1rem 1.25rem",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
-            <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#ffffff" }}>
-              {activeSet.exercise.name}
-            </h3>
-            <button
-              onClick={() => removeExercise(activeSet.exercise.id)}
-              style={{ background: "none", border: "none", color: "#6a6a6a", cursor: "pointer", fontSize: "1rem" }}
-            >
-              ✕
-            </button>
-          </div>
-          <div style={{ fontSize: "0.75rem", color: "#6a6a6a", marginBottom: "0.75rem" }}>
-            {activeSet.exercise.muscle_groups.join(", ")}
-          </div>
+      {activeSets.map((activeSet) => {
+        const target = workoutTargets.find((t) => t.exerciseId === activeSet.exercise.id)
+        const suggestion = suggestProgression(activeSet.exercise.id, target?.targetWeightKg ?? null)
+        const suggestedWeight = activeSet.sets.length === 0 ? (suggestion.suggestedWeightKg ?? target?.targetWeightKg ?? null) : null
+        const suggestedReps = activeSet.sets.length === 0 ? (suggestion.suggestedReps ?? target?.targetReps ?? 10) : undefined
 
-          {activeSet.sets.length > 0 && (
-            <div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "2rem 1fr 1fr auto auto",
-                  gap: "0.5rem",
-                  padding: "0.25rem 0",
-                  fontSize: "0.7rem",
-                  color: "#6a6a6a",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.04em",
-                  borderBottom: "1px solid rgba(255,255,255,0.06)",
-                }}
+        return (
+          <div
+            key={activeSet.exercise.id}
+            style={{
+              background: "#181818",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 16,
+              padding: "1rem 1.25rem",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+              <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#ffffff" }}>
+                {activeSet.exercise.name}
+              </h3>
+              <button
+                onClick={() => removeExercise(activeSet.exercise.id)}
+                style={{ background: "none", border: "none", color: "#6a6a6a", cursor: "pointer", fontSize: "1rem" }}
               >
-                <span style={{ textAlign: "center" }}>#</span>
-                <span style={{ textAlign: "center" }}>Peso</span>
-                <span style={{ textAlign: "center" }}>Reps</span>
-                <span />
-                <span />
-              </div>
-              {activeSet.sets.map((s, i) => (
-                <SetRow
-                  key={i}
-                  index={i}
-                  weight={s.weight_kg}
-                  reps={s.reps}
-                  isPr={prExerciseIds.has(activeSet.exercise.id)}
-                  onRemove={() => removeSet(activeSet.exercise.id, i)}
-                />
-              ))}
+                ✕
+              </button>
             </div>
-          )}
+            <div style={{ fontSize: "0.75rem", color: "#6a6a6a", marginBottom: target || activeSet.sets.length === 0 ? "0.5rem" : "0.75rem" }}>
+              {activeSet.exercise.muscle_groups.join(", ")}
+            </div>
 
-          <AddSetForm
-            onAdd={(weight, reps) =>
-              addSet(activeSet.exercise.id, {
-                exercise_id: activeSet.exercise.id,
-                set_number: activeSet.sets.length + 1,
-                weight_kg: weight,
-                reps,
-              })
-            }
-          />
-        </div>
-      ))}
+            {/* Target + progression hint */}
+            {(target || activeSet.sets.length === 0) && suggestion.note && (
+              <div style={{
+                background: "rgba(29,185,84,0.07)",
+                border: "1px solid rgba(29,185,84,0.15)",
+                borderRadius: 8,
+                padding: "0.375rem 0.625rem",
+                marginBottom: "0.625rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+              }}>
+                {target && (
+                  <span style={{ fontSize: "0.75rem", color: "#1db954", fontWeight: 700, whiteSpace: "nowrap" }}>
+                    🎯 {target.targetSets}×{target.targetReps ?? "—"}{target.targetWeightKg ? ` @ ${target.targetWeightKg}kg` : ""}
+                  </span>
+                )}
+                {target && <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>}
+                <span style={{ fontSize: "0.72rem", color: "#b3b3b3" }}>{suggestion.note}</span>
+              </div>
+            )}
+
+            {activeSet.sets.length > 0 && (
+              <div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "2rem 1fr 1fr auto auto",
+                    gap: "0.5rem",
+                    padding: "0.25rem 0",
+                    fontSize: "0.7rem",
+                    color: "#6a6a6a",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    borderBottom: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <span style={{ textAlign: "center" }}>#</span>
+                  <span style={{ textAlign: "center" }}>Peso</span>
+                  <span style={{ textAlign: "center" }}>Reps</span>
+                  <span />
+                  <span />
+                </div>
+                {activeSet.sets.map((s, i) => (
+                  <SetRow
+                    key={i}
+                    index={i}
+                    weight={s.weight_kg}
+                    reps={s.reps}
+                    isPr={prExerciseIds.has(activeSet.exercise.id)}
+                    onRemove={() => removeSet(activeSet.exercise.id, i)}
+                  />
+                ))}
+              </div>
+            )}
+
+            <AddSetForm
+              defaultWeight={suggestedWeight}
+              defaultReps={suggestedReps}
+              onAdd={(weight, reps) =>
+                addSet(activeSet.exercise.id, {
+                  exercise_id: activeSet.exercise.id,
+                  set_number: activeSet.sets.length + 1,
+                  weight_kg: weight,
+                  reps,
+                })
+              }
+            />
+          </div>
+        )
+      })}
 
       {/* Add exercise button */}
       <button
