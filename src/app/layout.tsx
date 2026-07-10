@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { OnlineStatus } from "@/components/pwa/OnlineStatus";
@@ -11,8 +11,15 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  display: "swap",
+  variable: "--font-fraunces",
+});
+
 export const viewport: Viewport = {
-  themeColor: "#1db954",
+  themeColor: "#121212",
   colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
@@ -52,7 +59,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={inter.variable}>
+    <html lang="pt-BR" className={`${inter.variable} ${fraunces.variable}`}>
       <body>
         {children}
         <OnlineStatus />

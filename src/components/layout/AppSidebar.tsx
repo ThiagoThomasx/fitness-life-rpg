@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/env"
 
@@ -77,6 +77,29 @@ export default function AppSidebar({ userEmail }: AppSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const hamburgerRef = useRef<HTMLButtonElement>(null)
+  const closeBtnRef = useRef<HTMLButtonElement>(null)
+
+  // Escape fecha o drawer; scroll lock enquanto aberto; foco gerenciado
+  useEffect(() => {
+    if (!mobileOpen) return
+
+    const hamburger = hamburgerRef.current
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMobileOpen(false)
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    document.body.classList.add("body-scroll-lock")
+    closeBtnRef.current?.focus()
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+      document.body.classList.remove("body-scroll-lock")
+      hamburger?.focus()
+    }
+  }, [mobileOpen])
 
   async function handleSignOut() {
     if (isSupabaseConfigured) {
@@ -93,43 +116,22 @@ export default function AppSidebar({ userEmail }: AppSidebarProps) {
     : "Usuário"
 
   const sidebarContent = (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      {/* Header */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        padding: "20px 16px 18px",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        flexShrink: 0,
-      }}>
-        <span style={{ fontSize: "1.4rem", lineHeight: 1, flexShrink: 0 }}>⚔️</span>
-        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-          <span style={{
-            fontSize: "0.85rem",
-            fontWeight: 700,
-            color: "#fff",
-            letterSpacing: "0.01em",
-            lineHeight: 1.2,
-          }}>Fitness RPG</span>
-          <span style={{
-            fontSize: "0.6rem",
-            color: "rgba(255,255,255,0.3)",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase" as const,
-          }}>v1.0 · RPG</span>
+    <>
+      <div className="sidebar__header">
+        <span className="sidebar__logo" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6.5 6.5h11" /><path d="M6.5 17.5h11" />
+            <path d="M3 9.5v5" /><path d="M21 9.5v5" />
+            <path d="M6.5 6.5v11" /><path d="M17.5 6.5v11" />
+          </svg>
+        </span>
+        <div className="sidebar__brand">
+          <span className="sidebar__brand-name">Fitness Life</span>
+          <span className="sidebar__brand-tag">Progressão física</span>
         </div>
       </div>
 
-      {/* Nav */}
-      <nav style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        gap: "2px",
-        padding: "12px 10px",
-        overflowY: "auto" as const,
-      }} aria-label="Navegação principal">
+      <nav className="sidebar__nav" aria-label="Navegação principal">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
           return (
@@ -138,88 +140,19 @@ export default function AppSidebar({ userEmail }: AppSidebarProps) {
               href={item.href}
               onClick={() => setMobileOpen(false)}
               aria-current={isActive ? "page" : undefined}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                padding: "9px 10px",
-                borderRadius: "7px",
-                textDecoration: "none",
-                color: isActive ? "#1db954" : "rgba(255,255,255,0.45)",
-                fontSize: "0.7rem",
-                fontWeight: 600,
-                letterSpacing: "0.09em",
-                textTransform: "uppercase" as const,
-                background: isActive ? "rgba(29,185,84,0.1)" : "transparent",
-                borderLeft: isActive ? "2px solid #1db954" : "2px solid transparent",
-                transition: "color 140ms ease, background 140ms ease",
-              }}
-              className="nav-item"
+              className={`nav-link${isActive ? " nav-link--active" : ""}`}
             >
-              <span style={{
-                display: "flex",
-                alignItems: "center",
-                flexShrink: 0,
-                opacity: isActive ? 1 : 0.7,
-              }}>
-                {item.icon}
-              </span>
-              <span style={{ whiteSpace: "nowrap" as const }}>{item.label}</span>
+              <span className="nav-link__icon">{item.icon}</span>
+              <span className="nav-link__label">{item.label}</span>
             </Link>
           )
         })}
       </nav>
 
-      {/* Footer */}
-      <div style={{
-        padding: "12px 10px",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        flexShrink: 0,
-      }}>
-        <div style={{
-          width: "28px",
-          height: "28px",
-          borderRadius: "50%",
-          background: "#1db954",
-          color: "#000",
-          fontSize: "0.7rem",
-          fontWeight: 700,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}>
-          {avatarLetter}
-        </div>
-        <span style={{
-          flex: 1,
-          fontSize: "0.63rem",
-          color: "rgba(255,255,255,0.3)",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap" as const,
-        }}>
-          {emailDisplay}
-        </span>
-        <button
-          onClick={handleSignOut}
-          aria-label="Sair da conta"
-          style={{
-            background: "none",
-            border: "none",
-            color: "rgba(255,255,255,0.25)",
-            cursor: "pointer",
-            padding: "4px",
-            borderRadius: "4px",
-            display: "flex",
-            alignItems: "center",
-            flexShrink: 0,
-          }}
-          className="signout-btn"
-        >
+      <div className="sidebar__footer">
+        <div className="sidebar__avatar" aria-hidden="true">{avatarLetter}</div>
+        <span className="sidebar__email">{emailDisplay}</span>
+        <button onClick={handleSignOut} aria-label="Sair da conta" className="icon-btn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
             <polyline points="16 17 21 12 16 7" />
@@ -227,56 +160,24 @@ export default function AppSidebar({ userEmail }: AppSidebarProps) {
           </svg>
         </button>
       </div>
-    </div>
+    </>
   )
-
-  const sidebarStyle: React.CSSProperties = {
-    width: "220px",
-    background: "#0c0e12",
-    borderRight: "1px solid rgba(255,255,255,0.06)",
-    flexShrink: 0,
-  }
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside
-        aria-label="Sidebar"
-        style={{
-          ...sidebarStyle,
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          zIndex: 50,
-        }}
-        className="sidebar-desktop"
-      >
+      {/* Sidebar desktop */}
+      <aside aria-label="Barra lateral" className="sidebar sidebar--desktop">
         {sidebarContent}
       </aside>
 
-      {/* Mobile hamburger */}
+      {/* Botão hamburger (mobile) */}
       <button
+        ref={hamburgerRef}
         onClick={() => setMobileOpen(true)}
         aria-label="Abrir menu"
         aria-expanded={mobileOpen}
+        aria-controls="mobile-drawer"
         className="hamburger-btn"
-        style={{
-          position: "fixed",
-          top: "12px",
-          left: "12px",
-          zIndex: 100,
-          background: "rgba(12,14,18,0.94)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: "8px",
-          color: "rgba(255,255,255,0.75)",
-          padding: "8px",
-          cursor: "pointer",
-          backdropFilter: "blur(12px)",
-          display: "none",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <line x1="3" y1="6" x2="21" y2="6" />
@@ -285,54 +186,27 @@ export default function AppSidebar({ userEmail }: AppSidebarProps) {
         </svg>
       </button>
 
-      {/* Mobile overlay */}
+      {/* Overlay do drawer (mobile) */}
       {mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.65)",
-            zIndex: 190,
-            backdropFilter: "blur(2px)",
-          }}
+          className="drawer-overlay"
         />
       )}
 
-      {/* Mobile drawer */}
+      {/* Drawer mobile */}
       <aside
+        id="mobile-drawer"
         aria-label="Menu lateral"
-        className="sidebar-mobile"
-        style={{
-          ...sidebarStyle,
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          zIndex: 200,
-          boxShadow: "4px 0 32px rgba(0,0,0,0.6)",
-          transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 260ms cubic-bezier(0.4,0,0.2,1)",
-          display: "none",
-        }}
+        aria-hidden={!mobileOpen}
+        className={`sidebar sidebar--drawer${mobileOpen ? " sidebar--open" : ""}`}
       >
         <button
+          ref={closeBtnRef}
           onClick={() => setMobileOpen(false)}
           aria-label="Fechar menu"
-          style={{
-            position: "absolute",
-            top: "12px",
-            right: "12px",
-            background: "none",
-            border: "none",
-            color: "rgba(255,255,255,0.35)",
-            cursor: "pointer",
-            padding: "4px",
-            display: "flex",
-            alignItems: "center",
-            zIndex: 1,
-          }}
+          className="sidebar__close-btn"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <line x1="18" y1="6" x2="6" y2="18" />
@@ -341,25 +215,6 @@ export default function AppSidebar({ userEmail }: AppSidebarProps) {
         </button>
         {sidebarContent}
       </aside>
-
-      <style jsx global>{`
-        .nav-item:hover {
-          color: rgba(255,255,255,0.8) !important;
-          background: rgba(255,255,255,0.04) !important;
-        }
-        .signout-btn:hover {
-          color: rgba(255,255,255,0.7) !important;
-        }
-        @media (max-width: 767px) {
-          .sidebar-desktop { display: none !important; }
-          .hamburger-btn { display: flex !important; }
-          .sidebar-mobile { display: block !important; }
-        }
-        @media (min-width: 768px) {
-          .sidebar-mobile { display: none !important; }
-          .hamburger-btn { display: none !important; }
-        }
-      `}</style>
     </>
   )
 }

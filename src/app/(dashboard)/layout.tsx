@@ -22,16 +22,12 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "100dvh" }}>
+    <div className="app-shell">
       <AppSidebar userEmail={user?.email} />
-      <main style={{ flex: 1, minWidth: 0, overflowY: "auto" }} className="app-main">
+      <main className="app-main">
         {children}
       </main>
       <RewardToast />
-      <style>{`
-        .app-main { margin-left: 220px; }
-        @media (max-width: 767px) { .app-main { margin-left: 0; padding-top: 52px; } }
-      `}</style>
     </div>
   )
 }

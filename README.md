@@ -47,9 +47,20 @@ Veja [`docs/DEPLOY.md`](docs/DEPLOY.md) para instruções de deploy na Vercel ou
 
 Veja [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) para o checklist de validação antes do deploy.
 
+## Navegação
+
+Navegação oficial (decisão travada na Sprint 1 do redesign): **sidebar fixa no desktop + drawer com overlay no mobile**, implementada em `src/components/layout/AppSidebar.tsx` com estilos tokenizados em `src/styles/shell.css`. A BottomNav da v1 foi removida.
+
+## Design system
+
+- Tokens: `src/styles/tokens.css` (fonte única de cor, tipografia, espaçamento, radius)
+- Componentes compartilhados: `src/styles/components.css`
+- Referência viva: rota `/style-guide`
+- Fontes: Inter (UI) + Fraunces (display), via `next/font`
+
 ## Dados locais
 
-Todos os dados ficam no `localStorage` do browser, organizados pelas chaves:
+Todos os dados ficam no `localStorage` do browser sob o prefixo `lrpg-fit:*`:
 
 | Chave | Conteúdo |
 |---|---|
@@ -61,5 +72,9 @@ Todos os dados ficam no `localStorage` do browser, organizados pelas chaves:
 | `lrpg-fit:reward-events` | Histórico de recompensas |
 | `lrpg-fit:nutrition-goal` | Metas de macros |
 | `lrpg-fit:nutrition-logs` | Registros nutricionais |
+| `lrpg-fit:missions-completed` | Missões do dia |
+| `lrpg-fit:weekly-plan` / `lrpg-fit:campaigns` | Plano semanal e campanhas |
+| `lrpg-fit:preferences` | Preferências e onboarding |
+| `lrpg-fit:custom-workouts` / `lrpg-fit:custom-exercises` | Workout builder |
 
 Use a página **Dados & Backup** (`/configuracoes`) para exportar um `.json` com todos os dados, importar um backup anterior ou resetar tudo com confirmação.

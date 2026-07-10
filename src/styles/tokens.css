@@ -1,55 +1,92 @@
-/* Spotify Dark Canvas — design tokens */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Fitness Life RPG — Design Tokens (fonte única de estilo)
+   Dark canvas + acento chartreuse (#c8f169) + deep forest (#043f2e).
+   Regra: chartreuse é acento (CTA, XP, estados ativos, badges) — nunca
+   superfície de grandes áreas. Ver DESIGN.md e CLAUDE.md.
+   ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-  --font-sans: var(--font-inter, system-ui, sans-serif);
-  /* === COLORS === */
-  --color-bg-base: #121212;
-  --color-bg-elevated: #181818;
-  --color-bg-highlight: #282828;
-  --color-bg-press: #333333;
+  /* ─── Fontes ─────────────────────────────────────────────────────────── */
+  --font-ui: var(--font-inter, system-ui, sans-serif);
+  --font-display: var(--font-fraunces, Georgia, serif);
+  --font-sans: var(--font-ui); /* alias legado */
 
-  /* Surface hierarchy (Spotify-style) */
-  --color-surface-0: #121212;
-  --color-surface-1: #1a1a1a;
-  --color-surface-2: #202020;
-  --color-surface-3: #282828;
-  --color-surface-4: #323232;
+  /* ─── Cores: canvas e superfícies ───────────────────────────────────── */
+  --color-canvas: #121212;
+  --color-surface: #1c1c1c;
+  --color-surface-hover: #242424;
+  --color-surface-active: #2c2c2c;
+  --color-surface-raised: #222222;
+  --color-surface-overlay: #161616;
 
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #b3b3b3;
-  --color-text-muted: #6a6a6a;
-
-  --color-accent: #1db954;
-  --color-accent-hover: #1ed760;
-  --color-accent-muted: rgba(29, 185, 84, 0.12);
-
-  --color-xp: #f59e0b;
-  --color-xp-muted: rgba(245, 158, 11, 0.15);
-
-  --color-level: #8b5cf6;
-  --color-level-muted: rgba(139, 92, 246, 0.15);
-
-  --color-danger: #ef4444;
-  --color-danger-muted: rgba(239, 68, 68, 0.12);
-
-  --color-border: rgba(255, 255, 255, 0.1);
+  /* ─── Cores: bordas ─────────────────────────────────────────────────── */
   --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-border-default: rgba(255, 255, 255, 0.1);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
 
-  /* === TYPOGRAPHY === */
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --text-4xl: 2.25rem;
+  /* ─── Cores: texto ──────────────────────────────────────────────────── */
+  --color-text-primary: #fcfcfc;
+  --color-text-secondary: #b3b3b3;
+  --color-text-muted: #7a7a7a;
+  --color-text-disabled: #4d4d4d;
+  --color-text-on-accent: #0d1405;
 
+  /* ─── Cores: acento (chartreuse) ────────────────────────────────────── */
+  --color-accent: #c8f169;
+  --color-accent-hover: #d7f78b;
+  --color-accent-active: #b3e34e;
+  --color-accent-subtle: rgba(200, 241, 105, 0.12);
+  --color-accent-border: rgba(200, 241, 105, 0.28);
+  --color-deep-forest: #043f2e;
+  --color-deep-forest-raised: #0a5940;
+
+  /* ─── Cores: semânticas ─────────────────────────────────────────────── */
+  --color-success: #4ade80;
+  --color-success-subtle: rgba(74, 222, 128, 0.12);
+  --color-warning: #f59e0b;
+  --color-warning-subtle: rgba(245, 158, 11, 0.12);
+  --color-danger: #ef4444;
+  --color-danger-subtle: rgba(239, 68, 68, 0.12);
+  --color-info: #60a5fa;
+  --color-info-subtle: rgba(96, 165, 250, 0.12);
+
+  /* ─── Cores: domínio (progressão) ───────────────────────────────────── */
+  --color-xp: var(--color-accent);
+  --color-xp-muted: var(--color-accent-subtle);
+  --color-level: #a78bfa;
+  --color-level-muted: rgba(167, 139, 250, 0.14);
+  --color-streak: #f59e0b;
+  --color-streak-muted: rgba(245, 158, 11, 0.14);
+
+  /* ─── Cores: overlay ────────────────────────────────────────────────── */
+  --color-overlay: rgba(0, 0, 0, 0.65);
+
+  /* ─── Tipografia: escala ────────────────────────────────────────────── */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-md: 1.0625rem;  /* 17px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  --text-3xl: 1.875rem;  /* 30px */
+  --text-4xl: 2.25rem;   /* 36px — alias legado */
+  --text-display: 2.5rem; /* 40px — headline Fraunces */
+
+  /* ─── Tipografia: pesos ─────────────────────────────────────────────── */
   --font-normal: 400;
   --font-medium: 500;
   --font-semibold: 600;
   --font-bold: 700;
 
-  /* === SPACING === */
+  /* ─── Tipografia: line-height e tracking ────────────────────────────── */
+  --leading-tight: 1.1;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --tracking-tight: -0.02em;
+  --tracking-wide: 0.06em;
+  --tracking-wider: 0.08em;
+
+  /* ─── Espaçamento (base 4px) ────────────────────────────────────────── */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -59,27 +96,76 @@
   --space-8: 2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
+  --space-16: 4rem;
 
-  /* === LAYOUT === */
-  --topbar-height: 56px;
-  --bottomnav-height: 64px;
-
-  /* === RADIUS === */
-  --radius-sm: 4px;
+  /* ─── Radius ────────────────────────────────────────────────────────── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-card-lg: 16px;
+  --radius-modal: 20px;
+  --radius-pill: 9999px;
+  --radius-round: 50%;
+  /* aliases legados */
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-full: 9999px;
 
-  /* === SHADOW === */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  /* ─── Sombras ───────────────────────────────────────────────────────── */
+  --shadow-focus: 0 0 0 2px var(--color-canvas), 0 0 0 4px var(--color-accent);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.7);
+  --shadow-drawer: 4px 0 32px rgba(0, 0, 0, 0.6);
+  /* aliases legados */
+  --shadow-sm: var(--shadow-card);
+  --shadow-md: var(--shadow-card-hover);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
 
-  /* === MOTION === */
+  /* ─── Layout ────────────────────────────────────────────────────────── */
+  --sidebar-width: 220px;
+  --mobile-header-height: 52px;
+  --content-max-width: 960px;
+  --content-max-width-wide: 1200px;
+  --page-padding: var(--space-6);
+  --page-padding-mobile: var(--space-4);
+  --card-gap: var(--space-4);
+  --section-gap: var(--space-6);
+  /* breakpoint principal: 768px (media queries não aceitam var — documentado) */
+  --topbar-height: 52px;       /* alias legado (mobile header) */
+  --bottomnav-height: 0px;     /* legado: BottomNav removida na v2 */
+
+  /* ─── Motion ────────────────────────────────────────────────────────── */
   --duration-fast: 120ms;
   --duration-normal: 200ms;
   --duration-slow: 350ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ─── Z-index ───────────────────────────────────────────────────────── */
+  --z-sidebar: 50;
+  --z-mobile-header: 100;
+  --z-toast: 150;
+  --z-overlay: 190;
+  --z-drawer: 200;
+  --z-modal: 1000;
+
+  /* ═── Aliases legados (rotas ainda não migradas — Sprints 2–6) ──────── */
+  --color-bg-base: var(--color-canvas);
+  --color-bg-primary: var(--color-canvas);
+  --color-bg-elevated: var(--color-surface);
+  --color-bg-surface: var(--color-surface);
+  --color-bg-subtle: var(--color-surface-raised);
+  --color-bg-highlight: var(--color-surface-hover);
+  --color-bg-press: var(--color-surface-active);
+  --color-surface-0: var(--color-canvas);
+  --color-surface-1: var(--color-surface);
+  --color-surface-2: var(--color-surface-raised);
+  --color-surface-3: var(--color-surface-hover);
+  --color-surface-4: var(--color-surface-active);
+  --color-border: var(--color-border-default);
+  --color-accent-muted: var(--color-accent-subtle);
+  --color-danger-muted: var(--color-danger-subtle);
 }

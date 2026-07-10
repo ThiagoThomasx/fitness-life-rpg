@@ -1,5 +1,6 @@
 @import '../styles/tokens.css';
 @import '../styles/components.css';
+@import '../styles/shell.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -19,9 +20,9 @@ html {
 }
 
 body {
-  background-color: var(--color-bg-base);
+  background-color: var(--color-canvas);
   color: var(--color-text-primary);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-ui, system-ui, sans-serif);
   min-height: 100dvh;
 }
 

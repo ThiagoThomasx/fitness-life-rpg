@@ -1,0 +1,269 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Navigation shell — sidebar desktop + drawer mobile.
+   Decisão de navegação travada (Sprint 1): AppSidebar é a navegação oficial.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.app-shell {
+  display: flex;
+  min-height: 100dvh;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  margin-left: var(--sidebar-width);
+}
+
+@media (max-width: 767px) {
+  .app-main {
+    margin-left: 0;
+    padding-top: var(--mobile-header-height);
+  }
+}
+
+/* ─── Sidebar (base compartilhada desktop/drawer) ───────────────────────── */
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  background: var(--color-surface-overlay);
+  border-right: 1px solid var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  z-index: var(--z-sidebar);
+}
+
+.sidebar--drawer {
+  z-index: var(--z-drawer);
+  box-shadow: var(--shadow-drawer);
+  transform: translateX(-100%);
+  visibility: hidden;
+  /* visibility só oculta após a animação de saída terminar */
+  transition: transform var(--duration-slow) var(--ease-in-out),
+              visibility 0s linear var(--duration-slow);
+}
+
+.sidebar--drawer.sidebar--open {
+  transform: translateX(0);
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+@media (max-width: 767px) {
+  .sidebar--desktop { display: none; }
+}
+
+@media (min-width: 768px) {
+  .sidebar--drawer { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar--drawer {
+    transition: none;
+  }
+}
+
+/* ─── Header ────────────────────────────────────────────────────────────── */
+
+.sidebar__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+.sidebar__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-control);
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+  flex-shrink: 0;
+}
+
+.sidebar__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sidebar__brand-name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.sidebar__brand-tag {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+/* ─── Navegação ─────────────────────────────────────────────────────────── */
+
+.sidebar__nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-2);
+  overflow-y: auto;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3);
+  min-height: 40px;
+  border-radius: var(--radius-control);
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  transition: color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-link:hover {
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+.nav-link--active {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  border-left-color: var(--color-accent);
+}
+
+.nav-link--active:hover {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+.nav-link__icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.nav-link--active .nav-link__icon {
+  opacity: 1;
+}
+
+.nav-link__label {
+  white-space: nowrap;
+}
+
+/* ─── Footer ────────────────────────────────────────────────────────────── */
+
+.sidebar__footer {
+  padding: var(--space-3) var(--space-2);
+  border-top: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.sidebar__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-round);
+  background: var(--color-deep-forest);
+  color: var(--color-accent);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar__email {
+  flex: 1;
+  font-size: 0.63rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Mobile: hamburger + overlay + fechar ──────────────────────────────── */
+
+.hamburger-btn {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: var(--z-mobile-header);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  background: var(--color-surface-overlay);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-control);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .hamburger-btn { display: flex; }
+}
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  z-index: var(--z-overlay);
+  border: none;
+  padding: 0;
+  cursor: default;
+}
+
+.sidebar__close-btn {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-control);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.sidebar__close-btn:hover {
+  color: var(--color-text-primary);
+}
+
+/* Scroll lock quando o drawer está aberto */
+.body-scroll-lock {
+  overflow: hidden;
+}
