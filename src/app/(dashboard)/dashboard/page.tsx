@@ -38,10 +38,6 @@ export default function DashboardPage() {
   const [todayRec, setTodayRec] = useState<WorkoutRecommendation | null>(null)
   const router = useRouter()
 
-  const prevLevel = typeof window !== "undefined"
-    ? Number(localStorage.getItem("rpg_last_seen_level") ?? 0)
-    : 0
-
   useEffect(() => {
     refreshBadges()
   }, [refreshBadges])
@@ -66,14 +62,18 @@ export default function DashboardPage() {
   const progress = xpProgress(character)
 
   useEffect(() => {
-    if (prevLevel > 0 && character.level > prevLevel) {
-      setLevelUpLevel(character.level)
+    // Só compara/grava depois da store reidratar: o fallback mock (nível 1)
+    // sobrescrevia rpg_last_seen_level e fazia o modal repetir no refresh.
+    if (!storeCharacter) return
+    const prevLevel = Number(localStorage.getItem("rpg_last_seen_level") ?? 0)
+    if (prevLevel > 0 && storeCharacter.level > prevLevel) {
+      setLevelUpLevel(storeCharacter.level)
     }
-    if (character.level > 0) {
-      localStorage.setItem("rpg_last_seen_level", String(character.level))
+    if (storeCharacter.level > 0) {
+      localStorage.setItem("rpg_last_seen_level", String(storeCharacter.level))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [character.level])
+  }, [storeCharacter?.level])
 
   function handleCompleteMission(id: string) {
     completeMission(id)

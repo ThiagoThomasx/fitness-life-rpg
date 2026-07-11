@@ -1,0 +1,353 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Progressão — badges, recompensas, LevelUpModal e RewardToast (Sprint 3).
+   Todos os valores vêm de tokens.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Badges ────────────────────────────────────────────────────────────── */
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .badges-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .badges-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.badge-card {
+  position: relative;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  padding: var(--space-4) var(--space-3);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.badge-card--locked {
+  background: var(--color-surface);
+  border-style: dashed;
+}
+
+.badge-card__icon {
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.badge-card--locked .badge-card__icon {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.badge-card__lock {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
+.badge-card__name {
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  line-height: 1.25;
+}
+
+.badge-card--locked .badge-card__name {
+  color: var(--color-text-secondary);
+}
+
+.badge-card__desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+.badge-card__date {
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+  font-weight: var(--font-semibold);
+  font-variant-numeric: tabular-nums;
+  margin-top: var(--space-1);
+}
+
+.badge-card__status {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin-top: var(--space-1);
+}
+
+.badge-card__progress {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.badge-card__progress-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: var(--space-1);
+}
+
+/* ─── Histórico de recompensas ──────────────────────────────────────────── */
+
+.reward-history {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.reward-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+
+.reward-item + .reward-item {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.reward-item__icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-control);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-lg);
+  background: var(--reward-bg, var(--color-surface-raised));
+  border: 1px solid var(--reward-border, var(--color-border-subtle));
+}
+
+.reward-item__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.reward-item__title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reward-item__subtitle {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reward-item__meta {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.reward-item__value {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--reward-text, var(--color-text-primary));
+  font-variant-numeric: tabular-nums;
+}
+
+.reward-item__date {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── LevelUpModal ──────────────────────────────────────────────────────── */
+
+.levelup {
+  text-align: center;
+}
+
+.levelup__icon {
+  font-size: 3rem;
+  line-height: 1;
+  animation: levelup-pop var(--duration-slow) var(--ease-out);
+}
+
+.levelup__eyebrow {
+  font-size: var(--text-xs);
+  color: var(--color-level);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  font-weight: var(--font-bold);
+  margin-top: var(--space-3);
+}
+
+.levelup__number {
+  font-family: var(--font-display);
+  font-weight: var(--font-normal);
+  font-size: var(--text-display);
+  color: var(--color-text-primary);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  font-variant-numeric: tabular-nums;
+  margin-top: var(--space-1);
+}
+
+.levelup__message {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-normal);
+  margin: var(--space-3) 0 var(--space-6);
+}
+
+@keyframes levelup-pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ─── RewardToast ───────────────────────────────────────────────────────── */
+
+.reward-toast {
+  position: fixed;
+  top: calc(var(--mobile-header-height) + var(--space-3));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  min-width: 268px;
+  max-width: min(360px, calc(100vw - var(--space-8)));
+  background: var(--color-surface-raised);
+  border: 1px solid var(--toast-border, var(--color-border-default));
+  border-radius: var(--radius-card-lg);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-lg);
+  animation: toast-in 0.32s var(--ease-out) forwards;
+}
+
+@media (min-width: 768px) {
+  .reward-toast {
+    top: var(--space-4);
+    left: calc(50% + (var(--sidebar-width) / 2));
+  }
+}
+
+.reward-toast--exiting {
+  animation: toast-out 0.26s var(--ease-in-out) forwards;
+}
+
+.reward-toast__icon {
+  font-size: 1.625rem;
+  flex-shrink: 0;
+  animation: toast-icon-pop 0.4s var(--ease-out) 0.1s both;
+}
+
+.reward-toast__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.reward-toast__title {
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  color: var(--toast-text, var(--color-text-primary));
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.reward-toast__subtitle {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reward-toast__value {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.reward-toast__close {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--text-base);
+  flex-shrink: 0;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
+  transition: color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+
+.reward-toast__close:hover {
+  color: var(--color-text-primary);
+  background: var(--color-surface-hover);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-16px) scale(0.94); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateX(-50%) translateY(-12px) scale(0.94); }
+}
+
+@keyframes toast-icon-pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ─── Motion reduzido ───────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .levelup__icon,
+  .reward-toast,
+  .reward-toast--exiting,
+  .reward-toast__icon {
+    animation: none;
+  }
+
+  .attr-card__progress-fill,
+  .badge-card__progress .progress-fill {
+    transition: none;
+  }
+}

@@ -39,6 +39,25 @@ export function attributeColor(attribute: string): ThemeColor {
   return ATTRIBUTE_COLORS[attribute.toLowerCase()] ?? CATEGORY_COLORS.default
 }
 
+// ─── Avatar backdrop colors (Perfil) ─────────────────────────────────────────
+
+export const AVATAR_COLORS: Record<string, string> = {
+  "🧙": "rgba(139,92,246,0.5)",
+  "⚔️": "rgba(239,68,68,0.45)",
+  "🦸": "rgba(59,130,246,0.45)",
+  "🏆": "rgba(245,158,11,0.45)",
+  "🔥": "rgba(239,68,68,0.5)",
+  "🐉": "rgba(200,241,105,0.35)",
+  "🦁": "rgba(245,158,11,0.5)",
+  "🌟": "rgba(245,158,11,0.4)",
+  "💎": "rgba(59,130,246,0.5)",
+  "🚀": "rgba(200,241,105,0.3)",
+}
+
+export function avatarColor(avatar: string): string {
+  return AVATAR_COLORS[avatar] ?? "rgba(200,241,105,0.3)"
+}
+
 // ─── Reward / event colors ───────────────────────────────────────────────────
 
 export const REWARD_COLORS: Record<string, ThemeColor> = {

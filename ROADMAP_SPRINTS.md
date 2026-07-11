@@ -32,13 +32,13 @@ Abordagem: **híbrida**. Mantém toda a lógica e dados da v1 (treinos, XP, atri
 - [x] Modal de resultado/XP alinhado ao design system (stats reais, XP em Fraunces, callouts de level-up/PR)
 - [x] Histórico de treino e detecção de PR mantidos, só reestilizados (lógica de XP/PR/atributos/badges intocada; guards de idempotência adicionados contra duplo clique)
 
-## Sprint 3 — Perfil (Atributos, Badges)
+## Sprint 3 — Perfil (Atributos, Badges) ✅
 **Objetivo:** Perfil consistente com Dashboard e Treinos.
 **Duração estimada:** 2–3 dias
 **Critério de aceite:** Perfil aprovado lado a lado com as duas telas anteriores.
 
-- [ ] Header de personagem, atributos e badges no novo padrão
-- [ ] Remoção de qualquer resquício de estilo antigo (BottomNav antiga, classes órfãs)
+- [x] Header de personagem, atributos e badges no novo padrão (componentes em `src/components/profile/`, estilos em `profile.css`/`progression.css`)
+- [x] Remoção de qualquer resquício de estilo antigo (bloco "Legado v1" removido de `components.css`; LevelUpModal/RewardToast tokenizados; verde Spotify zerado no escopo)
 
 ## Sprint 4 — Insights
 **Objetivo:** corrigir a tela que ficou genérica em dois redesigns anteriores da v1.

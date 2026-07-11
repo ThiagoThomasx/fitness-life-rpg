@@ -13,6 +13,34 @@
 
 ### Entregas
 
+#### Sprint 3 (v2) — Perfil, Atributos, Badges e Feedbacks de Progressão — 2026-07-11
+
+**Arquitetura**
+- `perfil/page.tsx` reduzido de **313 para 132 linhas** (dados + composição). Componentes extraídos para `src/components/profile/`: `ProfileHero` (identidade, avatar, edição de nome, pills, stats), `LevelProgressCard` (nível, barra de XP, próximo marco), `AttributesGrid`, `BadgesGrid`, `RewardsHistory`, `ProfileLinks`.
+- `LevelUpModal` reescrito sobre `ModalShell` (35 linhas; antes 120 com styled-jsx e keyframes inline) — ganha foco preso, Escape, scroll lock e retorno de foco. `RewardToast` reescrito com classes (79 linhas).
+- Novos arquivos de estilo de domínio: `src/styles/profile.css` e `src/styles/progression.css`. Bloco "Legado v1" removido de `components.css` (`.profile-hero`/`.attr-card` migrados e refinados; `.workout-row` mantido, apenas re-seccionado). `AVATAR_COLORS` centralizado em `theme-colors.ts`.
+
+**Visual**
+- Zero hex/rgba e zero inline styles de estilo (restam apenas CSS custom properties tokenizadas, padrão das Sprints 1–2) em Perfil, componentes de perfil, LevelUpModal e RewardToast (antes: 43 ocorrências de cor no escopo). Verde Spotify (`rgba(29,185,84,…)`) zerado no escopo, incluindo o mapa de cores de avatar.
+- Perfil: nome em Fraunces no hero, resumo de nível com tile deep forest + barra chartreuse + "faltam N XP" (próximo marco), atributos em grid 2/3/5 colunas com cor por atributo do mapa central, badges ordenados (desbloqueados por data desc primeiro; bloqueados com 🔒 + label "Bloqueada" + critério + progresso real x/y quando derivável dos mesmos dados dos critérios), histórico de recompensas (reward-events) com estado vazio, quick links tokenizados.
+- LevelUpModal: eyebrow em `--color-level`, número em Fraunces, CTA chartreuse, animação curta com `prefers-reduced-motion`. RewardToast: `role="status"`/`aria-live="polite"`, botão fechar ≥32px, borda semântica por tipo de evento, centralizado sobre o conteúdo no desktop (compensa a sidebar).
+
+**Correções funcionais (comprovadas em QA — documentadas)**
+- LevelUpModal repetia após refresh: o Dashboard gravava `rpg_last_seen_level` a partir do personagem mock (nível 1) antes da store reidratar e reabria o modal ao reidratar. Detecção agora só roda com a store hidratada (`storeCharacter`), leitura movida para dentro do efeito. Validado: abre 1× no level-up, não repete em 2 refreshes.
+- RewardToast: fechar 2× rápido (clique + timeout concorrente) descartava também o toast seguinte da fila → guard síncrono `exitingRef`.
+- Barra de XP: percentual com `Math.floor` (não mostra "100%" faltando 1 XP) e largura limitada a 100% com XP acima do esperado; leituras de localStorage do Perfil movidas para `useEffect` (higiene de hydration).
+
+**QA**
+- Suíte Playwright (msedge) **20/20 PASS**: modal abre no level-up e não repete em refresh; Escape fecha e destrava scroll; 2 eventos próximos exibem toasts em sequência; duplo clique no fechar não quebra a fila; Perfil reflete nível/XP/badges/recompensas e persiste após refresh; progressbar com aria; sem overflow horizontal em 390/360; XP acima do esperado limitado a 100%; console limpo.
+- Fluxo real validado no navegador: treino completo (95 XP → finalizar → +55 XP) → level up 1→2 → atributos 5→5.4/5.2 → badges `first-workout` e `level-2` concedidos 1× → toast → LevelUpModal no Dashboard → Perfil atualizado. Edição de nome e avatar persistem (localStorage + store).
+- Screenshots em `docs/screenshots/sprint3/` (13 estados: Perfil 1440/1280/768/390/360, vazio desktop/mobile, dados extensos com nome longo + nível 42, LevelUpModal desktop/mobile, RewardToast desktop/mobile).
+- Build, lint e typecheck limpos.
+
+**Pendências conhecidas**
+- Feedback de level-up existe em 3 superfícies (callout no resumo do treino → toast transitório → modal no Dashboard); hierarquia documentada como intencional (o modal só aparece no Dashboard; o toast cobre o caminho via /treinos). Consolidar em uma única superfície é decisão de produto para depois do redesign.
+- Badges de nutrição/plano/campanha não mostram progresso parcial no Perfil (dados desses domínios não são carregados na página; apenas o critério é exibido).
+- Projeto segue sem framework de testes (decisão da Sprint 2 mantida); a suíte de QA Playwright vive no scratchpad da sessão, não no repositório.
+
 #### Sprint 2 (v2) — Treinos e Sessão Ativa — 2026-07-10
 
 **Arquitetura**
