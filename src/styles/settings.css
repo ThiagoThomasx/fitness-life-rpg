@@ -1,0 +1,169 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Configurações / Dados & Backup (Sprint 6).
+   Todos os valores vêm de tokens.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Header ────────────────────────────────────────────────────────────── */
+
+.settings-header__title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.settings-header__subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* ─── Card de link (preferências) ───────────────────────────────────────── */
+
+.settings-link-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+}
+
+.settings-link-card__icon {
+  font-size: var(--text-lg);
+  line-height: 1;
+}
+
+.settings-link-card__title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-accent);
+}
+
+.settings-link-card__subtitle {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.settings-link-card__chevron {
+  color: var(--color-accent);
+}
+
+/* ─── Status de armazenamento ───────────────────────────────────────────── */
+
+.settings-key-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.settings-key-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.settings-key-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-round);
+  flex-shrink: 0;
+  background: var(--color-border-subtle);
+}
+
+.settings-key-dot--active {
+  background: var(--color-accent);
+}
+
+.settings-key-row__label {
+  flex: 1;
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.settings-key-row__size {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  min-width: 44px;
+  text-align: right;
+}
+
+/* ─── Card de perigo (reset) ────────────────────────────────────────────── */
+
+.card--danger-border {
+  border-color: var(--color-danger-subtle);
+}
+
+.settings-section__title {
+  margin-top: 0;
+}
+
+.settings-section__title--danger {
+  color: var(--color-danger);
+}
+
+.settings-section__body {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+/* ─── Painéis de confirmação (import/reset) ─────────────────────────────── */
+
+.settings-confirm {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-control);
+}
+
+.settings-confirm--warning {
+  background: var(--color-warning-subtle);
+  border: 1px solid var(--color-warning);
+}
+
+.settings-confirm--danger {
+  background: var(--color-danger-subtle);
+  border: 1px solid var(--color-danger);
+}
+
+.settings-confirm__title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.settings-confirm__title--danger {
+  color: var(--color-danger);
+}
+
+.settings-confirm__body {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.settings-confirm__input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-3);
+  box-sizing: border-box;
+}
+
+.settings-confirm__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.settings-confirm__actions .btn {
+  flex: 1;
+}
+
+.settings-footer-note {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+}

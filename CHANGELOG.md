@@ -13,6 +13,27 @@
 
 ### Entregas
 
+#### Sprint 6 (v2) — Configurações/Backup + QA Visual Completo — 2026-07-11
+
+**Arquitetura**
+- `configuracoes/page.tsx` reduzido para dados + composição. Componentes extraídos para `src/components/settings/`: `SettingsHeader`, `PreferencesLinkCard`, `StorageStatusSection`, `BackupExportSection`, `BackupImportSection`, `DataResetSection`.
+- Novo arquivo de estilo de domínio: `src/styles/settings.css`. Reaproveita classes já centralizadas em `components.css` (`.card`, `.btn`/`.btn--danger`, `.alert--success`/`.alert--danger`, `.stat-grid`/`.stat-cell`, `.section-label`) em vez de duplicar padding/radius/cor.
+- Lógica de `lib/backup.ts` (export/import/validação de schema/reset) preservada sem alteração, conforme regra de feature freeze do `CLAUDE.md` — a página apenas consome as funções já existentes.
+
+**Visual**
+- Zero hex/rgba e zero inline styles de cor/espaçamento no escopo (antes: página inteira em inline styles com `rgba(29,185,84,…)` verde Spotify legado, `#dc3545`, `rgba(220,53,69,…)`, `rgba(255,193,7,…)` hardcoded). Todos os estados (sucesso, alerta, perigo) agora usam `--color-success`/`--color-warning`/`--color-danger` via `.alert`/`.btn--danger`.
+- Card de link para Preferências alinhado ao padrão `.card--interactive` com `--color-accent` para título/chevron, eliminando o verde Spotify legado que ainda restava nesta rota.
+- Painéis de confirmação (importar/resetar) padronizados com `.settings-confirm--warning`/`--danger`, mesma linguagem visual do restante do design system.
+
+**QA**
+- `npm run build` e `npm run lint` limpos.
+- Validado via Playwright (msedge): fluxo de exportar backup (alerta de sucesso tokenizado exibido), fluxo de confirmação de reset (botão "Apagar tudo" habilita apenas ao digitar "resetar", cancelar fecha o painel sem apagar dados), desktop (1280px) e mobile (390px) sem overflow horizontal.
+- Checklist de screenshot por rota completo: `/dashboard`, `/treinos`, `/perfil`, `/insights`, `/diario`, `/nutricao`, `/configuracoes` capturados em desktop+mobile com dados populados — `docs/screenshots/sprint6/`. `/treinos/sessao` não recapturado (estado de sessão ativa via Zustand `persist` não reproduzido por seed estático; validado manualmente na Sprint 2).
+
+**Pendências conhecidas**
+- Validação de schema de backup com arquivo inválido não reexercitada nesta sprint (lógica inalterada desde a Sprint 1); recomenda-se um teste manual de upload antes do deploy final.
+- Sem framework de testes automatizado no repositório (decisão mantida desde a Sprint 2); QA segue via script Playwright ad-hoc.
+
 #### Sprint 5 (v2) — Diário e Nutrição — 2026-07-11
 
 **Arquitetura**

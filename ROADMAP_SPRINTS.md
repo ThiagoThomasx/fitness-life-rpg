@@ -61,8 +61,8 @@ Abordagem: **híbrida**. Mantém toda a lógica e dados da v1 (treinos, XP, atri
 **Duração estimada:** 2–3 dias
 **Critério de aceite:** screenshot de cada rota aprovado; build/lint limpos; backup/reset testados e confirmados acessíveis.
 
-- [ ] Página de Configurações/Backup revisada visualmente
-- [ ] Checklist de screenshot por rota (ver `QA_CHECKLIST.md`)
+- [x] Página de Configurações/Backup revisada visualmente — componentizada em `src/components/settings/`, estilos em `settings.css`, zero hex/rgba soltos
+- [x] Checklist de screenshot por rota (ver `QA_CHECKLIST.md`) — `docs/screenshots/sprint6/`
 - [ ] Deploy na Vercel com release notes
 
 ---
