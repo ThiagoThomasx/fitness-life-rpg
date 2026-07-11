@@ -29,6 +29,7 @@
 - `npm run build` e `npm run lint` limpos.
 - Validado via Playwright (msedge): fluxo de exportar backup (alerta de sucesso tokenizado exibido), fluxo de confirmação de reset (botão "Apagar tudo" habilita apenas ao digitar "resetar", cancelar fecha o painel sem apagar dados), desktop (1280px) e mobile (390px) sem overflow horizontal.
 - Checklist de screenshot por rota completo: `/dashboard`, `/treinos`, `/perfil`, `/insights`, `/diario`, `/nutricao`, `/configuracoes` capturados em desktop+mobile com dados populados — `docs/screenshots/sprint6/`. `/treinos/sessao` não recapturado (estado de sessão ativa via Zustand `persist` não reproduzido por seed estático; validado manualmente na Sprint 2).
+- Push `70dfd0d` → auto-deploy Vercel **Ready** em https://fitness-life-rpg.vercel.app. Validado em produção: `/configuracoes` renderiza idêntico ao ambiente local, exportar backup exibe alerta de sucesso tokenizado, fluxo de reset abre/cancela corretamente sem apagar dados, sem erros de console. Screenshot `docs/screenshots/sprint6/producao-configuracoes-desktop.png`.
 
 **Pendências conhecidas**
 - Validação de schema de backup com arquivo inválido não reexercitada nesta sprint (lógica inalterada desde a Sprint 1); recomenda-se um teste manual de upload antes do deploy final.
