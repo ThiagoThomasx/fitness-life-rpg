@@ -5,6 +5,7 @@
 @import '../styles/session.css';
 @import '../styles/profile.css';
 @import '../styles/progression.css';
+@import '../styles/insights.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -13,6 +13,27 @@
 
 ### Entregas
 
+#### Sprint 4 (v2) — Insights — 2026-07-11
+
+**Arquitetura**
+- `insights/page.tsx` reduzido de **767 para 80 linhas** (dados + composição). Componentes extraídos para `src/components/insights/`: `InsightsHeader`, `SummarySection`, `NarrativeSection`, `WeekVolumeSection`, `DayFrequencySection`, `ExerciseLoadSection`, `CategorySection`, `PrsSection`, `AttributesSection`, `TagsSection`, `NutritionSection`, além de `ChartCard` (helpers compartilhados `ChartHeader`/`EmptyChart`/estilo de tooltip/grid/eixo do Recharts).
+- Novo arquivo de estilo de domínio: `src/styles/insights.css` (hero, cards de gráfico, narrativa, lista de PRs, barras de tag, cards de nutrição).
+- Novos tokens `--color-chart-primary/secondary/tertiary/quaternary` em `tokens.css` (aliases para accent/level/streak/info). Equivalentes em hex para o Recharts (que exige string literal, não `var()`, nos props `fill`/`stroke`) centralizados em `CHART_COLORS` — `src/lib/theme-colors.ts`, mesmo arquivo que já concentrava `PIE_PALETTE`/`MACRO_COLORS`/`attributeColor` desde a Sprint 1.
+- Prop `goalCalories` removido de `NutritionSection` (era recebido mas nunca lido no componente original — dead code, sem alteração de comportamento).
+
+**Visual**
+- Zero hex/rgba e zero inline styles de cor/espaçamento fora de tokens na rota e nos componentes extraídos (antes: 42 ocorrências, registradas como pendência da Sprint 1). Objeto local `C` (paleta duplicada com hex fixo, incluindo tons de verde Spotify residual) removido por completo.
+- Hero com glow radial chartreuse (mesma linguagem do Dashboard/Perfil), metric cards reaproveitando `.metric-card` (idêntico ao Dashboard), cards de gráfico com `.card` + `ChartHeader` padronizado, narrativa da semana em card `--color-accent-subtle`, PRs em lista com destaque `--color-streak`, atributos com `.progress-track`/`.progress-fill` (mesmo padrão do Perfil), tags do diário com barras proporcionais, nutrição com CTA quando vazia e cards de macro tokenizados.
+- Únicos números "soltos" restantes são dimensões numéricas exigidas pela API do Recharts (altura do `ResponsiveContainer`, `barSize`, `radius` das barras, `fontSize` dos ticks dos eixos) — não são valores de design tokenizáveis, mesma exceção já aplicada nas Sprints 2–3 a bibliotecas de terceiros.
+
+**QA**
+- `npm run build` e `npm run lint` limpos.
+- Validado via Playwright (msedge): estado vazio (0 treinos) e estado populado (5 treinos, 2 PRs, 3 entradas de diário, 2 semanas de nutrição, atributos variados) em desktop (1280px) e mobile (390px) — sem overflow horizontal, cores nos gráficos batendo com os tokens de domínio (accent/level/streak/info), navegação da sidebar intacta.
+- Screenshots em `qa-screenshots/sprint4/` (`insights-desktop.png`/`insights-mobile.png` vazio; `insights-populated-desktop.png`/`insights-populated-mobile.png` com dados).
+
+**Pendências conhecidas**
+- Sem framework de testes automatizado no repositório (decisão mantida desde a Sprint 2); QA segue via script Playwright ad-hoc.
+
 #### Sprint 3 (v2) — Perfil, Atributos, Badges e Feedbacks de Progressão — 2026-07-11
 
 **Arquitetura**

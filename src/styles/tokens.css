@@ -57,6 +57,12 @@
   --color-streak: #f59e0b;
   --color-streak-muted: rgba(245, 158, 11, 0.14);
 
+  /* ─── Cores: gráficos (Insights) ─────────────────────────────────────── */
+  --color-chart-primary: var(--color-accent);
+  --color-chart-secondary: var(--color-level);
+  --color-chart-tertiary: var(--color-streak);
+  --color-chart-quaternary: var(--color-info);
+
   /* ─── Cores: overlay ────────────────────────────────────────────────── */
   --color-overlay: rgba(0, 0, 0, 0.65);
 

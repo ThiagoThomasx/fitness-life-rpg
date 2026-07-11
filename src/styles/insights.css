@@ -1,0 +1,405 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Insights — hero, cards de gráfico, narrativa e listas (Sprint 4).
+   Todos os valores vêm de tokens.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Hero ──────────────────────────────────────────────────────────────── */
+
+.insights-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-modal);
+  border: 1px solid var(--color-accent-border);
+  background: var(--color-surface);
+  padding: var(--space-6) var(--space-5) var(--space-5);
+}
+
+.insights-hero__backdrop {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, var(--color-accent-subtle) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.insights-hero__glow {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 160px;
+  height: 160px;
+  border-radius: var(--radius-round);
+  background: radial-gradient(circle, var(--color-accent-subtle) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.insights-hero__content {
+  position: relative;
+}
+
+.insights-hero__eyebrow {
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-2);
+}
+
+.insights-hero__title {
+  font-size: var(--text-3xl);
+}
+
+.insights-hero__subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: var(--space-2) 0 var(--space-5);
+  line-height: var(--leading-normal);
+}
+
+.insights-hero__chips {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.insights-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+}
+
+.insights-chip--accent {
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent-border);
+}
+
+.insights-chip__icon {
+  font-size: var(--text-base);
+}
+
+.insights-chip__label {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.insights-chip--accent .insights-chip__label {
+  color: var(--color-accent);
+}
+
+.insights-chip__value {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+}
+
+.insights-chip--accent .insights-chip__value {
+  color: var(--color-accent);
+}
+
+/* ─── Cards de gráfico ──────────────────────────────────────────────────── */
+
+.chart-card__header {
+  margin-bottom: var(--space-4);
+}
+
+.chart-card__title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  letter-spacing: var(--tracking-tight);
+}
+
+.chart-card__desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+  line-height: var(--leading-normal);
+}
+
+.chart-empty {
+  padding: var(--space-10) var(--space-4);
+}
+
+.chart-empty__cta {
+  margin-top: var(--space-1);
+}
+
+/* ─── Narrativa (leitura da semana) ─────────────────────────────────────── */
+
+.narrative-card {
+  border-color: var(--color-accent-border);
+  background: var(--color-accent-subtle);
+}
+
+.narrative-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.narrative-card__icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-accent-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-base);
+}
+
+.narrative-card__eyebrow {
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+
+.narrative-card__meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.narrative-card__text {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-normal);
+}
+
+/* ─── Evolução de carga ─────────────────────────────────────────────────── */
+
+.exercise-load {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.exercise-load__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.exercise-load__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-round);
+  flex-shrink: 0;
+}
+
+.exercise-load__label {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-semibold);
+}
+
+/* ─── Recordes pessoais ─────────────────────────────────────────────────── */
+
+.pr-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.pr-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-streak-muted);
+  border: 1px solid var(--color-streak-muted);
+  border-radius: var(--radius-card);
+  padding: var(--space-3) var(--space-4);
+}
+
+.pr-item__icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--radius-control);
+  background: var(--color-streak-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-base);
+}
+
+.pr-item__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.pr-item__name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+}
+
+.pr-item__date {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.pr-item__value {
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  color: var(--color-streak);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* ─── Tags do diário ────────────────────────────────────────────────────── */
+
+.tag-bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tag-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.tag-bar__label {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  width: 84px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tag-bar__track {
+  flex: 1;
+  height: 6px;
+  background: var(--color-surface-active);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.tag-bar__fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--color-accent), var(--color-info));
+}
+
+.tag-bar__count {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Nutrição ──────────────────────────────────────────────────────────── */
+
+.nutrition-cta {
+  background: var(--color-info-subtle);
+  border-color: var(--color-info);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.nutrition-cta__icon {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-info-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xl);
+}
+
+.nutrition-cta__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.nutrition-cta__title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.nutrition-cta__desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+}
+
+.nutrition-cta__chevron {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.nutrition-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+}
+
+.nutrition-card__link {
+  font-size: var(--text-xs);
+  color: var(--color-info);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: var(--font-bold);
+  flex-shrink: 0;
+}
+
+.nutrition-macros {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.nutrition-macro {
+  background: var(--color-surface-active);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  padding: var(--space-3);
+}
+
+.nutrition-macro__label {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin-bottom: var(--space-1);
+}
+
+.nutrition-macro__value {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Layout de gráficos ────────────────────────────────────────────────── */
+
+.insights-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--card-gap);
+}

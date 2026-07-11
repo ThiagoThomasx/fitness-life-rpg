@@ -112,3 +112,14 @@ export function statusColor(
 export const PIE_PALETTE = [
   "#c8f169", "#f59e0b", "#8b5cf6", "#3b82f6", "#ec4899", "#ef4444",
 ]
+
+// ─── Chart series colors (Insights) — espelham --color-chart-* em tokens.css ──
+// Bibliotecas de gráfico (Recharts) exigem string literal, não var() — os hex
+// abaixo devem permanecer sincronizados com tokens.css.
+
+export const CHART_COLORS = {
+  primary: "#c8f169",   // --color-chart-primary / --color-accent
+  secondary: "#a78bfa", // --color-chart-secondary / --color-level
+  tertiary: "#f59e0b",  // --color-chart-tertiary / --color-streak
+  quaternary: "#60a5fa", // --color-chart-quaternary / --color-info
+} as const

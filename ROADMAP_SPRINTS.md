@@ -40,13 +40,13 @@ Abordagem: **híbrida**. Mantém toda a lógica e dados da v1 (treinos, XP, atri
 - [x] Header de personagem, atributos e badges no novo padrão (componentes em `src/components/profile/`, estilos em `profile.css`/`progression.css`)
 - [x] Remoção de qualquer resquício de estilo antigo (bloco "Legado v1" removido de `components.css`; LevelUpModal/RewardToast tokenizados; verde Spotify zerado no escopo)
 
-## Sprint 4 — Insights
+## Sprint 4 — Insights ✅
 **Objetivo:** corrigir a tela que ficou genérica em dois redesigns anteriores da v1.
 **Duração estimada:** 3–4 dias
 **Critério de aceite:** gráficos usando os tokens de cor; qualidade de layout equivalente ao Dashboard.
 
-- [ ] Padronizar cores/tipografia nos gráficos Recharts (usar `--color-accent`, `--color-chart-secondary`)
-- [ ] Reorganizar cards de insight (volume semanal, evolução de carga, distribuição por categoria, PRs recentes, tags do diário)
+- [x] Padronizar cores/tipografia nos gráficos Recharts (tokens `--color-chart-*` em `tokens.css`; equivalentes JS em `CHART_COLORS`/`PIE_PALETTE`/`MACRO_COLORS` de `theme-colors.ts`, único ponto de hex para bibliotecas de gráfico)
+- [x] Reorganizar cards de insight (volume semanal, evolução de carga, distribuição por categoria, PRs recentes, tags do diário) — componentizados em `src/components/insights/`, estilos em `insights.css`
 
 ## Sprint 5 — Diário e Nutrição
 **Objetivo:** últimas duas telas migradas para o novo sistema.
