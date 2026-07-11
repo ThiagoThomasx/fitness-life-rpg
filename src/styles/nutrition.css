@@ -1,0 +1,320 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Nutrição — metas, registro diário e histórico de macros (Sprint 5).
+   Todos os valores vêm de tokens.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Header ────────────────────────────────────────────────────────────── */
+
+.nutrition-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.nutrition-header__back {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-xl);
+  cursor: pointer;
+  padding: 0;
+}
+
+.nutrition-header__title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.nutrition-header__subtitle {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 2px 0 0;
+}
+
+/* ─── Streak banner ─────────────────────────────────────────────────────── */
+
+.streak-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-3) var(--space-4);
+}
+
+.streak-banner__icon {
+  font-size: var(--text-xl);
+}
+
+.streak-banner__title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-accent);
+}
+
+.streak-banner__desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* ─── Goal section ──────────────────────────────────────────────────────── */
+
+.goal-section__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.goal-section__label {
+  margin-bottom: 0;
+}
+
+.goal-section__edit {
+  font-size: var(--text-xs);
+  color: var(--color-info);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: var(--font-bold);
+}
+
+.goal-section__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+
+.goal-stat {
+  background: var(--color-surface-raised);
+  border-radius: var(--radius-control);
+  padding: var(--space-3) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.goal-stat__label {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+}
+
+.goal-stat__value {
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+}
+
+.goal-stat__unit {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+}
+
+/* ─── Number input ──────────────────────────────────────────────────────── */
+
+.number-input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.number-input__control {
+  display: flex;
+  align-items: center;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+  gap: var(--space-2);
+}
+
+.number-input__field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  min-width: 0;
+}
+
+.number-input__unit {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+/* ─── Macro bar ─────────────────────────────────────────────────────────── */
+
+.macro-bar__row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-1);
+}
+
+.macro-bar__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.macro-bar__value {
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+}
+
+.macro-bar__value--over {
+  color: var(--color-danger);
+}
+
+.macro-bar__goal {
+  font-weight: var(--font-normal);
+  color: var(--color-text-muted);
+}
+
+.macro-bar__track {
+  height: 6px;
+  background: var(--color-surface-raised);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.macro-bar__fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+/* ─── Calorie ring ──────────────────────────────────────────────────────── */
+
+.calorie-ring {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.calorie-ring__progress {
+  transition: stroke-dashoffset var(--duration-slow) var(--ease-out);
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.calorie-ring__value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.calorie-ring__number {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+}
+
+.calorie-ring__unit {
+  font-size: 0.5rem;
+  color: var(--color-text-muted);
+}
+
+/* ─── Today log ─────────────────────────────────────────────────────────── */
+
+.today-log__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.today-log__summary-body {
+  flex: 1;
+}
+
+.today-log__goal {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.today-log__remaining {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.today-log__remaining--over {
+  color: var(--color-danger);
+}
+
+.today-log__xp-granted {
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+  margin-top: var(--space-1);
+  font-weight: var(--font-bold);
+}
+
+.today-log__macros {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.today-log__inputs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.today-log__save--done {
+  background: var(--color-success);
+  color: var(--color-text-on-accent);
+}
+
+/* ─── History ────────────────────────────────────────────────────────────── */
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface-raised);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+}
+
+.history-row__icon {
+  font-size: var(--text-base);
+  flex-shrink: 0;
+}
+
+.history-row__body {
+  flex: 1;
+}
+
+.history-row__date {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.history-row__macros {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.history-row__calories {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-info);
+}

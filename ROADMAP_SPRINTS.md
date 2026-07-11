@@ -48,13 +48,13 @@ Abordagem: **híbrida**. Mantém toda a lógica e dados da v1 (treinos, XP, atri
 - [x] Padronizar cores/tipografia nos gráficos Recharts (tokens `--color-chart-*` em `tokens.css`; equivalentes JS em `CHART_COLORS`/`PIE_PALETTE`/`MACRO_COLORS` de `theme-colors.ts`, único ponto de hex para bibliotecas de gráfico)
 - [x] Reorganizar cards de insight (volume semanal, evolução de carga, distribuição por categoria, PRs recentes, tags do diário) — componentizados em `src/components/insights/`, estilos em `insights.css`
 
-## Sprint 5 — Diário e Nutrição
+## Sprint 5 — Diário e Nutrição ✅
 **Objetivo:** últimas duas telas migradas para o novo sistema.
 **Duração estimada:** 2–3 dias
 **Critério de aceite:** ambas revisadas visualmente, sem CSS legado.
 
-- [ ] Diário no novo padrão (tags automáticas mantidas)
-- [ ] Nutrição no novo padrão (metas de macros, logs)
+- [x] Diário no novo padrão (tags automáticas mantidas) — 375→145 linhas, componentizado em `src/components/diary/`, estilos em `diary.css`
+- [x] Nutrição no novo padrão (metas de macros, logs) — 384→51 linhas, componentizado em `src/components/nutrition/`, estilos em `nutrition.css`; paleta de macros unificada com Insights (`MACRO_COLORS` de `theme-colors.ts`)
 
 ## Sprint 6 — QA Visual Completo + Configurações/Backup + Deploy
 **Objetivo:** consolidar tudo, validar cada rota e publicar.

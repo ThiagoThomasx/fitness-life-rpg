@@ -1,0 +1,165 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Diário — entradas diárias, energia, humor e tags (Sprint 5).
+   Todos os valores vêm de tokens.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Botões compactos (reutilizados no header e nos cards de entrada) ────── */
+
+.btn--sm {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.icon-btn--sm {
+  min-width: 28px;
+  min-height: 28px;
+  padding: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+/* ─── Header ────────────────────────────────────────────────────────────── */
+
+.diary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diary-header__title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+}
+
+/* ─── Energia (estrelas) ────────────────────────────────────────────────── */
+
+.energy-stars {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.energy-star {
+  background: none;
+  border: none;
+  font-size: var(--text-xl);
+  padding: 0;
+  line-height: 1;
+}
+
+/* ─── Humor (seletor de emoji) ──────────────────────────────────────────── */
+
+.mood-picker {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.mood-chip {
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xl);
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
+}
+
+.mood-chip--active {
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent-border);
+}
+
+/* ─── Tag chip ──────────────────────────────────────────────────────────── */
+
+.tag-chip {
+  display: inline-flex;
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+  font-weight: var(--font-semibold);
+}
+
+/* ─── Lista de entradas ─────────────────────────────────────────────────── */
+
+.entries-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ─── Card de entrada ───────────────────────────────────────────────────── */
+
+.log-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.log-card__date {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.log-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.log-card__mood {
+  font-size: var(--text-base);
+}
+
+.log-card__stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.log-card__sleep {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.log-card__notes {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-normal);
+  margin-top: var(--space-2);
+}
+
+.log-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+/* ─── Formulário de entrada ─────────────────────────────────────────────── */
+
+.entry-form__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.entry-form__slider {
+  width: 100%;
+  accent-color: var(--color-accent);
+}
+
+.entry-form__tags-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.entry-form__actions {
+  display: flex;
+  gap: var(--space-2);
+}

@@ -13,6 +13,28 @@
 
 ### Entregas
 
+#### Sprint 5 (v2) — Diário e Nutrição — 2026-07-11
+
+**Arquitetura**
+- `diario/page.tsx` reduzido de **375 para 145 linhas**. Componentes extraídos para `src/components/diary/`: `DiaryHeader`, `EntryForm`, `EntriesSection`, `LogCard`, `EnergyStars`, `MoodPicker`, `TagChip`, além de `format.ts` (helpers `formatDiaryDate`/`formatDiaryTime`, puros, sem JSX).
+- `nutricao/page.tsx` reduzido de **384 para 51 linhas**. Componentes extraídos para `src/components/nutrition/`: `NutritionHeader`, `StreakBanner`, `GoalSection`, `TodayLogSection`, `CalorieRing`, `MacroBar`, `NumberInput`, `HistorySection`.
+- Novos arquivos de estilo de domínio: `src/styles/diary.css` e `src/styles/nutrition.css`. Ambos reaproveitam classes já centralizadas em `components.css` (`.card`, `.btn`, `.badge-pill--xp`, `.alert--success`, `.input`/`.textarea`, `.page`) em vez de duplicar padding/radius/cor.
+- Lógica de negócio (`daily-log.ts`, `nutrition.ts`, `auto-tags.ts`, `badges.ts`, `reward-events.ts`) preservada sem alteração — apenas a camada visual foi reescrita, conforme regra de feature freeze do `CLAUDE.md`.
+
+**Visual**
+- Zero hex/rgba e zero inline styles de cor/espaçamento no escopo (antes: 33 em Diário + 22 em Nutrição = 55 ocorrências, registradas como pendência da Sprint 3). Verde Spotify (`#1db954`/`rgba(29,185,84,…)`) eliminado das duas rotas.
+- Diário: estrelas de energia, seletor de humor e tags usam `--color-accent` (chartreuse) como estado ativo — consistente com a regra de "chartreuse é acento" do `CLAUDE.md`; XP exibido via `.badge-pill--xp` já usado em outras rotas.
+- Nutrição: paleta de macros **remapeada** para bater com a já usada em Insights (`MACRO_COLORS` de `theme-colors.ts` — proteína azul, carboidrato dourado, gordura rosa) em vez da paleta ad-hoc da página antiga (proteína vermelha, carboidrato azul, gordura dourada). Anel de calorias usa `--color-info` (mesmo tom do gráfico semanal de kcal em Insights) e vira `--color-danger` acima da meta.
+- Ambas as páginas usam `.page`/`.page--tight` para layout, alinhando largura máxima e espaçamento com as demais rotas migradas.
+
+**QA**
+- `npm run build` e `npm run lint` limpos.
+- Validado via Playwright (msedge): estado vazio e estado populado (3 entradas de diário com tags, 3 registros de nutrição, streak de 3 dias) em desktop (1440px) e mobile (390px) — sem overflow horizontal, cores batendo com os tokens de domínio, sidebar intacta. Fluxo interativo testado (seleção de humor + salvar entrada do diário; edição e salvamento de metas de nutrição) sem erros de console.
+- Screenshots em `docs/screenshots/sprint5/`.
+
+**Pendências conhecidas**
+- Sem framework de testes automatizado no repositório (decisão mantida desde a Sprint 2); QA segue via script Playwright ad-hoc.
+
 #### Sprint 4 (v2) — Insights — 2026-07-11
 
 **Arquitetura**
