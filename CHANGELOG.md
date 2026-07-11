@@ -46,6 +46,10 @@
 - Peso/reps padrão do formulário de série usam a meta do treino custom apenas quando o histórico existe no primeiro render (as metas carregam em efeito) — quirk pré-existente da v1, mantido para não remontar o formulário.
 - Projeto segue sem framework de testes (sem script `test`); criar infraestrutura de testes é decisão separada (não entrou para não adicionar dependências fora do escopo do redesign).
 - `elapsedSeconds` no banner de Treinos mostra o último valor persistido (o tick só roda na rota de Sessão) — comportamento herdado da store.
+- `/dashboard` em produção emite erros de hydration do React (#425/#418/#423) — pré-existente da Sprint 1 (saudação/data calculadas no SSR em UTC divergem do cliente; nenhum arquivo de Dashboard foi tocado nesta sprint). `/treinos` e `/sessao` estão com console limpo em produção.
+
+**Deploy**
+- Push `99f62e5` → auto-deploy Vercel **Ready** (43s) em https://fitness-life-rpg.vercel.app. Validado em produção: `/treinos` renderiza, série registrada em sessão real, cancelamento com confirmação limpa o storage, sem overflow horizontal em 390px, Dashboard continua funcionando. Screenshot `docs/screenshots/sprint2/15-producao-treinos-desktop.png`.
 
 #### Sprint 1 (v2) — Consolidação da fundação visual + navigation shell + Dashboard piloto — 2026-07-10
 
