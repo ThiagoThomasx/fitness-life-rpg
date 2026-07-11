@@ -13,6 +13,40 @@
 
 ### Entregas
 
+#### Sprint 2 (v2) — Treinos e Sessão Ativa — 2026-07-10
+
+**Arquitetura**
+- `treinos/page.tsx` reduzido de **875 para 271 linhas**; `sessao/page.tsx` de **750 para 346 linhas** (ambas viraram dados + composição; a rota de Sessão mantém deliberadamente a lógica de finalização — XP/PR/atributos/badges/histórico — no mesmo lugar de antes, sem mover lógica de negócio).
+- Componentes extraídos para `src/components/workouts/`: `WorkoutCard`, `WorkoutFilters` (+ `filterByTime`), `ActiveSessionBanner`, `WorkoutQuickStart`, `WorkoutBuilderModal` (com `ExerciseTargetRow` interno), `CreateExerciseModal`, `ExerciseLibrary`, `ExerciseHistoryModal`.
+- Componentes extraídos para `src/components/session/`: `SessionHeader`, `SessionExerciseCard`, `AddSetForm`, `ExercisePickerModal`, `WorkoutSummaryModal`.
+- Novos componentes compartilhados: `ModalShell` (overlay + painel com Escape, foco, scroll-lock com contador para modais aninhados, `role="dialog"`/`aria-modal`) e `ConfirmDialog` — substituem todos os `window.confirm` e overlays ad-hoc do escopo.
+- Novos arquivos de estilo de domínio: `src/styles/workouts.css` e `src/styles/session.css`; classes de modal adicionadas a `components.css`; `.fab-create` (morta) removida.
+
+**Visual**
+- Zero hex/rgba hardcoded nas duas rotas e em todos os componentes extraídos (antes: 74 em Treinos, 70 em Sessão). Verde Spotify (`#1db954`/`rgba(29,185,84,…)`) zerado no escopo, incluindo `toMockWorkoutShape` (agora usa `categoryColor(...).fill`).
+- Treinos: headline Fraunces, sessão ativa em banner prioritário no topo (pulso + Continuar), início rápido com recomendação real (`getWorkoutRecommendations`), filtros tokenizados com `aria-pressed`, seções separadas "Meus treinos" × "Templates", CTA "Criar treino" como botão primário compacto + tile tracejado no estado vazio (sem grandes superfícies chartreuse).
+- Sessão: header compacto (nome do treino, timer tabular chartreuse, barra de progresso por exercício, séries totais), cards de exercício com meta 🎯 + sugestão de progressão, séries com ícone ✓ (estado não depende só de cor), inputs ≥44px com labels e `inputMode` numérico, resumo pós-treino com stats reais (duração/exercícios/séries), XP em Fraunces, callouts de level-up/PR e dois destinos (Dashboard/Treinos).
+
+**Correções funcionais (idempotência/segurança — documentadas)**
+- Duplo clique em "Finalizar" salvava o treino 2× no histórico → guard síncrono (`finishedRef`); validado com triple-click (1 entrada).
+- Duplo clique na confirmação do resumo aplicaria XP/atributos/badges 2× → guard `confirmedRef` + estado de processamento no botão.
+- "Cancelar" encerrava a sessão sem confirmação → `ConfirmDialog` de descarte.
+- Iniciar treino com sessão ativa descartava a sessão silenciosamente → diálogo de conflito com opção de voltar.
+- Finalizar com exercícios sem séries agora pede confirmação explícita.
+- Botões editar/excluir/duplicar da linha de treino eram invisíveis em touch (`display:none` até hover) → visíveis com alvo ≥40px via `@media (hover: none)`.
+- Exclusões (treino e exercício) migradas de `window.confirm` para diálogo acessível com retorno de foco.
+
+**QA**
+- Fluxo completo validado no navegador: iniciar → registrar séries → refresh (sessão recuperada com séries e tempo) → finalizar → resumo → Dashboard refletindo o treino ("Último treino") → histórico com 1 entrada → sessão removida do storage.
+- Console limpo (apenas logs de dev do Fast Refresh). Sem overflow horizontal em 390px; inputs de série com ~47px de altura no mobile.
+- Screenshots em `docs/screenshots/sprint2/` (13 estados: Treinos 1440/1280/390, filtro ativo, sessão ativa, modal de criação, Sessão 1440/390, séries registradas, desempenho anterior, confirmação de finalização, resumo, estado vazio). **Não existe timer de descanso no código** — o screenshot "descanso ativo" não se aplica (nada foi removido; a feature nunca existiu).
+- Build, lint e typecheck limpos.
+
+**Pendências conhecidas**
+- Peso/reps padrão do formulário de série usam a meta do treino custom apenas quando o histórico existe no primeiro render (as metas carregam em efeito) — quirk pré-existente da v1, mantido para não remontar o formulário.
+- Projeto segue sem framework de testes (sem script `test`); criar infraestrutura de testes é decisão separada (não entrou para não adicionar dependências fora do escopo do redesign).
+- `elapsedSeconds` no banner de Treinos mostra o último valor persistido (o tick só roda na rota de Sessão) — comportamento herdado da store.
+
 #### Sprint 1 (v2) — Consolidação da fundação visual + navigation shell + Dashboard piloto — 2026-07-10
 
 **Design system**

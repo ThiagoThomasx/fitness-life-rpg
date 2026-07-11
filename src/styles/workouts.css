@@ -1,0 +1,292 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Treinos — estilos de domínio (Sprint 2). Todos os valores vêm de tokens.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Filtros de duração / tipo ─────────────────────────────────────────── */
+
+.filter-pill {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  transition: background var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
+  min-height: 32px;
+}
+
+.filter-pill:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.filter-pill--active {
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent-border);
+  color: var(--color-accent);
+}
+
+.filter-row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* ─── Banner de sessão ativa ────────────────────────────────────────────── */
+
+.active-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-card-lg);
+  padding: var(--space-4) var(--space-5);
+  position: relative;
+  overflow: hidden;
+}
+
+.active-banner::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--color-accent);
+}
+
+.active-banner__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-round);
+  background: var(--color-accent);
+  flex-shrink: 0;
+  animation: active-banner-pulse 2s ease-in-out infinite;
+}
+
+@keyframes active-banner-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .active-banner__pulse {
+    animation: none;
+  }
+}
+
+/* ─── Início rápido (recomendação) ──────────────────────────────────────── */
+
+.quickstart {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  padding: var(--space-3) var(--space-4);
+}
+
+.quickstart__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-control);
+  background: var(--color-deep-forest);
+  font-size: var(--text-lg);
+  flex-shrink: 0;
+}
+
+/* ─── Lista de treinos ──────────────────────────────────────────────────── */
+
+.workout-list {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card-lg);
+  overflow: hidden;
+}
+
+.workout-list > * + * {
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+/* Ações da linha sempre visíveis e com alvo de toque maior em touch */
+@media (hover: none) {
+  .workout-row__icon-btn {
+    display: inline-flex;
+    min-width: 40px;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .workout-row__start-btn {
+    min-height: 40px;
+    padding: var(--space-2) var(--space-4);
+  }
+}
+
+/* ─── Card tracejado "criar treino" ─────────────────────────────────────── */
+
+.create-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  background: transparent;
+  border: 1px dashed var(--color-border-default);
+  border-radius: var(--radius-card-lg);
+  padding: var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+
+.create-tile:hover {
+  border-color: var(--color-accent-border);
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+/* ─── Builder: seletor de exercícios ────────────────────────────────────── */
+
+.picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 40dvh;
+  overflow-y: auto;
+}
+
+.picker-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
+}
+
+.picker-row:hover {
+  background: var(--color-surface-hover);
+}
+
+.picker-row--selected {
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent-border);
+}
+
+.picker-row__check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-on-accent);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  flex-shrink: 0;
+}
+
+.picker-row--selected .picker-row__check {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* ─── Builder: metas por exercício ──────────────────────────────────────── */
+
+.target-card {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.target-inputs {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.target-input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+.target-input .input {
+  width: 64px;
+  text-align: center;
+  padding: var(--space-2);
+}
+
+.target-input--wide .input {
+  width: 76px;
+}
+
+/* ─── Biblioteca de exercícios ──────────────────────────────────────────── */
+
+.library-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--color-canvas);
+  z-index: var(--z-drawer);
+  overflow-y: auto;
+}
+
+.library-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  padding: var(--space-3) var(--space-4);
+}
+
+/* ─── Chips de série (histórico) ────────────────────────────────────────── */
+
+.set-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  padding: 3px var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.set-chip--pr {
+  background: var(--color-warning-subtle);
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}

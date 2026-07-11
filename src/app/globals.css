@@ -1,6 +1,8 @@
 @import '../styles/tokens.css';
 @import '../styles/components.css';
 @import '../styles/shell.css';
+@import '../styles/workouts.css';
+@import '../styles/session.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

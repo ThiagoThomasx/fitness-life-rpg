@@ -22,15 +22,15 @@ Abordagem: **híbrida**. Mantém toda a lógica e dados da v1 (treinos, XP, atri
 - [x] Alinhar documentação com o código real (stores, chaves `lrpg-fit:*`, navegação)
 - [x] Build, lint e typecheck limpos; QA desktop + mobile com screenshots
 
-## Sprint 2 — Treinos e Sessão Ativa
+## Sprint 2 — Treinos e Sessão Ativa ✅
 **Objetivo:** migrar a tela mais usada do app para o novo sistema visual.
 **Duração estimada:** 3–4 dias
 **Critério de aceite:** fluxo completo (iniciar → série → finalizar) visualmente consistente com o Dashboard.
 
-- [ ] Lista de treinos e templates no novo padrão
-- [ ] Sessão ativa (timer, séries) redesenhada
-- [ ] Modal de resultado/XP alinhado ao design system
-- [ ] Histórico de treino e detecção de PR mantidos, só reestilizados
+- [x] Lista de treinos e templates no novo padrão (seções Meus treinos × Templates, filtros tokenizados, banner de sessão ativa, início rápido com recomendação)
+- [x] Sessão ativa (timer, séries) redesenhada (header compacto com progresso, cards de exercício, inputs touch-friendly, ✓ em séries)
+- [x] Modal de resultado/XP alinhado ao design system (stats reais, XP em Fraunces, callouts de level-up/PR)
+- [x] Histórico de treino e detecção de PR mantidos, só reestilizados (lógica de XP/PR/atributos/badges intocada; guards de idempotência adicionados contra duplo clique)
 
 ## Sprint 3 — Perfil (Atributos, Badges)
 **Objetivo:** Perfil consistente com Dashboard e Treinos.

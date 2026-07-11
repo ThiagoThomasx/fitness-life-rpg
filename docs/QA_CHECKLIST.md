@@ -91,7 +91,7 @@ Use esta lista antes de cada deploy ou release. Marque cada item manualmente.
 
 ## 13. Mobile / Responsivo
 
-- [ ] BottomNav visível e funcional em telas < 430px
+- [ ] Sidebar/drawer (hamburger) visível e funcional em telas < 430px
 - [ ] Todos os cards e botões acessíveis em mobile
 - [ ] Nenhum overflow horizontal
 - [ ] Inputs de teclado numérico funcionam em mobile

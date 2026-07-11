@@ -1,5 +1,6 @@
 import type { Exercise } from '@/types/database'
 import { MOCK_WORKOUT_TYPES, MOCK_EXERCISES } from './mock/data'
+import { categoryColor } from './theme-colors'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -194,7 +195,7 @@ export function toMockWorkoutShape(cw: CustomWorkout, allExercises: Exercise[]) 
     created_at: cw.createdAt,
     workout_type: workoutType,
     exercises,
-    color: '#1db954',
+    color: categoryColor(workoutType.category).fill,
     estimated_minutes: cw.estimatedMinutes,
     isCustom: true as const,
     targets: cw.targets ?? [],

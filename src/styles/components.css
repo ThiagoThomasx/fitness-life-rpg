@@ -573,6 +573,64 @@
   }
 }
 
+/* ─── Modal shell (overlay + painel) ────────────────────────────────────── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.modal-overlay--sheet {
+  align-items: flex-end;
+  padding: 0;
+}
+
+.modal-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-modal);
+  width: 100%;
+  outline: none;
+}
+
+.modal-panel--center {
+  max-width: 420px;
+  border-radius: var(--radius-modal);
+  padding: var(--space-6) var(--space-5);
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+
+.modal-panel--sheet {
+  max-width: 640px;
+  border-radius: var(--radius-modal) var(--radius-modal) 0 0;
+  border-bottom: none;
+  padding: var(--space-6) var(--space-4) var(--space-8);
+  max-height: 92dvh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.modal-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  letter-spacing: var(--tracking-tight);
+}
+
 /* ─── Empty state ───────────────────────────────────────────────────────── */
 
 .empty-state {
@@ -1027,28 +1085,3 @@
   background: var(--color-border-default);
 }
 
-.fab-create {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  background: var(--color-accent);
-  color: var(--color-text-on-accent);
-  border: none;
-  border-radius: var(--radius-pill);
-  padding: var(--space-3) var(--space-5);
-  font-size: var(--text-sm);
-  font-weight: var(--font-bold);
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-out),
-              transform var(--duration-fast) var(--ease-out),
-              box-shadow var(--duration-fast) var(--ease-out);
-  box-shadow: var(--shadow-card-hover);
-}
-
-.fab-create:hover {
-  background: var(--color-accent-hover);
-}
-
-.fab-create:active {
-  transform: scale(0.97);
-}
