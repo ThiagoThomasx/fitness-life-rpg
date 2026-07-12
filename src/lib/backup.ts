@@ -88,6 +88,77 @@ export function validateBackupPayload(raw: unknown): raw is BackupPayload {
   return true
 }
 
+// Chaves cujo valor persistido deve ser um array (histórico, badges, logs).
+const ARRAY_KEYS: ReadonlySet<StorageKey> = new Set<StorageKey>([
+  'lrpg-fit:workout-history',
+  'lrpg-fit:badges',
+  'lrpg-fit:daily-logs',
+  'lrpg-fit:reward-events',
+  'lrpg-fit:nutrition-logs',
+  'lrpg-fit:custom-workouts',
+  'lrpg-fit:custom-exercises',
+])
+
+// Chaves cujo valor persistido deve ser um objeto (inclui o envelope
+// `{ state, version }` que o middleware `persist` do Zustand grava).
+const OBJECT_KEYS: ReadonlySet<StorageKey> = new Set<StorageKey>([
+  'lrpg-fit:character',
+  'lrpg-fit:active-session',
+  'lrpg-fit:nutrition-goal',
+  'lrpg-fit:missions-completed',
+  'lrpg-fit:weekly-plan',
+  'lrpg-fit:campaigns',
+  'lrpg-fit:preferences',
+])
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isNonNegativeFiniteNumber(value: unknown): boolean {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+}
+
+function isJsonSerializable(value: unknown): boolean {
+  try {
+    JSON.stringify(value)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Validação estrutural mínima por chave (Etapa 3 da Sprint 10): não modela o
+ * schema completo de cada domínio, mas rejeita as inversões de tipo mais
+ * perigosas (array virando string, XP/nível negativo ou não numérico) antes
+ * de qualquer escrita em localStorage.
+ */
+function validateKeyValue(key: StorageKey, value: unknown): boolean {
+  if (ARRAY_KEYS.has(key)) return Array.isArray(value)
+
+  if (OBJECT_KEYS.has(key)) {
+    if (!isPlainObject(value)) return false
+
+    if (key === 'lrpg-fit:character' || key === 'lrpg-fit:active-session') {
+      const state = (value as Record<string, unknown>).state
+      if (state === undefined) return true // formato legado sem envelope
+      if (!isPlainObject(state)) return false
+      const character = state.character
+      if (character !== undefined && character !== null) {
+        if (!isPlainObject(character)) return false
+        for (const field of ['level', 'current_xp', 'total_xp'] as const) {
+          if (field in character && !isNonNegativeFiniteNumber(character[field])) return false
+        }
+      }
+    }
+    return true
+  }
+
+  // avatar, char-name, rpg_last_seen_level: valores livres (string/number).
+  return true
+}
+
 export function importBackup(payload: BackupPayload): ImportResult {
   if (!validateBackupPayload(payload)) {
     return { ok: false, error: 'Arquivo inválido ou corrompido.', restoredKeys: [], skippedKeys: [] }
@@ -102,20 +173,56 @@ export function importBackup(payload: BackupPayload): ImportResult {
     }
   }
 
+  const data = payload.data as Record<string, unknown>
+
+  // Valida TUDO antes de escrever qualquer coisa: garante atomicidade — um
+  // backup parcialmente corrompido não deve alterar nenhum dado existente.
+  for (const key of STORAGE_KEYS) {
+    const value = data[key]
+    if (value === undefined || value === null) continue
+    if (!isJsonSerializable(value) || !validateKeyValue(key, value)) {
+      return {
+        ok: false,
+        error: `Backup contém dados inválidos em "${key}". Nenhum dado foi alterado.`,
+        restoredKeys: [],
+        skippedKeys: [],
+      }
+    }
+  }
+
+  // Snapshot do estado atual: permite reverter tudo se uma escrita falhar no
+  // meio (ex.: quota do localStorage excedida), preservando atomicidade.
+  const snapshot = new Map<StorageKey, string | null>()
+  for (const key of STORAGE_KEYS) {
+    snapshot.set(key, window.localStorage.getItem(key))
+  }
+
   const restoredKeys: string[] = []
   const skippedKeys: string[] = []
 
-  for (const key of STORAGE_KEYS) {
-    const value = (payload.data as Record<string, unknown>)[key]
-    if (value !== undefined && value !== null) {
-      try {
+  try {
+    for (const key of STORAGE_KEYS) {
+      const value = data[key]
+      if (value !== undefined && value !== null) {
         window.localStorage.setItem(key, JSON.stringify(value))
         restoredKeys.push(key)
-      } catch {
+      } else {
         skippedKeys.push(key)
       }
-    } else {
-      skippedKeys.push(key)
+    }
+  } catch {
+    snapshot.forEach((raw, key) => {
+      if (raw === null) {
+        window.localStorage.removeItem(key)
+      } else {
+        window.localStorage.setItem(key, raw)
+      }
+    })
+    return {
+      ok: false,
+      error: 'Falha ao salvar o backup (armazenamento cheio ou indisponível). Nenhum dado foi alterado.',
+      restoredKeys: [],
+      skippedKeys: [],
     }
   }
 
