@@ -4,8 +4,10 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useCharacterStore, xpProgress, xpToNextLevel } from "@/stores/useCharacterStore"
 import { useBadgeStore } from "@/stores/useBadgeStore"
+import { useRewardStore } from "@/stores/useRewardStore"
+import { addRewardEvent } from "@/lib/reward-events"
 import { MOCK_CHARACTER } from "@/lib/mock/data"
-import { getDailyMissions, buildMissionsInput, completeMission, type DailyMission } from "@/lib/daily-missions"
+import { getDailyMissions, buildMissionsInput, completeMission, getMissionCompletions, type DailyMission } from "@/lib/daily-missions"
 import { getWeeklyProgress, type WeeklyProgress } from "@/lib/weekly-progress"
 import { getWeeklyPlanProgress } from "@/lib/weekly-plan"
 import type { WeeklyPlanProgress } from "@/types/planning"
@@ -28,8 +30,10 @@ import { LastWorkout } from "@/components/dashboard/LastWorkout"
 
 export default function DashboardPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
+  const applyDiaryXp = useCharacterStore((s) => s.applyDiaryXp)
   const characterHydrated = useHasHydrated(useCharacterStore)
   const { earnedBadges, refreshBadges } = useBadgeStore()
+  const pushReward = useRewardStore((s) => s.pushReward)
   const [missions, setMissions] = useState<DailyMission[]>([])
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress | null>(null)
   const [planProgress, setPlanProgress] = useState<WeeklyPlanProgress | null>(null)
@@ -78,8 +82,22 @@ export default function DashboardPage() {
   }, [storeCharacter?.level])
 
   function handleCompleteMission(id: string) {
+    // Checa a fonte da verdade (localStorage) de forma síncrona: evita
+    // creditar XP duas vezes em cliques duplicados antes do re-render.
+    if (getMissionCompletions()[id]) return
+    const mission = missions.find((m) => m.id === id)
     completeMission(id)
     setMissions(getDailyMissions(buildMissionsInput()))
+    if (mission) {
+      applyDiaryXp(mission.xpReward)
+      pushReward(addRewardEvent({
+        type: "xp",
+        title: mission.title,
+        subtitle: "Missão concluída!",
+        value: `+${mission.xpReward} XP`,
+        icon: mission.icon,
+      }))
+    }
   }
 
   return (
