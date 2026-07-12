@@ -185,6 +185,76 @@ describe('importBackup and the character envelope (Hotfix 10.1)', () => {
   })
 })
 
+describe('Sprint 12 — PR metadata round-trip', () => {
+  it('preserves new optional ExerciseRecord PR fields through export -> reset -> import', () => {
+    const historyWithPrFields = [
+      {
+        id: 'w1',
+        workoutId: 'wt-1',
+        workoutName: 'Peito',
+        workoutColor: '#000',
+        category: 'strength',
+        startedAt: '2026-07-10T00:00:00.000Z',
+        completedAt: '2026-07-10T00:00:00.000Z',
+        durationSeconds: 1800,
+        xpEarned: 100,
+        prsCount: 1,
+        exercises: [
+          {
+            exerciseId: 'ex-1',
+            exerciseName: 'Supino',
+            sets: [{ weight_kg: 50, reps: 8, isPr: true }],
+            isWeightPr: true,
+            isRepsPr: false,
+            isVolumePr: true,
+            isFirstTime: false,
+            estimated1RMKg: 63.3,
+          },
+        ],
+      },
+    ]
+    window.localStorage.setItem('lrpg-fit:workout-history', JSON.stringify(historyWithPrFields))
+
+    const payload = exportBackup()
+    resetAllData()
+    const result = importBackup(payload)
+
+    expect(result.ok).toBe(true)
+    const restored = JSON.parse(window.localStorage.getItem('lrpg-fit:workout-history') as string)
+    expect(restored).toEqual(historyWithPrFields)
+  })
+
+  it('still validates and imports an old-format history entry missing the new PR fields', () => {
+    const legacyHistory = [
+      {
+        id: 'w-legacy',
+        workoutId: 'wt-1',
+        workoutName: 'Costas',
+        workoutColor: '#000',
+        category: 'strength',
+        startedAt: '2026-01-01T00:00:00.000Z',
+        completedAt: '2026-01-01T00:00:00.000Z',
+        durationSeconds: 900,
+        xpEarned: 50,
+        prsCount: 0,
+        exercises: [
+          { exerciseId: 'ex-2', exerciseName: 'Remada', sets: [{ weight_kg: 30, reps: 10, isPr: false }] },
+        ],
+      },
+    ]
+    const payload: BackupPayload = {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: { 'lrpg-fit:workout-history': legacyHistory },
+    }
+
+    const result = importBackup(payload)
+
+    expect(result.ok).toBe(true)
+    expect(JSON.parse(window.localStorage.getItem('lrpg-fit:workout-history') as string)).toEqual(legacyHistory)
+  })
+})
+
 describe('resetAllData', () => {
   it('removes every known storage key and leaves nothing behind', () => {
     seedSampleData()

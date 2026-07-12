@@ -12,6 +12,7 @@ import { NarrativeSection } from "@/components/insights/NarrativeSection"
 import { WeekVolumeSection } from "@/components/insights/WeekVolumeSection"
 import { DayFrequencySection } from "@/components/insights/DayFrequencySection"
 import { ExerciseLoadSection } from "@/components/insights/ExerciseLoadSection"
+import { ExerciseGrowthSection } from "@/components/insights/ExerciseGrowthSection"
 import { CategorySection } from "@/components/insights/CategorySection"
 import { PrsSection } from "@/components/insights/PrsSection"
 import { AttributesSection } from "@/components/insights/AttributesSection"
@@ -64,6 +65,7 @@ export default function InsightsPage() {
           </div>
 
           <ExerciseLoadSection data={data} />
+          <ExerciseGrowthSection data={data} />
 
           <div className="insights-chart-grid">
             <CategorySection data={data} />

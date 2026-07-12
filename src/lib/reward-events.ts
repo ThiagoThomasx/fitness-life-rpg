@@ -1,4 +1,4 @@
-export type RewardEventType = 'xp' | 'badge' | 'level_up' | 'attribute_up'
+export type RewardEventType = 'xp' | 'badge' | 'level_up' | 'attribute_up' | 'pr'
 
 export interface RewardEvent {
   id: string

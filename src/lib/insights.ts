@@ -1,6 +1,14 @@
 import { getWorkoutHistory } from './workout-history'
 import { getDailyLogs } from './daily-log'
 import { getNutritionLogs, getNutritionGoal } from './nutrition'
+import {
+  calculateVolumeKg,
+  getRecentRecords,
+  getTopGrowthExercises,
+  getStagnantExercises,
+  type RecentRecordEntry,
+  type ExerciseGrowthEntry,
+} from './exercise-records'
 
 export interface WeekVolume {
   week: string
@@ -11,7 +19,7 @@ export interface WeekVolume {
 export interface ExerciseLoad {
   exerciseId: string
   exerciseName: string
-  data: Array<{ date: string; maxWeight: number }>
+  data: Array<{ date: string; maxWeight: number; volumeKg: number }>
 }
 
 export interface CategoryDist {
@@ -57,6 +65,9 @@ export interface InsightsData {
   recentPrs: RecentPr[]
   nutritionWeeks: NutritionWeek[]
   nutritionGoalCalories: number
+  recentRecords: RecentRecordEntry[]
+  topGrowthExercises: ExerciseGrowthEntry[]
+  stagnantExercises: ExerciseGrowthEntry[]
 }
 
 function getIsoWeek(date: Date): string {
@@ -114,12 +125,12 @@ export function computeInsights(): InsightsData {
 
   const topExerciseLoads: ExerciseLoad[] = top3Ids.map((exId) => {
     const name = exerciseTrainCount.get(exId)!.name
-    const data: Array<{ date: string; maxWeight: number }> = []
+    const data: Array<{ date: string; maxWeight: number; volumeKg: number }> = []
     for (const w of [...history].reverse()) {
       const ex = w.exercises.find((e) => e.exerciseId === exId)
       if (!ex) continue
       const max = Math.max(...ex.sets.map((s) => s.weight_kg), 0)
-      if (max > 0) data.push({ date: w.completedAt.slice(0, 10), maxWeight: max })
+      if (max > 0) data.push({ date: w.completedAt.slice(0, 10), maxWeight: max, volumeKg: calculateVolumeKg(ex.sets) })
     }
     return { exerciseId: exId, exerciseName: name, data }
   }).filter((e) => e.data.length >= 2)
@@ -208,5 +219,8 @@ export function computeInsights(): InsightsData {
     recentPrs,
     nutritionWeeks,
     nutritionGoalCalories,
+    recentRecords: getRecentRecords(5),
+    topGrowthExercises: getTopGrowthExercises(3),
+    stagnantExercises: getStagnantExercises(3, 3),
   }
 }

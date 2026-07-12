@@ -10,6 +10,13 @@ export interface ExerciseRecord {
   exerciseId: string
   exerciseName: string
   sets: SetRecord[]
+  // Sprint 12: metadados aditivos de recorde (aba de progressão/Insights/Perfil).
+  // Nunca lidos por calculateXpGain/checkAndEarnBadges — esses seguem via prsCount/isPr.
+  isWeightPr?: boolean
+  isRepsPr?: boolean
+  isVolumePr?: boolean
+  isFirstTime?: boolean
+  estimated1RMKg?: number | null
 }
 
 export interface CompletedWorkout {

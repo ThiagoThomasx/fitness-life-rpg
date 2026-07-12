@@ -17,6 +17,7 @@ import { useRewardStore } from "@/stores/useRewardStore"
 import { useBadgeStore } from "@/stores/useBadgeStore"
 import { getCustomWorkouts, type ExerciseTarget } from "@/lib/custom-workouts"
 import { suggestProgression } from "@/lib/progression"
+import { detectExercisePrs, getLastExecutionSummary, type ExercisePrDetection } from "@/lib/exercise-records"
 import { categoryColor } from "@/lib/theme-colors"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
@@ -58,6 +59,7 @@ export default function SessaoPage() {
   const [showPicker, setShowPicker] = useState(false)
   const [xpResult, setXpResult] = useState<XpGainResult | null>(null)
   const [prExerciseIds, setPrExerciseIds] = useState<Set<string>>(new Set())
+  const [recordEvents, setRecordEvents] = useState<Array<{ exerciseName: string; label: string }>>([])
   const [workoutTargets, setWorkoutTargets] = useState<ExerciseTarget[]>([])
   const [workoutName, setWorkoutName] = useState("Treino")
   const [showCancelDialog, setShowCancelDialog] = useState(false)
@@ -136,6 +138,21 @@ export default function SessaoPage() {
     }
     setPrExerciseIds(prIds)
 
+    // Sprint 12 — detecção ampliada de recordes (peso/reps/volume/primeira vez).
+    // Aditiva: não altera prsCount nem os argumentos passados a calculateXpGain abaixo.
+    const exerciseRecordFlags = new Map<string, ExercisePrDetection>()
+    const newRecordEvents: Array<{ exerciseName: string; label: string }> = []
+    for (const activeSet of activeSets) {
+      if (activeSet.sets.length === 0) continue
+      const flags = detectExercisePrs(activeSet.exercise.id, activeSet.sets)
+      exerciseRecordFlags.set(activeSet.exercise.id, flags)
+      if (flags.isFirstTime) newRecordEvents.push({ exerciseName: activeSet.exercise.name, label: "Primeira vez!" })
+      else if (flags.isWeightPr) newRecordEvents.push({ exerciseName: activeSet.exercise.name, label: "Novo peso máximo" })
+      else if (flags.isVolumePr) newRecordEvents.push({ exerciseName: activeSet.exercise.name, label: "Novo volume máximo" })
+      else if (flags.isRepsPr) newRecordEvents.push({ exerciseName: activeSet.exercise.name, label: "Mais repetições" })
+    }
+    setRecordEvents(newRecordEvents)
+
     const result = calculateXpGain(workoutType, totalSets, elapsedSeconds, char, prsCount)
 
     // Persiste o treino no histórico
@@ -153,15 +170,23 @@ export default function SessaoPage() {
       completedAt: new Date().toISOString(),
       durationSeconds: elapsedSeconds,
       xpEarned: result.xp_earned,
-      exercises: activeSets.map((s) => ({
-        exerciseId: s.exercise.id,
-        exerciseName: s.exercise.name,
-        sets: s.sets.map((set) => ({
-          weight_kg: set.weight_kg,
-          reps: set.reps,
-          isPr: prIds.has(s.exercise.id),
-        })),
-      })),
+      exercises: activeSets.map((s) => {
+        const flags = exerciseRecordFlags.get(s.exercise.id)
+        return {
+          exerciseId: s.exercise.id,
+          exerciseName: s.exercise.name,
+          sets: s.sets.map((set) => ({
+            weight_kg: set.weight_kg,
+            reps: set.reps,
+            isPr: prIds.has(s.exercise.id),
+          })),
+          isWeightPr: flags?.isWeightPr ?? false,
+          isRepsPr: flags?.isRepsPr ?? false,
+          isVolumePr: flags?.isVolumePr ?? false,
+          isFirstTime: flags?.isFirstTime ?? false,
+          estimated1RMKg: flags?.estimated1RMKg ?? null,
+        }
+      }),
       prsCount,
     }
     saveCompletedWorkout(completedWorkout)
@@ -246,6 +271,17 @@ export default function SessaoPage() {
       pushReward(ev)
     }
 
+    // Recompensa de novo recorde pessoal (Sprint 12) — aditiva, não afeta badges/XP acima.
+    for (const rec of recordEvents) {
+      const ev = addRewardEvent({
+        type: "pr",
+        title: "🏆 Novo Recorde!",
+        subtitle: `${rec.exerciseName} — ${rec.label}`,
+        icon: "🏆",
+      })
+      pushReward(ev)
+    }
+
     refreshBadges()
     endSession()
     router.push(destination)
@@ -273,6 +309,7 @@ export default function SessaoPage() {
       {activeSets.map((activeSet) => {
         const target = workoutTargets.find((t) => t.exerciseId === activeSet.exercise.id)
         const suggestion = suggestProgression(activeSet.exercise.id, target?.targetWeightKg ?? null)
+        const lastExecution = getLastExecutionSummary(activeSet.exercise.id)
 
         return (
           <SessionExerciseCard
@@ -282,6 +319,7 @@ export default function SessaoPage() {
             target={target}
             suggestion={suggestion}
             isPr={prExerciseIds.has(activeSet.exercise.id)}
+            lastExecution={lastExecution}
             onAddSet={(weight, reps) =>
               addSet(activeSet.exercise.id, {
                 exercise_id: activeSet.exercise.id,

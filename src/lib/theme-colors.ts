@@ -65,6 +65,7 @@ export const REWARD_COLORS: Record<string, ThemeColor> = {
   level_up:     { bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.4)", text: "#f59e0b", fill: "#f59e0b" },
   attribute_up: { bg: "rgba(200,241,105,0.12)",  border: "rgba(200,241,105,0.3)",  text: "#c8f169", fill: "#c8f169" },
   xp:           { bg: "rgba(200,241,105,0.1)",   border: "rgba(200,241,105,0.25)", text: "#c8f169", fill: "#c8f169" },
+  pr:           { bg: "rgba(245,158,11,0.15)",   border: "rgba(245,158,11,0.4)",   text: "#f59e0b", fill: "#f59e0b" },
 }
 
 export function rewardColor(type: string): ThemeColor {

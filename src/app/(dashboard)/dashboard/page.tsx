@@ -28,6 +28,7 @@ import { RecentBadges } from "@/components/dashboard/RecentBadges"
 import { NextMilestone } from "@/components/dashboard/NextMilestone"
 import { LastWorkout } from "@/components/dashboard/LastWorkout"
 import { WorkoutRecommendationCard } from "@/components/dashboard/WorkoutRecommendationCard"
+import { RecentRecordsCard } from "@/components/dashboard/RecentRecordsCard"
 
 export default function DashboardPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
@@ -152,6 +153,7 @@ export default function DashboardPage() {
             {planProgress && <WeeklyPlanCard planProgress={planProgress} />}
             <TodaySection />
             {earnedBadges.length > 0 && <RecentBadges badges={earnedBadges} />}
+            <RecentRecordsCard />
             <NextMilestone totalWorkouts={totalWorkouts} />
           </div>
         </div>

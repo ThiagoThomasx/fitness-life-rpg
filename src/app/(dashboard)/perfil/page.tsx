@@ -7,11 +7,13 @@ import { BADGE_DEFINITIONS } from "@/lib/badges"
 import { getWorkoutHistory } from "@/lib/workout-history"
 import { getDiaryCount } from "@/lib/daily-log"
 import { getRewardHistory, type RewardEvent } from "@/lib/reward-events"
+import { getProfileRecordStats, type ProfileRecordStats } from "@/lib/exercise-records"
 import { MOCK_CHARACTER } from "@/lib/mock/data"
 import { ProfileHero } from "@/components/profile/ProfileHero"
 import { LevelProgressCard } from "@/components/profile/LevelProgressCard"
 import { AttributesGrid } from "@/components/profile/AttributesGrid"
 import { BadgesGrid } from "@/components/profile/BadgesGrid"
+import { RecordsSection } from "@/components/profile/RecordsSection"
 import { RewardsHistory } from "@/components/profile/RewardsHistory"
 import { ProfileLinks } from "@/components/profile/ProfileLinks"
 
@@ -32,6 +34,7 @@ export default function PerfilPage() {
   const character = storeCharacter ?? MOCK_CHARACTER
 
   const [stats, setStats] = useState<ProfileStats>({ workouts: 0, diaries: 0, prs: 0 })
+  const [recordStats, setRecordStats] = useState<ProfileRecordStats | null>(null)
   const [rewards, setRewards] = useState<RewardEvent[]>([])
   const [avatar, setAvatar] = useState(DEFAULT_AVATAR)
   const [charName, setCharName] = useState(character.name)
@@ -49,6 +52,7 @@ export default function PerfilPage() {
       prs: history.reduce((acc, w) => acc + (w.prsCount ?? 0), 0),
     })
     setRewards(getRewardHistory())
+    setRecordStats(getProfileRecordStats())
     setAvatar(window.localStorage.getItem(AVATAR_KEY) ?? DEFAULT_AVATAR)
   }, [])
 
@@ -110,6 +114,15 @@ export default function PerfilPage() {
             character,
           }}
         />
+      </section>
+
+      <section aria-labelledby="perfil-recordes">
+        <div className="section-header">
+          <h2 id="perfil-recordes" className="section-header__title">
+            Recordes
+          </h2>
+        </div>
+        {recordStats && <RecordsSection stats={recordStats} />}
       </section>
 
       <section aria-labelledby="perfil-recompensas">

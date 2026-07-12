@@ -13,6 +13,7 @@ type SessionExerciseCardProps = {
   target?: ExerciseTarget
   suggestion: ProgressionSuggestion
   isPr: boolean
+  lastExecution?: { weightKg: number; reps: number; date: string } | null
   onAddSet: (weight: number, reps: number) => void
   onRemoveSet: (setIndex: number) => void
   onRemoveExercise: () => void
@@ -24,6 +25,7 @@ export function SessionExerciseCard({
   target,
   suggestion,
   isPr,
+  lastExecution,
   onAddSet,
   onRemoveSet,
   onRemoveExercise,
@@ -55,6 +57,13 @@ export function SessionExerciseCard({
         </div>
       </div>
       <div className="mb-2 text-xs text-muted">{exercise.muscle_groups.join(", ")}</div>
+
+      {lastExecution && sets.length === 0 && (
+        <div className="text-xs text-muted mb-2">
+          Última vez: {lastExecution.weightKg > 0 ? `${lastExecution.weightKg}kg × ` : ""}
+          {lastExecution.reps} reps
+        </div>
+      )}
 
       {/* Meta do treino + sugestão baseada no desempenho anterior */}
       {(target || sets.length === 0) && suggestion.note && (

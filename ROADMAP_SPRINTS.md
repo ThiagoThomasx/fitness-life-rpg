@@ -143,6 +143,20 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 - [x] QA Playwright (msedge) com histórico semeado em datas variadas — `docs/screenshots/sprint11/`
 - [x] Build, lint, typecheck e testes (63/63) limpos
 
+## Sprint 12 — Progressive Overload & Personal Records ✅
+**Objetivo:** acompanhar a evolução física do jogador em cada exercício — detecção automática de recordes (peso, repetições, volume, primeira execução), sugestão de progressão, e visibilidade em Insights/Dashboard/Perfil — sem alterar XP ou badges existentes. Ver `SPRINT-12.md` para o relatório completo.
+
+- [x] Auditoria: detector de PR existente (`sessao/page.tsx`) era estreito (só peso, nunca dispara na primeira execução de um exercício) e alimentava diretamente `calculateXpGain`/`checkAndEarnBadges`; decisão de manter esse caminho 100% intocado e tratar peso/reps/volume/primeira-vez como metadados aditivos, opcionais, em `ExerciseRecord` — sem nova chave de storage, sem bump de `BACKUP_VERSION`
+- [x] `src/lib/exercise-records.ts` — `calculateVolumeKg`, `calculateEstimated1RM` (Epley), `detectExercisePrs`, `getExerciseSummary`, `getLastExecutionSummary`, `getRecentRecords`, `getTopGrowthExercises`/`getStagnantExercises`, `getProfileRecordStats`
+- [x] `finishWorkout()`/`handleConfirmResult()` (sessão) wireados de forma aditiva: novos campos gravados no histórico, novo toast `'pr'` (🏆 Novo Recorde!) enfileirado junto de badge/level_up/attribute_up — `prsCount`/XP/badges seguem byte-a-byte iguais
+- [x] "Última execução" discreta no card de exercício durante a sessão ativa
+- [x] Insights enriquecido: `recentRecords` (com tipo de recorde), `topGrowthExercises`/`stagnantExercises` (novo card "Evolução por exercício"), `volumeKg` por ponto de carga (prepara gráficos futuros)
+- [x] Novo card "Últimos Recordes" no Dashboard; nova seção "Recordes" no Perfil (total, maior carga, exercício mais evoluído, maior sequência)
+- [x] "Tela de Exercícios" do escopo original resolvida enriquecendo o `ExerciseHistoryModal.tsx` já existente (volume, 1RM estimado, tendência, selos de recorde por sessão) em vez de nova rota — decisão confirmada com o usuário para não reabrir a navegação travada
+- [x] 32 testes novos (`exercise-records.test.ts`) + 2 testes de round-trip de backup (`backup.test.ts`) cobrindo PR novo, empate, carga menor, mais reps, maior volume, primeira execução, tendência, streak e compatibilidade com histórico antigo sem os novos campos
+- [x] QA end-to-end no dev server: sessão real gerou PR de peso + primeira execução, toast disparou, XP (+110) e badge ("Recorde Pessoal") idênticos ao formato pré-existente, Dashboard/Insights/Perfil consistentes — `docs/screenshots/sprint12/`
+- [x] Build, lint, typecheck e testes (95/95) limpos
+
 ---
 
 ## Feature Freeze (vigente até a Sprint 6 aceita)
