@@ -38,6 +38,17 @@ export default function ConfiguracoesPage() {
       url.searchParams.delete("resetado")
       window.history.replaceState({}, "", url.toString())
     }
+    if (params.get("importado") === "true") {
+      const count = params.get("chaves")
+      setMessage({
+        type: "ok",
+        text: count ? `Backup restaurado com sucesso! ${count} chaves importadas.` : "Backup restaurado com sucesso!",
+      })
+      const url = new URL(window.location.href)
+      url.searchParams.delete("importado")
+      url.searchParams.delete("chaves")
+      window.history.replaceState({}, "", url.toString())
+    }
   }, [refreshStatus])
 
   function showMessage(type: "ok" | "err", text: string) {
@@ -67,20 +78,25 @@ export default function ConfiguracoesPage() {
       if (!payload) {
         showMessage("err", "Arquivo inválido. Selecione um backup exportado pelo app.")
         setPanel("idle")
+        setImportFile(null)
         return
       }
       const result = importBackup(payload)
       if (!result.ok) {
         showMessage("err", result.error ?? "Falha na importação.")
-      } else {
-        showMessage("ok", `Dados restaurados! ${result.restoredKeys.length} chaves importadas.`)
-        refreshStatus()
+        setPanel("idle")
+        setImportFile(null)
+        return
       }
+      // Recarrega a página para re-hidratar as stores Zustand com os dados
+      // importados (mesmo padrão do reset): sem isso, Dashboard/Perfil
+      // continuariam mostrando o estado anterior até um refresh manual.
+      window.location.href = `/configuracoes?importado=true&chaves=${result.restoredKeys.length}`
     } catch {
       showMessage("err", "Erro ao ler o arquivo.")
+      setPanel("idle")
+      setImportFile(null)
     }
-    setPanel("idle")
-    setImportFile(null)
   }
 
   function handleResetConfirm() {
