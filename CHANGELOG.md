@@ -32,6 +32,7 @@
 - `npm run lint`, `npx tsc --noEmit` e `npm run build` limpos.
 - Playwright (Browser pane + msedge): criar/editar/duplicar/excluir treino personalizado, iniciar treino (navega para `/sessao`), guard de sessão ativa já em andamento (diálogo "descartar e iniciar"), persistência após reload, responsividade sem overflow horizontal em 1280px/768px/390px. Nenhum erro de console em nenhum cenário.
 - Screenshots desktop (1280px) + mobile (390px), estado populado e vazio, em `docs/screenshots/sprint8/`.
+- Push `699862a` → auto-deploy Vercel **Ready**. Validado em produção (`https://fitness-life-rpg.vercel.app/treinos`): hero, stats, recomendação e empty state idênticos ao ambiente local, sem erros de console. Screenshot `docs/screenshots/sprint8/producao-treinos-desktop.png`.
 
 #### Sprint 7 (v2) — Sessão Ativa: QA Real e Fechamento da Pendência da Sprint 6 — 2026-07-11
 
