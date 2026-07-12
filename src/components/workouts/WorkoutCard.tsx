@@ -3,6 +3,8 @@
 import type { MockWorkout } from "@/lib/mock/data"
 import type { ExerciseTarget } from "@/lib/custom-workouts"
 import { categoryColor } from "@/lib/theme-colors"
+import type { WorkoutRecoveryInfo } from "@/lib/workout-recovery"
+import { WorkoutStatus } from "./WorkoutStatus"
 
 export type AnyWorkout = MockWorkout & { isCustom?: boolean; targets?: ExerciseTarget[] }
 
@@ -14,6 +16,8 @@ type WorkoutCardProps = {
   onDuplicate?: () => void
   isRecommended?: boolean
   lastCompletedAt?: string
+  recovery?: WorkoutRecoveryInfo
+  isTopRecoveryPick?: boolean
 }
 
 function formatLastCompleted(iso: string): string {
@@ -28,6 +32,8 @@ export function WorkoutCard({
   onDuplicate,
   isRecommended,
   lastCompletedAt,
+  recovery,
+  isTopRecoveryPick,
 }: WorkoutCardProps) {
   // Cor dinâmica por categoria — mapa centralizado em theme-colors.ts
   const colors = categoryColor(workout.workout_type.category)
@@ -63,6 +69,11 @@ export function WorkoutCard({
             <>&nbsp;·&nbsp;último em {formatLastCompleted(lastCompletedAt)}</>
           )}
         </div>
+        {recovery && (
+          <div className="workout-row__recovery">
+            <WorkoutStatus recovery={recovery} isTopPick={isTopRecoveryPick} />
+          </div>
+        )}
       </div>
 
       <div className="workout-row__actions">

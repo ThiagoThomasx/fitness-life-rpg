@@ -27,6 +27,7 @@ import { TodaySection } from "@/components/dashboard/TodaySection"
 import { RecentBadges } from "@/components/dashboard/RecentBadges"
 import { NextMilestone } from "@/components/dashboard/NextMilestone"
 import { LastWorkout } from "@/components/dashboard/LastWorkout"
+import { WorkoutRecommendationCard } from "@/components/dashboard/WorkoutRecommendationCard"
 
 export default function DashboardPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
@@ -135,6 +136,7 @@ export default function DashboardPage() {
         )}
 
         {todayRec && <RecommendationCard rec={todayRec} />}
+        <WorkoutRecommendationCard />
 
         <div className="grid gap-3 md:grid-cols-2 md:items-start">
           <div className="flex flex-col gap-3">

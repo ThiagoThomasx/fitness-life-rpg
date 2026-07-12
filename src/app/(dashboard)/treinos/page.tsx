@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useSessionStore } from "@/stores/useSessionStore"
 import { useCharacterStore } from "@/stores/useCharacterStore"
 import { MOCK_WORKOUTS, MOCK_CHARACTER } from "@/lib/mock/data"
@@ -21,6 +21,8 @@ import { getWorkoutHistory } from "@/lib/workout-history"
 import type { WorkoutSession } from "@/types/database"
 import { getPreferences } from "@/lib/preferences"
 import { getWorkoutRecommendations, type WorkoutRecommendation } from "@/lib/recommendations"
+import { rankWorkoutsByRecovery, getRecommendedWorkout, type WorkoutRecoveryInfo } from "@/lib/workout-recovery"
+import { useMounted } from "@/hooks/useHasHydrated"
 import { WorkoutCard, type AnyWorkout } from "@/components/workouts/WorkoutCard"
 import { WorkoutFilters, filterByTime, type TimeFilter } from "@/components/workouts/WorkoutFilters"
 import { ActiveSessionBanner } from "@/components/workouts/ActiveSessionBanner"
@@ -34,6 +36,7 @@ export default function TreinosPage() {
   const router = useRouter()
   const { startSession, addExercise, activeSession } = useSessionStore()
   const character = useCharacterStore((s) => s.character) ?? MOCK_CHARACTER
+  const mounted = useMounted()
   const [customWorkouts, setCustomWorkouts] = useState<AnyWorkout[]>([])
   const [showBuilder, setShowBuilder] = useState(false)
   const [editingWorkout, setEditingWorkout] = useState<CustomWorkout | null>(null)
@@ -124,8 +127,37 @@ export default function TreinosPage() {
 
   const recommendedIds = new Set(recommendations.map((r) => r.workout.id))
   const topRecommendation = recommendations[0] ?? null
-  const visibleCustom = filterByTime(customWorkouts, timeFilter)
-  const visibleTemplates = filterByTime(MOCK_WORKOUTS as AnyWorkout[], timeFilter)
+
+  const allWorkoutsForRecovery = useMemo(
+    () => [...customWorkouts, ...(MOCK_WORKOUTS as AnyWorkout[])],
+    [customWorkouts]
+  )
+  const activeWorkoutId = activeSession?.workout_id ?? null
+  // Gateado por `mounted`: getWorkoutHistory()/getAllExercises() leem localStorage,
+  // que não existe no SSR. Calcular isso incondicionalmente faria o primeiro
+  // render do cliente (hidratação) já sair reordenado, divergindo do HTML do
+  // servidor e disparando um hydration mismatch (mesma classe de bug do Sprint 9).
+  const recoveryByWorkoutId = useMemo(() => {
+    if (!mounted) return {} as Record<string, WorkoutRecoveryInfo>
+    const ranked = rankWorkoutsByRecovery(allWorkoutsForRecovery, { activeWorkoutId })
+    const map: Record<string, WorkoutRecoveryInfo> = {}
+    for (const r of ranked) map[r.workoutId] = r
+    return map
+  }, [mounted, allWorkoutsForRecovery, activeWorkoutId])
+  const topRecoveryPick = useMemo(
+    () => (mounted ? getRecommendedWorkout(allWorkoutsForRecovery, { activeWorkoutId }) : null),
+    [mounted, allWorkoutsForRecovery, activeWorkoutId]
+  )
+
+  function sortByRecovery(list: AnyWorkout[]): AnyWorkout[] {
+    if (!mounted) return list
+    return [...list].sort(
+      (a, b) => (recoveryByWorkoutId[b.id]?.score ?? 0) - (recoveryByWorkoutId[a.id]?.score ?? 0)
+    )
+  }
+
+  const visibleCustom = sortByRecovery(filterByTime(customWorkouts, timeFilter))
+  const visibleTemplates = sortByRecovery(filterByTime(MOCK_WORKOUTS as AnyWorkout[], timeFilter))
   const totalVisible = visibleCustom.length + visibleTemplates.length
   const totalWorkouts = customWorkouts.length + MOCK_WORKOUTS.length
 
@@ -196,6 +228,8 @@ export default function TreinosPage() {
                 onEdit={() => handleEdit(workout)}
                 onDuplicate={() => handleDuplicate(workout.id)}
                 lastCompletedAt={lastByWorkoutId[workout.id]}
+                recovery={recoveryByWorkoutId[workout.id]}
+                isTopRecoveryPick={workout.id === topRecoveryPick?.workoutId}
               />
             ))}
           </div>
@@ -226,6 +260,8 @@ export default function TreinosPage() {
                 onStart={() => handleStartRequest(workout)}
                 isRecommended={recommendedIds.has(workout.id)}
                 lastCompletedAt={lastByWorkoutId[workout.id]}
+                recovery={recoveryByWorkoutId[workout.id]}
+                isTopRecoveryPick={workout.id === topRecoveryPick?.workoutId}
               />
             ))}
           </div>

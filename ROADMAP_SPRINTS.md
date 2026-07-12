@@ -130,6 +130,19 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 - [x] QA em instalação realmente limpa: onboarding → personagem semeado → missão concede XP real → reward event registrado → refresh preserva progresso → diário concede XP → Dashboard/Perfil consistentes → zero erros de console/hydration; estado legado `character: null` recuperado sem apagar dados não relacionados
 - [x] Lint, typecheck, testes (31/31) e build limpos
 
+## Sprint 11 — Workout Planner & Recovery Intelligence ✅
+**Objetivo:** transformar o app de "registrador de treinos" em "planejador de treinos", recomendando automaticamente qual treino faz mais sentido hoje com base em recuperação muscular — cálculo 100% local e determinístico, sem IA. Ver `SPRINT-11.md` para o relatório completo.
+
+- [x] Auditoria: `Exercise.muscle_groups` é texto livre em português sem taxonomia canônica; `lib/recommendations.ts` (preferências) já existia e permanece intocado — novo sistema roda em paralelo
+- [x] `src/lib/muscle-groups.ts` — taxonomia canônica (7 grupos), `RECOVERY_HOURS`, normalização de termos livres
+- [x] `src/lib/workout-recovery.ts` — cálculo de recuperação por grupo, score por treino (dominado pelo grupo mais fatigado, não pela média), ranking determinístico com desempate, casos especiais (nunca realizado, sessão ativa, sem grupo mapeável)
+- [x] Componentes novos: `WorkoutRecommendationCard` (Dashboard), `RecoveryBadge`, `RecoveryIndicator`, `WorkoutStatus`, `WorkoutRecommendationReason`
+- [x] `WorkoutCard`, `/treinos` (ranking + selo "⭐ Recomendado hoje") e `/dashboard` (novo card) integrados sem alterar XP/níveis/badges/histórico/backup/sessão ativa
+- [x] Bug de hydration mismatch descoberto e corrigido em QA: ordenação por recuperação gateada por `useMounted()` (mesma classe de bug do Sprint 9)
+- [x] 32 testes novos (`muscle-groups.test.ts`, `workout-recovery.test.ts`) cobrindo normalização, recuperação por grupo, score, empate, nunca realizado, sessão ativa, grupo não mapeável
+- [x] QA Playwright (msedge) com histórico semeado em datas variadas — `docs/screenshots/sprint11/`
+- [x] Build, lint, typecheck e testes (63/63) limpos
+
 ---
 
 ## Feature Freeze (vigente até a Sprint 6 aceita)
