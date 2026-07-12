@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { devtools, persist, createJSONStorage } from 'zustand/middleware'
 import type { Character, XpTransaction } from '@/types/database'
+import { MOCK_CHARACTER } from '@/lib/mock/data'
 
 interface CharacterState {
   character: Character | null
@@ -12,6 +13,7 @@ interface CharacterState {
 interface CharacterActions {
   setCharacter: (character: Character) => void
   clearCharacter: () => void
+  initializeCharacter: () => void
   addTransaction: (tx: XpTransaction) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
@@ -68,6 +70,22 @@ export const useCharacterStore = create<CharacterState & CharacterActions>()(
 
         clearCharacter: () =>
           set(INITIAL_STATE, false, 'character/clear'),
+
+        // Chamado uma única vez por boot, depois do rehydrate (ver
+        // StoreHydrationBoundary). Idempotente: só cria um personagem se
+        // ainda não existir um (instalação nova OU `character: null`
+        // recuperado de um estado legado/backup) — nunca sobrescreve um
+        // personagem já persistido, mesmo que chamado de novo.
+        initializeCharacter: () =>
+          set(
+            (state) => {
+              if (state.character) return state
+              const now = new Date().toISOString()
+              return { character: { ...MOCK_CHARACTER, created_at: now, updated_at: now } }
+            },
+            false,
+            'character/initialize'
+          ),
 
         addTransaction: (tx) =>
           set(
