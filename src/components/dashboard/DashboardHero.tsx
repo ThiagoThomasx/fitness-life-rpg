@@ -3,7 +3,8 @@
 import type { MOCK_CHARACTER } from "@/lib/mock/data"
 import type { WeeklyProgress } from "@/lib/weekly-progress"
 import { attributeColor } from "@/lib/theme-colors"
-import { getGreeting } from "@/lib/greeting"
+import { useGreeting } from "@/lib/greeting"
+import { useMounted } from "@/hooks/useHasHydrated"
 
 const ATTRIBUTES = [
   { key: "strength" as const, label: "FOR" },
@@ -28,7 +29,11 @@ type Props = {
 }
 
 export function DashboardHero({ character, progress, needed, weeklyProgress }: Props) {
-  const today = new Date().toISOString().slice(0, 10)
+  const greeting = useGreeting()
+  const mounted = useMounted()
+  // "Hoje" varia entre o relógio do servidor (SSR/SSG) e o do cliente —
+  // calcular só após montar evita hydration mismatch (#425/#418/#423).
+  const today = mounted ? new Date().toISOString().slice(0, 10) : ""
 
   return (
     <section className="card">
@@ -36,7 +41,7 @@ export function DashboardHero({ character, progress, needed, weeklyProgress }: P
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="section-label" style={{ marginBottom: "var(--space-1)" }}>
-            {getGreeting()}
+            {greeting}
           </div>
           <h1 className="display-heading text-3xl truncate">{character.name}</h1>
           <div className="mt-2 flex items-center gap-2">

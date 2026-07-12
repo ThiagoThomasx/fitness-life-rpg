@@ -4,6 +4,7 @@ import { MOCK_USER } from "@/lib/mock/data"
 import { redirect } from "next/navigation"
 import AppSidebar from "@/components/layout/AppSidebar"
 import { RewardToast } from "@/components/rewards/RewardToast"
+import { StoreHydrationBoundary } from "@/components/layout/StoreHydrationBoundary"
 
 export default async function DashboardLayout({
   children,
@@ -23,6 +24,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="app-shell">
+      <StoreHydrationBoundary />
       <AppSidebar userEmail={user?.email} />
       <main className="app-main">
         {children}

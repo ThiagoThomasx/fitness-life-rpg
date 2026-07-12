@@ -13,6 +13,40 @@
 
 ### Entregas
 
+#### Sprint 9 (v2) — Dashboard: Estabilidade de Hydration e Consolidação Visual — 2026-07-12
+
+**Auditoria**
+- Dashboard já estava componentizado desde o Sprint 1 (`src/components/dashboard/`) — não havia monólito para quebrar. Toda a lógica de dados (XP, nível, missões, plano semanal, badges) já vinha de `useCharacterStore`/`useBadgeStore`/`lib/*` via `useEffect`, com skeletons já em uso (`SkeletonCard`) para os dados assíncronos. O único ponto fora do padrão era `DashboardHero.tsx`.
+- **Causa raiz da dívida #425/#418/#423** (dois bugs distintos, não um só — ver [[hydration-debug-playbook]] atualizado):
+  1. **Mismatch real (erro no console)**: `getGreeting()` (`new Date().getHours()`) e `today` (`new Date().toISOString()`) eram calculados **direto no render** de `DashboardHero.tsx`. `/dashboard` e `/treinos` são prerenderizados estaticamente (`○ Static` no build do Next 14) — o HTML fica congelado na hora/timezone do build (Vercel), divergindo do relógio local do navegador do usuário. O mesmo bug existia, sem nunca ter sido notado, em `WorkoutsHero.tsx` (`/treinos`), que reusa `lib/greeting.ts` desde o Sprint 8.
+  2. **Flash de mock/zerado (sem erro, mas visualmente incorreto)**: `useCharacterStore` usa `persist` (Zustand v5). O binding React usa `useSyncExternalStore` com `getServerSnapshot` apontando para o estado pré-hidratação (`character: null`) — o primeiro render do cliente nunca diverge do SSR (por isso nenhum mismatch de personagem chegava a aparecer), mas mostra Nv 1 / 0 XP (fallback `MOCK_CHARACTER`) até o próximo render, quando o valor real da store assume. Confirmado por inspeção do código-fonte do zustand: gatear isso só com `store.persist.hasHydrated()` não funciona, porque a store reidrata de forma síncrona no import do módulo — `hasHydrated()` já é `true` no primeiro render committed.
+- Uma branch anterior não mergeada (`claude/festive-ritchie-518fb3`) tinha um commit chamado "fix: calcular saudação do Dashboard após mount", mas só inlinhava a função sem adicionar mount-gating — não resolvia o bug. Descartada como referência.
+
+**Solução implementada**
+- `src/hooks/useHasHydrated.ts` (novo, reutilizável): `useMounted()` para valores client-only (hora/data) e `useHasHydrated(store)` para stores Zustand com `persist`, lendo `store.persist.hasHydrated()` + `onFinishHydration`.
+- `src/lib/greeting.ts`: adicionado `useGreeting()` (hook) ao lado de `getGreeting()` (função pura já existente) — retorna `""` até montar, elimina o mismatch nos dois consumidores (`DashboardHero`, `WorkoutsHero`) a partir de um único ponto, sem duplicar a lógica de mount-gating.
+- `src/components/dashboard/DashboardHero.tsx`: `getGreeting()` → `useGreeting()`; `today` (usado só para destacar o dia atual na barra semanal) passa a ser calculado apenas após montar, com `""` como valor estável no primeiro render.
+- `src/components/workouts/WorkoutsHero.tsx`: mesma troca (`getGreeting()` → `useGreeting()`), fechando a mesma dívida em `/treinos`.
+- `src/stores/useCharacterStore.ts`: `skipHydration: true` no `persist` — a reidratação deixa de ser automática no import do módulo e passa a ser disparada explicitamente, tornando `hasHydrated()` um sinal confiável para gatear UI (começa `false` nos dois lados, só vira `true` após o rehydrate real no cliente). **Nenhuma chave de storage, contrato de ação ou lógica de XP/nível foi alterada** — só o momento da hidratação.
+- `src/components/layout/StoreHydrationBoundary.tsx` (novo, client component): dispara `useCharacterStore.persist.rehydrate()` uma única vez em `useEffect`, montado no layout raiz de `(dashboard)` — cobre todas as rotas que leem a store (Dashboard, Treinos, Perfil, Insights, Diário, Nutrição, Plano, Sessão), evitando implementar hidratação duplicada por tela.
+- `src/app/(dashboard)/dashboard/page.tsx`: `DashboardHero` passa a ser gateado por `useHasHydrated(useCharacterStore)`, mostrando `SkeletonCard` (altura equivalente ao card real) em vez do personagem mock até os dados persistidos chegarem.
+
+**Não alterado** (conforme regra da sprint): cálculo de XP/nível/PR, critérios de badge, estrutura de dados persistidos, chaves de `localStorage`, fluxo de reward toast/level-up (o guard existente contra repetição do modal continua intacto e foi revalidado).
+
+**QA (Playwright + msedge, contra `next build && next start` — ver [[browser-pane-screenshot-workaround]])**
+- 3 timezones (`Asia/Tokyo`, `America/Sao_Paulo`, `UTC`) em `/dashboard`: saudação correta por timezone, **0 erros de console** em todas.
+- `/treinos`: mesma verificação de timezone, **0 erros de console**.
+- Cenários: usuário novo (vazio, onboarding), usuário populado (Nv 12, atributos, XP, missões), refresh duplo (persistência confirmada, sem repetir LevelUpModal), level-up genuíno (`prevLevel < level`, modal aparece corretamente uma única vez), mobile 390px, desktop 1440px, e regressão nas demais rotas que leem `useCharacterStore` (`/perfil`, `/insights`, `/diario`, `/nutricao`, `/plano`, `/configuracoes`) — 0 erros em todas.
+- Screenshots em `docs/screenshots/sprint9/`: `hydration-Asia-Tokyo.png`, `hydration-America-Sao_Paulo.png`, `hydration-UTC.png`, `dashboard-populated-mobile.png`, `dashboard-empty-desktop.png`, `dashboard-after-refresh.png`.
+- `npm run lint`, `npx tsc --noEmit` e `npm run build` limpos.
+
+**Pendências documentadas (não resolvidas nesta sprint)**
+- Consolidação visual em `dashboard.css`: os componentes do Dashboard já usam 100% tokens (`var(--color-*)`) — **0 hardcodes hex/rgba** — mas ainda usam `style={{...}}` inline em vez de classes dedicadas, ao contrário de `diary.css`/`nutrition.css`/`workouts.css`. Não migrado nesta sprint para não expandir o escopo/risco de uma mudança já grande o suficiente; fica como item de backlog visual (não é dívida de hydration).
+- Sem framework de testes automatizado no projeto (mantém-se o padrão dos sprints anteriores — QA via Playwright manual/scriptado substitui suíte automatizada).
+- `.claude/launch.json` ganhou uma segunda configuração (`fitness-rpg-prod`, porta 3100, `next start`) para permitir QA contra build de produção local sem interferir no `npm run dev` já configurado.
+
+**Deploy**: aguardando commit/push — ver próximos passos.
+
 #### Sprint 8 (v2) — Hub de Treinos Premium — 2026-07-12
 
 **Auditoria inicial**

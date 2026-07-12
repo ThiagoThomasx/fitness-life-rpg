@@ -138,6 +138,12 @@ export const useCharacterStore = create<CharacterState & CharacterActions>()(
         name: 'lrpg-fit:character',
         storage: createJSONStorage(() => safeStorage),
         partialize: (state) => ({ character: state.character }),
+        // Hidratação manual (ver StoreHydrationBoundary): sem isso, o
+        // localStorage é lido de forma síncrona no import do módulo, então o
+        // primeiro render do cliente já reflete os dados reais enquanto o
+        // SSR usa o estado inicial (null) — divergência que causa hydration
+        // mismatch em qualquer tela que leia `character`.
+        skipHydration: true,
       }
     ),
     { name: 'CharacterStore' }

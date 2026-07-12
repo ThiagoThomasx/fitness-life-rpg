@@ -92,6 +92,20 @@ Abordagem: **híbrida**. Mantém toda a lógica e dados da v1 (treinos, XP, atri
 
 Esta sprint encerra a modernização do fluxo principal do produto. As próximas sprints podem focar em evolução (novas funcionalidades, analytics, sincronização, IA, backend, recursos premium).
 
+## Sprint 9 — Dashboard: Estabilidade de Hydration e Consolidação Visual ✅
+**Objetivo:** fechar a dívida técnica conhecida de hydration mismatch do Dashboard (#425/#418/#423), sem novas funcionalidades.
+**Duração estimada:** 0.5–1 dia
+**Critério de aceite:** 0 erros de hydration no console em `/dashboard` e `/treinos` (build de produção, múltiplos timezones); sem flash de personagem mock/zerado antes dos dados reais; build/lint/typecheck limpos.
+
+- [x] Causa raiz identificada: dois bugs distintos — saudação/data calculadas direto no render (`DashboardHero`, e o mesmo padrão em `WorkoutsHero`) e flash de `MOCK_CHARACTER` antes da store `persist` reidratar
+- [x] `useHasHydrated`/`useMounted` (`src/hooks/useHasHydrated.ts`) e `useGreeting` (`src/lib/greeting.ts`) — hooks reutilizáveis, únicos pontos de solução
+- [x] `useCharacterStore` com `skipHydration: true` + `StoreHydrationBoundary` (rehydrate explícito no layout raiz) — sem alterar chaves de storage, contratos ou lógica de XP/nível
+- [x] `DashboardHero` e `WorkoutsHero` migrados para os novos hooks; Dashboard gateia o Hero com skeleton até a store reidratar
+- [x] QA Playwright (msedge) contra build de produção local, 3 timezones, cenários vazio/populado/refresh/level-up/mobile/regressão nas demais rotas — 0 erros de console
+- [x] Build, lint e typecheck limpos
+
+**Fora do escopo desta sprint (backlog documentado):** consolidação de `style={{}}` inline em `dashboard.css` (sem hardcodes hex/rgba — só inconsistência de padrão com outras telas).
+
 ---
 
 ## Feature Freeze (vigente até a Sprint 6 aceita)

@@ -14,6 +14,7 @@ import { getTodayRecommendation, type WorkoutRecommendation } from "@/lib/recomm
 import { LevelUpModal } from "@/components/ui/LevelUpModal"
 import { SkeletonCard } from "@/components/ui/Skeleton"
 import { OnboardingModal } from "@/components/onboarding/OnboardingModal"
+import { useHasHydrated } from "@/hooks/useHasHydrated"
 import { DashboardHero } from "@/components/dashboard/DashboardHero"
 import { QuickActions } from "@/components/dashboard/QuickActions"
 import { MetricsGrid } from "@/components/dashboard/MetricsGrid"
@@ -27,6 +28,7 @@ import { LastWorkout } from "@/components/dashboard/LastWorkout"
 
 export default function DashboardPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
+  const characterHydrated = useHasHydrated(useCharacterStore)
   const { earnedBadges, refreshBadges } = useBadgeStore()
   const [missions, setMissions] = useState<DailyMission[]>([])
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress | null>(null)
@@ -91,12 +93,16 @@ export default function DashboardPage() {
       )}
 
       <div className="page page--wide page--tight">
-        <DashboardHero
-          character={character}
-          progress={progress}
-          needed={needed}
-          weeklyProgress={weeklyProgress}
-        />
+        {!characterHydrated ? (
+          <SkeletonCard height="340px" />
+        ) : (
+          <DashboardHero
+            character={character}
+            progress={progress}
+            needed={needed}
+            weeklyProgress={weeklyProgress}
+          />
+        )}
 
         <QuickActions />
 

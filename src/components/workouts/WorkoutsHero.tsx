@@ -1,6 +1,6 @@
 "use client"
 
-import { getGreeting } from "@/lib/greeting"
+import { useGreeting } from "@/lib/greeting"
 import type { WorkoutRecommendation } from "@/lib/recommendations"
 import type { AnyWorkout } from "./WorkoutCard"
 import { WorkoutQuickStart } from "./WorkoutQuickStart"
@@ -20,10 +20,12 @@ export function WorkoutsHero({
   recommendation,
   onStart,
 }: WorkoutsHeroProps) {
+  const greeting = useGreeting()
+
   return (
     <section className="card workouts-hero" aria-label="Resumo de treinos">
       <div className="min-w-0">
-        <div className="section-label">{getGreeting()}, {characterName}</div>
+        <div className="section-label">{greeting}, {characterName}</div>
         <h2 className="display-heading text-2xl">Pronto para o próximo treino?</h2>
       </div>
 
