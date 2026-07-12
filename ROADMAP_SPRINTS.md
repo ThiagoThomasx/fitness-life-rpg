@@ -106,6 +106,30 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 **Fora do escopo desta sprint (backlog documentado):** consolidação de `style={{}}` inline em `dashboard.css` (sem hardcodes hex/rgba — só inconsistência de padrão com outras telas).
 
+## Sprint 10 — QA Sistêmico, Integridade de Dados e Hardening (parcial) ✅
+**Objetivo:** auditar o app como sistema completo (stores, backup, XP/recompensas) e corrigir falhas sistêmicas com evidência real, sem expandir escopo funcional. Ver `SPRINT-10.md` para o relatório completo.
+**Duração estimada:** 1 dia (execução escopada; especificação original é maior, ver pendências)
+
+- [x] Auditoria de stores, chaves de `localStorage` e fluxos de XP/recompensa
+- [x] Corrigido: missões manuais do Dashboard não concediam XP nem toast de recompensa
+- [x] Corrigido: importar backup não recarregava/re-hidratava o app (inconsistente com o reset)
+- [x] Corrigido: import de backup não era atômico nem validava schema por chave
+- [x] Fundação de testes automatizados adicionada (Vitest) — 19 testes cobrindo backup/import/reset/missões
+- [x] QA manual dirigido: rotas vazias, export/reset/import, missão→XP, responsividade mobile — sem erros de console
+- [x] Lint, typecheck, testes e build limpos
+- [x] Fora do escopo desta execução: suíte Playwright completa, teste de volume, matriz de responsividade 5×8, smoke test em produção/deploy (ver `SPRINT-10.md` §7) — pendências não críticas, documentadas
+
+## Hotfix 10.1 — Inicialização segura do personagem ✅
+**Objetivo:** corrigir o bug crítico descoberto na Sprint 10 — `character` nunca era inicializado numa instalação nova, então XP de treino/diário/nutrição/missões não acumulava até o usuário renomear o personagem por acidente na Perfil. Feito como hotfix separado a pedido explícito do usuário, que não quis encerrar a Sprint 10 com esse bug em aberto. Ver `SPRINT-10.md` (seção "Hotfix 10.1") para auditoria, decisão arquitetural, testes e QA completos.
+
+- [x] Auditoria: nenhum ponto de criação de personagem existia (onboarding só grava preferências); `MOCK_CHARACTER` já usado como fallback de leitura em toda a UI
+- [x] Nova action `initializeCharacter()` em `useCharacterStore` — idempotente, nunca sobrescreve personagem existente
+- [x] Chamada em `StoreHydrationBoundary` após `rehydrate()` resolver (pós-montagem, sem risco de hydration mismatch) — cobre qualquer rota de entrada, não só o Dashboard
+- [x] Recupera `character: null` legado (backup antigo, storage corrompido) pelo mesmo caminho de uma instalação nova, sem migração separada
+- [x] 12 testes novos (10 em `useCharacterStore.test.ts`, 2 em `backup.test.ts`) — 31/31 no total
+- [x] QA em instalação realmente limpa: onboarding → personagem semeado → missão concede XP real → reward event registrado → refresh preserva progresso → diário concede XP → Dashboard/Perfil consistentes → zero erros de console/hydration; estado legado `character: null` recuperado sem apagar dados não relacionados
+- [x] Lint, typecheck, testes (31/31) e build limpos
+
 ---
 
 ## Feature Freeze (vigente até a Sprint 6 aceita)
