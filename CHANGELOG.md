@@ -13,6 +13,21 @@
 
 ### Entregas
 
+#### Sprint 7 (v2) — Sessão Ativa: QA Real e Fechamento da Pendência da Sprint 6 — 2026-07-11
+
+**Contexto**
+- A Sprint 6 fechou o checklist de QA de todas as rotas, exceto `/sessao` (sessão ativa): a tela só existe com `useSessionStore` (Zustand `persist`) populado, e não é alcançável por navegação estática — ficou pendente como item aberto.
+
+**Auditoria**
+- Revisão de `src/components/session/` e `src/components/workouts/` (código já redesenhado na Sprint 2) contra o critério de hardcodes visuais do `QA_CHECKLIST.md`: único hardcode real encontrado foi `style={{ opacity: 0.5, cursor: "default" }}` inline em `ExercisePickerModal.tsx` para o item já adicionado à sessão — migrado para regra `.picker-row:disabled` em `workouts.css`, reaproveitando o atributo `disabled` já presente no botão.
+- Os inline styles `style={{ marginBottom: "2px" }}` em `SessionHeader.tsx`/`ActiveSessionBanner.tsx` **não** foram alterados: é o mesmo padrão já usado no Dashboard piloto (`TodaySection`, `LastWorkout`, `DashboardHero`, etc.), aceito desde a Sprint 1 — não é uma regressão desta tela.
+
+**QA**
+- Estado de sessão ativa reproduzido via seed direto do `localStorage` (`lrpg-fit:active-session`) no mesmo shape serializado pelo `persist` do Zustand (`{ state: { activeSession, activeSets, elapsedSeconds }, version: 0 }`), com Playwright (msedge) — sem precisar navegar pelo fluxo real de início de treino.
+- Cenário: 3 exercícios (2 com séries completas, 1 pendente), timer em andamento, banner de sessão ativa em `/treinos`.
+- Screenshots capturados (desktop 1280px + mobile 390px) em `docs/screenshots/sprint7/`: sessão ativa com séries, diálogo de "exercícios sem séries", e `WorkoutSummaryModal` com XP/breakdown pós-treino.
+- `npm run build` e `npm run lint` limpos; nenhum erro de console na navegação real via Browser pane com o mesmo seed.
+
 #### Sprint 6 (v2) — Configurações/Backup + QA Visual Completo — 2026-07-11
 
 **Arquitetura**

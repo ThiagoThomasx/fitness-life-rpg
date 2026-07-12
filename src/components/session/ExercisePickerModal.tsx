@@ -31,7 +31,6 @@ export function ExercisePickerModal({ alreadyAdded, onPick, onClose }: ExerciseP
               type="button"
               className="picker-row"
               disabled={isAdded}
-              style={isAdded ? { opacity: 0.5, cursor: "default" } : undefined}
               onClick={() => { onPick(exercise); onClose() }}
             >
               <span className="min-w-0 flex-1">

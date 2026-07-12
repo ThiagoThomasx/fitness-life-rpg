@@ -190,6 +190,11 @@
   background: var(--color-surface-hover);
 }
 
+.picker-row:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .picker-row--selected {
   background: var(--color-accent-subtle);
   border-color: var(--color-accent-border);

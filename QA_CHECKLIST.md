@@ -24,7 +24,7 @@ Rota por rota, confirmar visual consistente e funcional:
 
 - [x] `/dashboard`
 - [x] `/treinos`
-- [ ] `/treinos/sessao` (sessão ativa) — requer estado de sessão ativa via `useSessionStore` (persist), não reproduzido via seed estático nesta rodada; validado manualmente na Sprint 2
+- [x] `/sessao` (sessão ativa) — reproduzido via seed do `localStorage` (`lrpg-fit:active-session`, mesmo shape do Zustand persist) na Sprint 7; screenshots em `docs/screenshots/sprint7/`
 - [x] `/perfil`
 - [x] `/insights`
 - [x] `/diario`
@@ -37,7 +37,7 @@ Para cada rota:
 - [x] Navegação (`NavigationShell`) presente e consistente
 - [x] Nenhum elemento com estilo da v1 antiga visível
 
-Screenshots em `docs/screenshots/sprint6/` (desktop 1280px + mobile 390px, dados seedados: 2 treinos, 1 entrada de diário, 1 registro nutricional, 1 badge).
+Screenshots em `docs/screenshots/sprint6/` (desktop 1280px + mobile 390px, dados seedados: 2 treinos, 1 entrada de diário, 1 registro nutricional, 1 badge). `/sessao` recapturado na Sprint 7 em `docs/screenshots/sprint7/` (sessão ativa, aviso de exercício incompleto, modal de resumo com XP).
 
 ## Checklist específico de Dados & Backup (lição da v1)
 

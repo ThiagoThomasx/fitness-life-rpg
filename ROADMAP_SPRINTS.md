@@ -63,7 +63,18 @@ Abordagem: **híbrida**. Mantém toda a lógica e dados da v1 (treinos, XP, atri
 
 - [x] Página de Configurações/Backup revisada visualmente — componentizada em `src/components/settings/`, estilos em `settings.css`, zero hex/rgba soltos
 - [x] Checklist de screenshot por rota (ver `QA_CHECKLIST.md`) — `docs/screenshots/sprint6/`
-- [ ] Deploy na Vercel com release notes
+- [x] Deploy na Vercel com release notes
+
+## Sprint 7 — Sessão Ativa e Fluxo de Treino: QA Real e Produção ✅
+**Objetivo:** fechar a pendência da Sprint 6 — recapturar `/sessao` (sessão ativa) com estado real via seed de `localStorage` no shape do Zustand persist, já que não há como chegar nessa tela por navegação estática.
+**Duração estimada:** 0.5–1 dia
+**Critério de aceite:** screenshot de `/sessao` (desktop+mobile) com exercícios/séries reais, do aviso de exercício incompleto e do modal de resumo pós-treino; build/lint limpos; produção validada.
+
+- [x] Auditoria de hardcodes visuais em `src/components/session/` e `src/components/workouts/` — encontrado 1 hardcode real (opacity/cursor inline em `ExercisePickerModal.tsx`), migrado para `.picker-row:disabled` em `workouts.css`
+- [x] Script Playwright (msedge) seedando `lrpg-fit:active-session` para reproduzir sessão ativa com 2 exercícios completos + 1 pendente
+- [x] Screenshots desktop+mobile de `/sessao`, do diálogo de exercícios incompletos e do `WorkoutSummaryModal` (XP, breakdown, level-up/PR) em `docs/screenshots/sprint7/`
+- [x] Banner de sessão ativa em `/treinos` revalidado com sessão em andamento
+- [x] Build e lint limpos
 
 ---
 
