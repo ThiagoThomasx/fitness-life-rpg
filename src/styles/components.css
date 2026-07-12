@@ -895,7 +895,8 @@
   display: none;
 }
 
-.workout-row:hover .workout-row__icon-btn {
+.workout-row:hover .workout-row__icon-btn,
+.workout-row:focus-within .workout-row__icon-btn {
   display: inline-flex;
 }
 

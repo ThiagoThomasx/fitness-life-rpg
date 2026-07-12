@@ -76,6 +76,22 @@ Abordagem: **híbrida**. Mantém toda a lógica e dados da v1 (treinos, XP, atri
 - [x] Banner de sessão ativa em `/treinos` revalidado com sessão em andamento
 - [x] Build e lint limpos
 
+## Sprint 8 — Hub de Treinos Premium ✅
+**Objetivo:** elevar `/treinos` ao mesmo padrão visual e organizacional de Perfil, Insights, Diário, Nutrição, Configurações e Sessão Ativa, sem adicionar funcionalidades novas.
+**Duração estimada:** 1 dia
+**Critério de aceite:** fluxo de treinos 100% funcional, página totalmente componentizada, CSS dedicado, zero hardcodes visuais, QA Playwright, build/lint/typecheck limpos, deploy validado.
+
+- [x] Auditoria da arquitetura atual (dados, fluxos, componentes, pontos de acoplamento)
+- [x] `WorkoutsHeader` e `WorkoutsHero` (saudação, stats, recomendação) extraídos para `src/components/workouts/`
+- [x] `WorkoutEmptyState` ilustrado para o caso de zero treinos cadastrados
+- [x] `WorkoutCard` enriquecido com "última execução" (leitura read-only de `lib/workout-history.ts`)
+- [x] Correção de acessibilidade: ações de treino (duplicar/editar/excluir) alcançáveis via teclado (`:focus-within`)
+- [x] `treinos/page.tsx` reduzido a dados + composição
+- [x] QA Playwright (CRUD, iniciar treino, sessão ativa, persistência, responsividade) — `docs/screenshots/sprint8/`
+- [x] Build, lint e typecheck limpos; deploy Vercel validado
+
+Esta sprint encerra a modernização do fluxo principal do produto. As próximas sprints podem focar em evolução (novas funcionalidades, analytics, sincronização, IA, backend, recursos premium).
+
 ---
 
 ## Feature Freeze (vigente até a Sprint 6 aceita)

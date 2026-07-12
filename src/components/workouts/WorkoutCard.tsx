@@ -13,6 +13,11 @@ type WorkoutCardProps = {
   onEdit?: () => void
   onDuplicate?: () => void
   isRecommended?: boolean
+  lastCompletedAt?: string
+}
+
+function formatLastCompleted(iso: string): string {
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "numeric", month: "short" })
 }
 
 export function WorkoutCard({
@@ -22,6 +27,7 @@ export function WorkoutCard({
   onEdit,
   onDuplicate,
   isRecommended,
+  lastCompletedAt,
 }: WorkoutCardProps) {
   // Cor dinâmica por categoria — mapa centralizado em theme-colors.ts
   const colors = categoryColor(workout.workout_type.category)
@@ -53,6 +59,9 @@ export function WorkoutCard({
         <div className="workout-row__meta">
           ~{workout.estimated_minutes}min&nbsp;·&nbsp;+{workout.workout_type.base_xp} XP&nbsp;·&nbsp;
           {workout.exercises.length} exercício{workout.exercises.length !== 1 ? "s" : ""}
+          {lastCompletedAt && (
+            <>&nbsp;·&nbsp;último em {formatLastCompleted(lastCompletedAt)}</>
+          )}
         </div>
       </div>
 

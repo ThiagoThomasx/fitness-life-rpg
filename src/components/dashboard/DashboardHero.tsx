@@ -3,6 +3,7 @@
 import type { MOCK_CHARACTER } from "@/lib/mock/data"
 import type { WeeklyProgress } from "@/lib/weekly-progress"
 import { attributeColor } from "@/lib/theme-colors"
+import { getGreeting } from "@/lib/greeting"
 
 const ATTRIBUTES = [
   { key: "strength" as const, label: "FOR" },
@@ -13,13 +14,6 @@ const ATTRIBUTES = [
 ]
 
 const WEEKDAY_INITIALS = ["D", "S", "T", "Q", "Q", "S", "S"]
-
-function getGreeting(): string {
-  const hour = new Date().getHours()
-  if (hour < 12) return "Bom dia"
-  if (hour < 18) return "Boa tarde"
-  return "Boa noite"
-}
 
 function weekdayInitial(isoDate: string): string {
   const day = new Date(isoDate + "T12:00:00").getDay()

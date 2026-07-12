@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation"
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useSessionStore } from "@/stores/useSessionStore"
-import { MOCK_WORKOUTS } from "@/lib/mock/data"
+import { useCharacterStore } from "@/stores/useCharacterStore"
+import { MOCK_WORKOUTS, MOCK_CHARACTER } from "@/lib/mock/data"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import {
@@ -16,19 +17,23 @@ import {
   getAllExercises,
   type CustomWorkout,
 } from "@/lib/custom-workouts"
+import { getWorkoutHistory } from "@/lib/workout-history"
 import type { WorkoutSession } from "@/types/database"
 import { getPreferences } from "@/lib/preferences"
 import { getWorkoutRecommendations, type WorkoutRecommendation } from "@/lib/recommendations"
 import { WorkoutCard, type AnyWorkout } from "@/components/workouts/WorkoutCard"
 import { WorkoutFilters, filterByTime, type TimeFilter } from "@/components/workouts/WorkoutFilters"
 import { ActiveSessionBanner } from "@/components/workouts/ActiveSessionBanner"
-import { WorkoutQuickStart } from "@/components/workouts/WorkoutQuickStart"
+import { WorkoutsHeader } from "@/components/workouts/WorkoutsHeader"
+import { WorkoutsHero } from "@/components/workouts/WorkoutsHero"
+import { WorkoutEmptyState } from "@/components/workouts/WorkoutEmptyState"
 import { WorkoutBuilderModal } from "@/components/workouts/WorkoutBuilderModal"
 import { ExerciseLibrary } from "@/components/workouts/ExerciseLibrary"
 
 export default function TreinosPage() {
   const router = useRouter()
   const { startSession, addExercise, activeSession } = useSessionStore()
+  const character = useCharacterStore((s) => s.character) ?? MOCK_CHARACTER
   const [customWorkouts, setCustomWorkouts] = useState<AnyWorkout[]>([])
   const [showBuilder, setShowBuilder] = useState(false)
   const [editingWorkout, setEditingWorkout] = useState<CustomWorkout | null>(null)
@@ -37,12 +42,21 @@ export default function TreinosPage() {
   const [recommendations, setRecommendations] = useState<WorkoutRecommendation[]>([])
   const [deletingWorkout, setDeletingWorkout] = useState<AnyWorkout | null>(null)
   const [pendingStart, setPendingStart] = useState<AnyWorkout | null>(null)
+  const [totalExercises, setTotalExercises] = useState(0)
+  const [lastByWorkoutId, setLastByWorkoutId] = useState<Record<string, string>>({})
   const startingRef = useRef(false)
 
   const loadWorkouts = useCallback(() => {
     const allExercises = getAllExercises()
     const stored = getCustomWorkouts()
     setCustomWorkouts(stored.map((cw) => toMockWorkoutShape(cw, allExercises) as AnyWorkout))
+    setTotalExercises(allExercises.length)
+
+    const lastMap: Record<string, string> = {}
+    for (const completed of getWorkoutHistory()) {
+      if (!(completed.workoutId in lastMap)) lastMap[completed.workoutId] = completed.completedAt
+    }
+    setLastByWorkoutId(lastMap)
   }, [])
 
   useEffect(() => {
@@ -113,6 +127,7 @@ export default function TreinosPage() {
   const visibleCustom = filterByTime(customWorkouts, timeFilter)
   const visibleTemplates = filterByTime(MOCK_WORKOUTS as AnyWorkout[], timeFilter)
   const totalVisible = visibleCustom.length + visibleTemplates.length
+  const totalWorkouts = customWorkouts.length + MOCK_WORKOUTS.length
 
   const activeWorkoutName = activeSession
     ? [...customWorkouts, ...(MOCK_WORKOUTS as AnyWorkout[])].find(
@@ -126,37 +141,23 @@ export default function TreinosPage() {
 
   return (
     <div className="page">
-      {/* ─── Cabeçalho ─────────────────────────────────────────────── */}
-      <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="display-heading text-3xl">Treinos</h1>
-          <p className="mt-1 text-sm text-secondary">
-            {totalVisible} treino{totalVisible !== 1 ? "s" : ""} disponíve{totalVisible !== 1 ? "is" : "l"} · escolha um e comece
-          </p>
-        </div>
-        <div className="flex flex-shrink-0 gap-2">
-          <button type="button" className="btn btn--ghost" onClick={() => setShowLibrary(true)}>
-            Biblioteca
-          </button>
-          <button
-            type="button"
-            className="btn btn--primary"
-            onClick={() => { setEditingWorkout(null); setShowBuilder(true) }}
-          >
-            + Criar treino
-          </button>
-        </div>
-      </header>
+      <WorkoutsHeader
+        totalVisible={totalVisible}
+        onOpenLibrary={() => setShowLibrary(true)}
+        onCreateWorkout={() => { setEditingWorkout(null); setShowBuilder(true) }}
+      />
 
       {/* ─── Sessão ativa (prioridade máxima) ─────────────────────────── */}
       {activeSession && <ActiveSessionBanner workoutName={activeWorkoutName} />}
 
-      {/* ─── Início rápido ─────────────────────────────────────────── */}
-      {!activeSession && topRecommendation && (
-        <WorkoutQuickStart
-          workout={topRecommendation.workout as AnyWorkout}
-          reason={topRecommendation.reason}
-          onStart={() => handleStartRequest(topRecommendation.workout as AnyWorkout)}
+      {/* ─── Hero: saudação, resumo e recomendação ───────────────────── */}
+      {!activeSession && (
+        <WorkoutsHero
+          characterName={character.name}
+          totalWorkouts={totalWorkouts}
+          totalExercises={totalExercises}
+          recommendation={topRecommendation}
+          onStart={handleStartRequest}
         />
       )}
 
@@ -176,13 +177,7 @@ export default function TreinosPage() {
 
         {visibleCustom.length === 0 ? (
           customWorkouts.length === 0 ? (
-            <button
-              type="button"
-              className="create-tile"
-              onClick={() => { setEditingWorkout(null); setShowBuilder(true) }}
-            >
-              <span aria-hidden="true">+</span> Criar seu primeiro treino personalizado
-            </button>
+            <WorkoutEmptyState onCreate={() => { setEditingWorkout(null); setShowBuilder(true) }} />
           ) : (
             <EmptyState
               icon="⏱️"
@@ -200,6 +195,7 @@ export default function TreinosPage() {
                 onDelete={() => setDeletingWorkout(workout)}
                 onEdit={() => handleEdit(workout)}
                 onDuplicate={() => handleDuplicate(workout.id)}
+                lastCompletedAt={lastByWorkoutId[workout.id]}
               />
             ))}
           </div>
@@ -229,6 +225,7 @@ export default function TreinosPage() {
                 workout={workout}
                 onStart={() => handleStartRequest(workout)}
                 isRecommended={recommendedIds.has(workout.id)}
+                lastCompletedAt={lastByWorkoutId[workout.id]}
               />
             ))}
           </div>

@@ -13,6 +13,26 @@
 
 ### Entregas
 
+#### Sprint 8 (v2) — Hub de Treinos Premium — 2026-07-12
+
+**Auditoria inicial**
+- `treinos/page.tsx` concentrava toda a orquestração (271 linhas): dados de `MOCK_WORKOUTS` + `lib/custom-workouts.ts` (CRUD direto em `localStorage`, não é store Zustand), sessão ativa via `useSessionStore`, recomendação via `lib/recommendations.ts`. Componentes já existiam em `src/components/workouts/` (`WorkoutCard`, `WorkoutFilters`, `ActiveSessionBanner`, `WorkoutQuickStart`, `WorkoutBuilderModal`, `ExerciseLibrary`) com CSS já tokenizado em `workouts.css` desde o Sprint 2.
+- Risco identificado e corrigido: `.workout-row__icon-btn` (duplicar/editar/excluir) usava `display: none` fora do `:hover`, tornando essas ações **inacessíveis via teclado** — corrigido com `:focus-within` em `components.css`, validado via Playwright (foco no botão "Iniciar" + Shift+Tab alcança "Excluir").
+
+**Componentes criados**
+- `WorkoutsHeader` (título, contagem, ações Biblioteca/Criar) e `WorkoutsHero` (saudação via `useCharacterStore`, stats de treinos cadastrados/exercícios na biblioteca, recomendação embutida via `WorkoutQuickStart` já existente) em `src/components/workouts/`.
+- `WorkoutEmptyState` — empty state ilustrado (ícones, mensagem, CTA) substituindo o antigo `create-tile` tracejado para o caso de zero treinos cadastrados.
+- `lib/greeting.ts` extraído de `DashboardHero.tsx` (DRY — mesma saudação por horário agora compartilhada entre Dashboard e Treinos).
+
+**Enriquecimento**
+- `WorkoutCard` ganhou "última execução" (leitura read-only de `lib/workout-history.ts`, sem alterar a lib) — computado uma vez em `page.tsx` e passado via prop `lastCompletedAt`.
+- `treinos/page.tsx` reduzido para dados + composição, seguindo o padrão Dashboard/Diário/Nutrição. Nenhuma store, cálculo de XP/PR ou formato de dado alterado.
+
+**QA**
+- `npm run lint`, `npx tsc --noEmit` e `npm run build` limpos.
+- Playwright (Browser pane + msedge): criar/editar/duplicar/excluir treino personalizado, iniciar treino (navega para `/sessao`), guard de sessão ativa já em andamento (diálogo "descartar e iniciar"), persistência após reload, responsividade sem overflow horizontal em 1280px/768px/390px. Nenhum erro de console em nenhum cenário.
+- Screenshots desktop (1280px) + mobile (390px), estado populado e vazio, em `docs/screenshots/sprint8/`.
+
 #### Sprint 7 (v2) — Sessão Ativa: QA Real e Fechamento da Pendência da Sprint 6 — 2026-07-11
 
 **Contexto**
