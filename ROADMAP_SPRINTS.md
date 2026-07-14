@@ -157,6 +157,24 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 - [x] QA end-to-end no dev server: sessão real gerou PR de peso + primeira execução, toast disparou, XP (+110) e badge ("Recorde Pessoal") idênticos ao formato pré-existente, Dashboard/Insights/Perfil consistentes — `docs/screenshots/sprint12/`
 - [x] Build, lint, typecheck e testes (95/95) limpos
 
+## Sprint 15 — Adaptive Session Control & Readiness Validation ✅
+**Objetivo:** transformar as orientações de prontidão em ações práticas opcionais e reversíveis para a sessão atual. Ver `SPRINT-15.md` para o relatório completo.
+
+- [x] Auditoria da Sprint 14: readiness-check-ins.ts, workout-readiness.ts, componentes e fluxo — tudo íntegro; QA visual pendente documentado
+- [x] `src/lib/session-adjustments.ts` — engine puro com `readinessToPreset`, `applyAdjustmentToExercise`, `buildAdjustmentSummary`, `validateAdjustment`, `roundWeightDown`, `toSnapshot`, `computeAdjustmentStats`, `isValidAdjustmentSnapshot`; config centralizada sem números mágicos; arredondamento sempre para baixo ao incremento mais próximo
+- [x] `SessionAdjustmentMode` (original | conservative | custom) e `SessionAdjustment`, `AdjustedExerciseTarget`, `AppliedSessionAdjustmentSnapshot` como tipos explícitos
+- [x] `useSessionStore` atualizado: `sessionAdjustment` persiste no localStorage e é limpo ao iniciar/encerrar sessão
+- [x] `SessionAdjustmentPanel` — painel inline na fase de treino: mostra sugestão, aceitar preset, personalizar (4 campos opcionais) e desfazer; nenhum ajuste aplicado automaticamente
+- [x] `SessionExerciseCard` atualizado: exibe meta original e meta ajustada lado a lado quando há diferença; progressão suprimida indicada textualmente
+- [x] `WorkoutSummaryModal` atualizado: seção "Estratégia da sessão" com modo, detalhes e prontidão inicial relacionada ao outcome
+- [x] `CompletedWorkout` atualizado: campo `appliedSessionAdjustment?` opcional (snapshot imutável); backward-compatible com histórico antigo
+- [x] `ReadinessOverviewCard` (Dashboard) enriquecido: estatísticas de ajuste dos últimos 7 dias
+- [x] 52 testes novos (`session-adjustments.test.ts`) — 216/216 no total, 9 arquivos
+- [x] Arredondamento: `roundWeightDown` — sempre para o incremento disponível mais próximo abaixo; nunca arredonda para cima; zero-weight preservado
+- [x] Presets: alta → original; moderada → consolidação (sem redução de carga, +30s descanso, técnica); baixa → conservador (−10%, −1 série, +30s)
+- [x] XP, badges, PRs, Sprint 14, Sprint 13, navegação e histórico antigo intocados
+- [x] Build, lint, typecheck (0 erros) e 216 testes limpos
+
 ## Sprint 14 — Readiness, Recovery & Adaptive Workout Guidance ✅
 **Objetivo:** conectar planejamento, histórico e progressão ao estado atual do usuário — "Como devo abordar o treino de hoje?" — via check-in pré-treino e engine de prontidão local, determinístico e testado. Ver `SPRINT-14.md` para o relatório completo.
 

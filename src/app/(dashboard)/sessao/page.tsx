@@ -27,6 +27,7 @@ import { ExercisePickerModal } from "@/components/session/ExercisePickerModal"
 import { WorkoutSummaryModal } from "@/components/session/WorkoutSummaryModal"
 import { ReadinessCheckIn } from "@/components/session/ReadinessCheckIn"
 import { ReadinessCard } from "@/components/session/ReadinessCard"
+import { SessionAdjustmentPanel } from "@/components/session/SessionAdjustmentPanel"
 import { saveCheckIn } from "@/lib/readiness-check-ins"
 import type { WorkoutReadinessCheckIn } from "@/lib/readiness-check-ins"
 import {
@@ -36,6 +37,13 @@ import {
 } from "@/lib/workout-readiness"
 import type { WorkoutReadinessResult, ReadinessOutcome } from "@/lib/workout-readiness"
 import { getExerciseStatus } from "@/lib/workout-intelligence"
+import {
+  applyAdjustmentToExercise,
+  toSnapshot,
+  isOriginalAdjustment,
+  ORIGINAL_ADJUSTMENT,
+} from "@/lib/session-adjustments"
+import type { SessionAdjustment } from "@/lib/session-adjustments"
 
 // ─── Timer da sessão ──────────────────────────────────────────────────────────
 
@@ -61,6 +69,8 @@ export default function SessaoPage() {
     removeSet,
     removeExercise,
     endSession,
+    sessionAdjustment,
+    setSessionAdjustment,
   } = useSessionStore()
 
   const { character, applyXpGain, applyAttributeGains } = useCharacterStore()
@@ -256,6 +266,9 @@ export default function SessaoPage() {
       }),
       prsCount,
       checkInId: activeCheckIn?.id,
+      appliedSessionAdjustment: isOriginalAdjustment(sessionAdjustment)
+        ? undefined
+        : toSnapshot(sessionAdjustment),
     }
     saveCompletedWorkout(completedWorkout)
 
@@ -417,12 +430,30 @@ export default function SessaoPage() {
         </div>
       )}
 
+      {/* Sprint 15: adjustment panel (shown after check-in result) */}
+      {checkInPhase === "training" && !xpResult && (
+        <SessionAdjustmentPanel
+          readinessResult={readinessResult}
+          adjustment={sessionAdjustment}
+          exerciseCount={activeSets.length}
+          onApply={(adj: SessionAdjustment) => setSessionAdjustment(adj)}
+          onReset={() => setSessionAdjustment(ORIGINAL_ADJUSTMENT)}
+        />
+      )}
+
       {/* Sprint 14: training phase — exercises */}
       {checkInPhase === "training" && activeSets.map((activeSet) => {
         const target = workoutTargets.find((t) => t.exerciseId === activeSet.exercise.id)
         const recommendation = generateRecommendation(activeSet.exercise.id)
         const lastExecution = getLastExecutionSummary(activeSet.exercise.id)
         const readinessHint = getReadinessHint(activeSet.exercise.id)
+        const adjustedTarget = applyAdjustmentToExercise(
+          activeSet.exercise.id,
+          target?.targetWeightKg ?? undefined,
+          target?.targetSets,
+          undefined,
+          sessionAdjustment
+        )
 
         return (
           <SessionExerciseCard
@@ -434,6 +465,7 @@ export default function SessaoPage() {
             isPr={prExerciseIds.has(activeSet.exercise.id)}
             lastExecution={lastExecution}
             readinessHint={readinessHint}
+            adjustedTarget={adjustedTarget}
             onAddSet={(weight, reps) =>
               addSet(activeSet.exercise.id, {
                 exercise_id: activeSet.exercise.id,
@@ -493,6 +525,10 @@ export default function SessaoPage() {
           totalSets={totalSets}
           isProcessing={isProcessing}
           sessionOutcomeMessage={sessionOutcome ? formatOutcome(sessionOutcome) : null}
+          appliedAdjustment={
+            isOriginalAdjustment(sessionAdjustment) ? null : toSnapshot(sessionAdjustment)
+          }
+          readinessLevel={readinessResult?.level ?? null}
           onConfirm={handleConfirmResult}
         />
       )}

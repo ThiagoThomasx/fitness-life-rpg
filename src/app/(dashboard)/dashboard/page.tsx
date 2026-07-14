@@ -35,6 +35,9 @@ import { getCheckIns } from "@/lib/readiness-check-ins"
 import type { WorkoutReadinessCheckIn } from "@/lib/readiness-check-ins"
 import { computeReadinessStats } from "@/lib/workout-readiness"
 import type { ReadinessStats } from "@/lib/workout-readiness"
+import { getWorkoutHistory } from "@/lib/workout-history"
+import { computeAdjustmentStats } from "@/lib/session-adjustments"
+import type { AdjustmentHistoryStats } from "@/lib/session-adjustments"
 
 export default function DashboardPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
@@ -52,6 +55,7 @@ export default function DashboardPage() {
   const [todayRec, setTodayRec] = useState<WorkoutRecommendation | null>(null)
   const [readinessStats, setReadinessStats] = useState<ReadinessStats | null>(null)
   const [lastCheckIn, setLastCheckIn] = useState<WorkoutReadinessCheckIn | null>(null)
+  const [adjustmentStats, setAdjustmentStats] = useState<AdjustmentHistoryStats | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -76,6 +80,10 @@ export default function DashboardPage() {
     )
     setReadinessStats(computeReadinessStats(recent7))
     setLastCheckIn(checkIns[0] ?? null)
+    const history7d = getWorkoutHistory().filter(
+      (w) => new Date(w.completedAt).getTime() >= Date.now() - 7 * 86400000
+    )
+    setAdjustmentStats(computeAdjustmentStats(history7d.map((w) => w.appliedSessionAdjustment ?? null)))
     setLoaded(true)
   }, [])
 
@@ -170,7 +178,11 @@ export default function DashboardPage() {
             <RecentRecordsCard />
             <NextChallengesCard />
             {readinessStats && (
-              <ReadinessOverviewCard stats={readinessStats} lastCheckIn={lastCheckIn} />
+              <ReadinessOverviewCard
+                stats={readinessStats}
+                lastCheckIn={lastCheckIn}
+                adjustmentStats={adjustmentStats}
+              />
             )}
             <NextMilestone totalWorkouts={totalWorkouts} />
           </div>

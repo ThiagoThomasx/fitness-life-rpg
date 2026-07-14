@@ -13,6 +13,65 @@
 
 ### Entregas
 
+#### Sprint 15 (v2) — Adaptive Session Control & Readiness Validation — 2026-07-14
+
+**Auditoria da Sprint 14**
+- `readiness-check-ins.ts`, `workout-readiness.ts`, componentes e fluxo da sessão auditados e confirmados íntegros.
+- QA visual da Sprint 14 permanecia pendente; documentado em `SPRINT-15.md`.
+
+**Novo módulo: `lib/session-adjustments.ts`**
+- `SessionAdjustmentMode`: `'original' | 'conservative' | 'custom'`.
+- `SessionAdjustment`: tipo completo com `weightReductionPercentage`, `setsReduction`, `restIncreaseSeconds`, `disableProgressionTargets`, `prioritizeTechnique`, `source`, `appliedAt`.
+- `AppliedSessionAdjustmentSnapshot`: subconjunto imutável gravado no histórico.
+- `SessionAdjustmentConfig`: config centralizada sem números mágicos (todos os presets derivados de `DEFAULT_SESSION_ADJUSTMENT_CONFIG`).
+- `readinessToPreset`: alta → original; moderada → consolidação (+30s descanso, técnica, sem progressão); baixa → conservador (−10%, −1 série, +30s).
+- `roundWeightDown`: arredondamento sempre para baixo ao incremento mais próximo; zero-weight preservado; sem arredondamento para cima.
+- `applyAdjustmentToExercise`: aplica ajuste ao alvo de exercício; preserva originais; mínimo 1 série; zero-weight preservado.
+- `buildAdjustmentSummary`, `validateAdjustment`, `toSnapshot`, `isOriginalAdjustment`, `computeAdjustmentStats`, `isValidAdjustmentSnapshot`, `adjustmentModeLabel`.
+
+**`useSessionStore` atualizado**
+- Campo `sessionAdjustment: SessionAdjustment` adicionado ao estado persistido.
+- Ação `setSessionAdjustment` adicionada.
+- Sessão sempre inicia com `ORIGINAL_ADJUSTMENT`; encerrada com reset completo.
+
+**`SessionAdjustmentPanel` (novo componente)**
+- Painel inline exibido na fase de treino, após o card de prontidão.
+- Sem ajuste: mostra status "plano original", sugestão derivada da prontidão, botões "Aplicar sugestão" / "Personalizar".
+- Com ajuste ativo: mostra modo, lista de alterações ativas, botões "Editar ajustes" / "Desfazer".
+- Personalização: 4 controles (redução de carga 0/5/10/15%, séries 0/−1, descanso +0/15/30/45/60s, toggles para progressão e técnica).
+- Nenhum ajuste é aplicado automaticamente; usuário sempre controla.
+
+**`SessionExerciseCard` atualizado**
+- Aceita `adjustedTarget?: AdjustedExerciseTarget | null`.
+- Quando há diferença, exibe meta original riscada e meta ajustada abaixo.
+- Progressão suprimida indicada textualmente ("Meta de progressão preservada para a próxima sessão.").
+- Default do `AddSetForm` usa o peso ajustado quando disponível.
+- Inputs continuam livres — o usuário pode registrar qualquer valor.
+
+**`WorkoutSummaryModal` atualizado**
+- Aceita `appliedAdjustment?` e `readinessLevel?`.
+- Exibe seção "Estratégia da sessão" com modo, detalhes e prontidão inicial relacionada.
+
+**`CompletedWorkout` atualizado**
+- Campo `appliedSessionAdjustment?: AppliedSessionAdjustmentSnapshot` adicionado (opcional, backward-compatible).
+
+**`ReadinessOverviewCard` (Dashboard) enriquecido**
+- Aceita `adjustmentStats?: AdjustmentHistoryStats | null`.
+- Exibe seção "Estratégias recentes" quando há dados dos últimos 7 dias.
+
+**Testes**
+- 52 testes novos em `session-adjustments.test.ts` (9 suítes).
+- Total: 216/216 testes, 9 arquivos de teste.
+
+**Gates**
+- Lint: ✅ 0 warnings/errors
+- Typecheck: ✅ 0 errors
+- Testes: ✅ 216/216
+- Build: ✅ sem erros
+
+**Não regressão confirmada**
+- XP, badges, PRs, recomendações da Sprint 13, prontidão da Sprint 14, navegação e histórico antigo intocados.
+
 #### Sprint 14 (v2) — Readiness, Recovery & Adaptive Workout Guidance — 2026-07-14
 
 **Auditoria inicial**

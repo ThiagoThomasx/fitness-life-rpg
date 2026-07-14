@@ -3,6 +3,7 @@
 import type { Exercise, ExerciseSet } from "@/types/database"
 import type { ExerciseTarget } from "@/lib/custom-workouts"
 import type { WorkoutRecommendation } from "@/lib/workout-intelligence"
+import type { AdjustedExerciseTarget } from "@/lib/session-adjustments"
 import { AddSetForm } from "./AddSetForm"
 
 type SetData = Omit<ExerciseSet, "id" | "session_id" | "created_at" | "is_pr">
@@ -15,6 +16,7 @@ type SessionExerciseCardProps = {
   isPr: boolean
   lastExecution?: { weightKg: number; reps: number; date: string } | null
   readinessHint?: string | null
+  adjustedTarget?: AdjustedExerciseTarget | null
   onAddSet: (weight: number, reps: number) => void
   onRemoveSet: (setIndex: number) => void
   onRemoveExercise: () => void
@@ -54,20 +56,34 @@ export function SessionExerciseCard({
   isPr,
   lastExecution,
   readinessHint,
+  adjustedTarget,
   onAddSet,
   onRemoveSet,
   onRemoveExercise,
 }: SessionExerciseCardProps) {
-  const suggestedWeight =
-    sets.length === 0
-      ? (recommendation.suggestedWeight ?? target?.targetWeightKg ?? null)
-      : null
+  const hasAdjustment =
+    adjustedTarget !== null &&
+    adjustedTarget !== undefined &&
+    !adjustedTarget.progressionTargetSuppressed === false ||
+    (adjustedTarget !== null &&
+      adjustedTarget !== undefined &&
+      (adjustedTarget.adjustedWeight !== adjustedTarget.originalWeight ||
+        adjustedTarget.adjustedSets !== adjustedTarget.originalSets))
+
+  // Effective weight for the AddSetForm default: use adjusted if available
+  const effectiveWeight =
+    adjustedTarget?.adjustedWeight !== undefined && adjustedTarget.adjustedWeight !== adjustedTarget.originalWeight
+      ? adjustedTarget.adjustedWeight
+      : recommendation.suggestedWeight ?? target?.targetWeightKg ?? null
+
+  const suggestedWeight = sets.length === 0 ? effectiveWeight : null
   const suggestedReps =
     sets.length === 0
       ? (recommendation.suggestedReps ?? target?.targetReps ?? 10)
       : undefined
-  const isDone = Boolean(target && sets.length >= target.targetSets)
-  const nextGoal = sets.length === 0 ? formatNextGoal(recommendation) : null
+  const effectiveSets = adjustedTarget?.adjustedSets ?? target?.targetSets
+  const isDone = Boolean(effectiveSets && sets.length >= effectiveSets)
+  const nextGoal = sets.length === 0 ? (adjustedTarget?.progressionTargetSuppressed ? null : formatNextGoal(recommendation)) : null
 
   return (
     <article className="exercise-card">
@@ -112,13 +128,52 @@ export function SessionExerciseCard({
       )}
 
       {/* Meta do treino conforme plano */}
-      {target && sets.length === 0 && (
+      {target && sets.length === 0 && !hasAdjustment && (
         <div className="target-hint">
           <span className="target-hint__goal">
             🎯 {target.targetSets}×{target.targetReps ?? "—"}
             {target.targetWeightKg ? ` @ ${target.targetWeightKg}kg` : ""}
           </span>
           {recommendation.reason && (
+            <span className="target-hint__note">{recommendation.reason}</span>
+          )}
+        </div>
+      )}
+
+      {/* Meta ajustada para hoje */}
+      {adjustedTarget && hasAdjustment && sets.length === 0 && (
+        <div className="target-hint target-hint--adjusted">
+          {adjustedTarget.originalWeight !== undefined && adjustedTarget.adjustedWeight !== adjustedTarget.originalWeight && (
+            <div className="target-hint__comparison">
+              <span className="target-hint__original">
+                Plano original: {adjustedTarget.originalSets ?? target?.targetSets ?? "—"}×
+                {target?.targetReps ?? "—"} @ {adjustedTarget.originalWeight}kg
+              </span>
+              <span className="target-hint__adjusted">
+                🎯 Meta de hoje: {adjustedTarget.adjustedSets ?? effectiveSets ?? "—"}×
+                {target?.targetReps ?? "—"} @ {adjustedTarget.adjustedWeight}kg
+              </span>
+            </div>
+          )}
+          {adjustedTarget.originalSets !== undefined &&
+            adjustedTarget.adjustedSets !== undefined &&
+            adjustedTarget.adjustedSets !== adjustedTarget.originalSets &&
+            (adjustedTarget.originalWeight === undefined || adjustedTarget.adjustedWeight === adjustedTarget.originalWeight) && (
+            <div className="target-hint__comparison">
+              <span className="target-hint__original">
+                Plano original: {adjustedTarget.originalSets} séries
+              </span>
+              <span className="target-hint__adjusted">
+                🎯 Meta de hoje: {adjustedTarget.adjustedSets} séries
+              </span>
+            </div>
+          )}
+          {adjustedTarget.progressionTargetSuppressed && (
+            <span className="target-hint__note">
+              Meta de progressão preservada para a próxima sessão.
+            </span>
+          )}
+          {recommendation.reason && !adjustedTarget.progressionTargetSuppressed && (
             <span className="target-hint__note">{recommendation.reason}</span>
           )}
         </div>

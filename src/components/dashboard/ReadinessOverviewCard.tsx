@@ -2,6 +2,7 @@
 
 import type { ReadinessStats } from "@/lib/workout-readiness"
 import type { WorkoutReadinessCheckIn } from "@/lib/readiness-check-ins"
+import type { AdjustmentHistoryStats } from "@/lib/session-adjustments"
 
 function levelLabel(high: number, moderate: number, low: number): string {
   if (high > moderate && high > low) return "alta"
@@ -13,9 +14,10 @@ function levelLabel(high: number, moderate: number, low: number): string {
 interface Props {
   stats: ReadinessStats
   lastCheckIn: WorkoutReadinessCheckIn | null
+  adjustmentStats?: AdjustmentHistoryStats | null
 }
 
-export function ReadinessOverviewCard({ stats, lastCheckIn }: Props) {
+export function ReadinessOverviewCard({ stats, lastCheckIn, adjustmentStats }: Props) {
   if (stats.totalCheckIns === 0) {
     return (
       <div className="card">
@@ -69,6 +71,18 @@ export function ReadinessOverviewCard({ stats, lastCheckIn }: Props) {
         <p className="text-xs text-muted mt-2">
           Último check-in: energia {lastCheckIn.energy}/5 · sono {lastCheckIn.sleepQuality}/5
         </p>
+      )}
+
+      {adjustmentStats && adjustmentStats.totalSessions > 0 && (
+        <div className="mt-3">
+          <p className="text-xs font-medium text-muted">Estratégias recentes</p>
+          <p className="text-sm mt-1">
+            {adjustmentStats.conservativeSessions > 0 && (
+              <span>{adjustmentStats.conservativeSessions} sessão{adjustmentStats.conservativeSessions !== 1 ? "ões" : ""} no modo conservador · </span>
+            )}
+            <span>{adjustmentStats.originalSessions} no plano original</span>
+          </p>
+        </div>
       )}
     </div>
   )

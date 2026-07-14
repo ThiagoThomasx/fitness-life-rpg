@@ -33,6 +33,8 @@ export interface CompletedWorkout {
   prsCount: number
   // Sprint 14: link ao check-in de prontidão pré-treino (opcional, compatível com histórico antigo)
   checkInId?: string
+  // Sprint 15: snapshot do ajuste aplicado nesta sessão (opcional, compatível com histórico antigo)
+  appliedSessionAdjustment?: import('./session-adjustments').AppliedSessionAdjustmentSnapshot
 }
 
 function loadHistory(): CompletedWorkout[] {

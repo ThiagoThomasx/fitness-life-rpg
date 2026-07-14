@@ -4,6 +4,18 @@ import { useId } from "react"
 import type { XpGainResult } from "@/stores/useCharacterStore"
 import { formatElapsed } from "@/stores/useSessionStore"
 import { ModalShell } from "@/components/ui/ModalShell"
+import type { AppliedSessionAdjustmentSnapshot } from "@/lib/session-adjustments"
+import { adjustmentModeLabel, buildAdjustmentSummary } from "@/lib/session-adjustments"
+import type { ReadinessLevel } from "@/lib/workout-readiness"
+
+function readinessLevelLabel(level: ReadinessLevel): string {
+  switch (level) {
+    case "high": return "Alta"
+    case "moderate": return "Moderada"
+    case "low": return "Baixa"
+    case "insufficient_data": return "—"
+  }
+}
 
 type WorkoutSummaryModalProps = {
   result: XpGainResult
@@ -12,6 +24,8 @@ type WorkoutSummaryModalProps = {
   totalSets: number
   isProcessing: boolean
   sessionOutcomeMessage?: string | null
+  appliedAdjustment?: AppliedSessionAdjustmentSnapshot | null
+  readinessLevel?: ReadinessLevel | null
   onConfirm: (destination: "/dashboard" | "/treinos") => void
 }
 
@@ -22,8 +36,18 @@ export function WorkoutSummaryModal({
   totalSets,
   isProcessing,
   sessionOutcomeMessage,
+  appliedAdjustment,
+  readinessLevel,
   onConfirm,
 }: WorkoutSummaryModalProps) {
+  const adjustmentSummary = appliedAdjustment
+    ? buildAdjustmentSummary(
+        { ...appliedAdjustment, source: "manual" },
+        totalExercises
+      )
+    : null
+  const showStrategy =
+    appliedAdjustment !== null && appliedAdjustment !== undefined
   const titleId = useId()
   const icon = result.level_up ? "🎉" : result.prsCount > 0 ? "🏆" : "⚡"
 
@@ -63,6 +87,27 @@ export function WorkoutSummaryModal({
         {sessionOutcomeMessage && (
           <div className="summary-callout summary-callout--readiness" role="status">
             {sessionOutcomeMessage}
+          </div>
+        )}
+
+        {showStrategy && appliedAdjustment && (
+          <div className="summary-strategy" aria-label="Estratégia da sessão">
+            <p className="summary-strategy__title">Estratégia da sessão</p>
+            <p className="summary-strategy__mode">
+              {adjustmentModeLabel(appliedAdjustment.mode)}
+            </p>
+            {adjustmentSummary && adjustmentSummary.messages.length > 0 && (
+              <ul className="summary-strategy__details">
+                {adjustmentSummary.messages.map((msg) => (
+                  <li key={msg}>{msg}</li>
+                ))}
+              </ul>
+            )}
+            {readinessLevel && readinessLevel !== "insufficient_data" && (
+              <p className="summary-strategy__context">
+                Prontidão inicial: {readinessLevelLabel(readinessLevel)}
+              </p>
+            )}
           </div>
         )}
 

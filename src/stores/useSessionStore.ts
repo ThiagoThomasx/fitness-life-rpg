@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { devtools, persist, createJSONStorage } from 'zustand/middleware'
 import type { WorkoutSession, ExerciseSet, Exercise } from '@/types/database'
+import type { SessionAdjustment } from '@/lib/session-adjustments'
+import { ORIGINAL_ADJUSTMENT } from '@/lib/session-adjustments'
 
 interface ActiveSet {
   exercise: Exercise
@@ -13,11 +15,13 @@ interface SessionState {
   elapsedSeconds: number
   isLoading: boolean
   error: string | null
+  sessionAdjustment: SessionAdjustment
 }
 
 interface SessionActions {
   startSession: (session: WorkoutSession) => void
   endSession: () => void
+  setSessionAdjustment: (adjustment: SessionAdjustment) => void
   addExercise: (exercise: Exercise) => void
   removeExercise: (exerciseId: string) => void
   addSet: (exerciseId: string, set: ActiveSet['sets'][number]) => void
@@ -35,6 +39,7 @@ const INITIAL_STATE: SessionState = {
   elapsedSeconds: 0,
   isLoading: false,
   error: null,
+  sessionAdjustment: ORIGINAL_ADJUSTMENT,
 }
 
 const safeStorage = {
@@ -60,10 +65,13 @@ export const useSessionStore = create<SessionState & SessionActions>()(
 
         startSession: (session) =>
           set(
-            { activeSession: session, activeSets: [], elapsedSeconds: 0, error: null },
+            { activeSession: session, activeSets: [], elapsedSeconds: 0, error: null, sessionAdjustment: ORIGINAL_ADJUSTMENT },
             false,
             'session/start'
           ),
+
+        setSessionAdjustment: (adjustment) =>
+          set({ sessionAdjustment: adjustment }, false, 'session/setAdjustment'),
 
         endSession: () =>
           set(INITIAL_STATE, false, 'session/end'),
@@ -164,6 +172,7 @@ export const useSessionStore = create<SessionState & SessionActions>()(
           activeSession: state.activeSession,
           activeSets: state.activeSets,
           elapsedSeconds: state.elapsedSeconds,
+          sessionAdjustment: state.sessionAdjustment,
         }),
       }
     ),
