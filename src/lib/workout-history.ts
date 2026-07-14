@@ -31,6 +31,8 @@ export interface CompletedWorkout {
   xpEarned: number
   exercises: ExerciseRecord[]
   prsCount: number
+  // Sprint 14: link ao check-in de prontidão pré-treino (opcional, compatível com histórico antigo)
+  checkInId?: string
 }
 
 function loadHistory(): CompletedWorkout[] {

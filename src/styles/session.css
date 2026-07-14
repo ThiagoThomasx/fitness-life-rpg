@@ -1,6 +1,261 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    Sessão Ativa — estilos de domínio (Sprint 2). Valores vêm de tokens.css.
+   Sprint 14: check-in de prontidão e cards de resultado adicionados.
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Readiness Check-in ─────────────────────────────────────────────────── */
+
+.readiness-checkin {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.readiness-checkin__title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.readiness-checkin__subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-top: calc(-1 * var(--space-2));
+}
+
+.readiness-checkin__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.readiness-checkin__field {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.readiness-checkin__field-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+  display: block;
+}
+
+.readiness-checkin__scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.readiness-checkin__buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.readiness-checkin__btn {
+  flex: 1;
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 150ms, background 150ms;
+}
+
+.readiness-checkin__btn:hover {
+  border-color: var(--color-accent);
+}
+
+.readiness-checkin__btn--active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-surface);
+}
+
+.readiness-checkin__notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.readiness-checkin__notes-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.readiness-checkin__notes-input {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  resize: none;
+  width: 100%;
+}
+
+.readiness-checkin__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ─── Readiness Card ─────────────────────────────────────────────────────── */
+
+.readiness-card {
+  border-radius: var(--radius-card-lg);
+  border: 1.5px solid var(--color-border);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.readiness-card--high { border-color: var(--color-success, #4ade80); }
+.readiness-card--moderate { border-color: var(--color-accent); }
+.readiness-card--low { border-color: var(--color-warning, #fb923c); }
+.readiness-card--unknown { border-color: var(--color-border); }
+
+.readiness-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.readiness-card__level-badge {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.readiness-card__confidence {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.readiness-card__headline {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.readiness-card__explanation {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.readiness-card__factors {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.readiness-card__factor {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  font-size: var(--text-sm);
+}
+
+.readiness-card__factor-icon {
+  font-size: var(--text-base);
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 1.2em;
+}
+
+.readiness-card__factor--positive .readiness-card__factor-icon { color: var(--color-success, #4ade80); }
+.readiness-card__factor--negative .readiness-card__factor-icon { color: var(--color-warning, #fb923c); }
+.readiness-card__factor--neutral .readiness-card__factor-icon { color: var(--color-text-muted); }
+
+.readiness-card__adjustments {
+  background: var(--color-surface-raised);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.readiness-card__adjustments-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-2);
+}
+
+.readiness-card__adjustments ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.readiness-card__adjustment {
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+}
+
+.readiness-card__adjustment::before {
+  content: "·  ";
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.readiness-card__edit-btn {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ─── Readiness hint on exercise card ───────────────────────────────────── */
+
+.readiness-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-raised);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
+}
+
+.readiness-hint__icon {
+  font-size: var(--text-sm);
+  flex-shrink: 0;
+}
+
+.readiness-hint__text {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
 
 /* ─── Header da sessão ──────────────────────────────────────────────────── */
 
@@ -209,6 +464,13 @@
   background: var(--color-warning-subtle);
   border: 1px solid var(--color-warning);
   color: var(--color-warning);
+}
+
+.summary-callout--readiness {
+  background: var(--color-surface-raised);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-normal);
 }
 
 .summary-breakdown {

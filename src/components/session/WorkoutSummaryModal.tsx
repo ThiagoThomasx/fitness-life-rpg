@@ -11,6 +11,7 @@ type WorkoutSummaryModalProps = {
   totalExercises: number
   totalSets: number
   isProcessing: boolean
+  sessionOutcomeMessage?: string | null
   onConfirm: (destination: "/dashboard" | "/treinos") => void
 }
 
@@ -20,6 +21,7 @@ export function WorkoutSummaryModal({
   totalExercises,
   totalSets,
   isProcessing,
+  sessionOutcomeMessage,
   onConfirm,
 }: WorkoutSummaryModalProps) {
   const titleId = useId()
@@ -55,6 +57,12 @@ export function WorkoutSummaryModal({
         {result.prsCount > 0 && (
           <div className="summary-callout" role="status">
             🎯 {result.prsCount} recorde{result.prsCount > 1 ? "s" : ""} pessoal{result.prsCount > 1 ? "is" : ""}!
+          </div>
+        )}
+
+        {sessionOutcomeMessage && (
+          <div className="summary-callout summary-callout--readiness" role="status">
+            {sessionOutcomeMessage}
           </div>
         )}
 
