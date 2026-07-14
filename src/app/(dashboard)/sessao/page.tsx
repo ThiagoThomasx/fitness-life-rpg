@@ -16,7 +16,7 @@ import { addRewardEvent } from "@/lib/reward-events"
 import { useRewardStore } from "@/stores/useRewardStore"
 import { useBadgeStore } from "@/stores/useBadgeStore"
 import { getCustomWorkouts, type ExerciseTarget } from "@/lib/custom-workouts"
-import { suggestProgression } from "@/lib/progression"
+import { generateRecommendation } from "@/lib/workout-intelligence"
 import { detectExercisePrs, getLastExecutionSummary, type ExercisePrDetection } from "@/lib/exercise-records"
 import { categoryColor } from "@/lib/theme-colors"
 import { EmptyState } from "@/components/ui/EmptyState"
@@ -25,6 +25,17 @@ import { SessionHeader } from "@/components/session/SessionHeader"
 import { SessionExerciseCard } from "@/components/session/SessionExerciseCard"
 import { ExercisePickerModal } from "@/components/session/ExercisePickerModal"
 import { WorkoutSummaryModal } from "@/components/session/WorkoutSummaryModal"
+import { ReadinessCheckIn } from "@/components/session/ReadinessCheckIn"
+import { ReadinessCard } from "@/components/session/ReadinessCard"
+import { saveCheckIn } from "@/lib/readiness-check-ins"
+import type { WorkoutReadinessCheckIn } from "@/lib/readiness-check-ins"
+import {
+  calculateReadiness,
+  calculateSessionOutcome,
+  formatOutcome,
+} from "@/lib/workout-readiness"
+import type { WorkoutReadinessResult, ReadinessOutcome } from "@/lib/workout-readiness"
+import { getExerciseStatus } from "@/lib/workout-intelligence"
 
 // ─── Timer da sessão ──────────────────────────────────────────────────────────
 
@@ -66,6 +77,12 @@ export default function SessaoPage() {
   const [showIncompleteDialog, setShowIncompleteDialog] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
 
+  // Sprint 14: readiness check-in state
+  const [checkInPhase, setCheckInPhase] = useState<"check_in" | "result" | "training">("check_in")
+  const [activeCheckIn, setActiveCheckIn] = useState<WorkoutReadinessCheckIn | null>(null)
+  const [readinessResult, setReadinessResult] = useState<WorkoutReadinessResult | null>(null)
+  const [sessionOutcome, setSessionOutcome] = useState<ReadinessOutcome | null>(null)
+
   // Guardas síncronas contra duplo clique (finalizar / confirmar resultado)
   const finishedRef = useRef(false)
   const confirmedRef = useRef(false)
@@ -102,6 +119,34 @@ export default function SessaoPage() {
   const totalSets = activeSets.reduce((acc, s) => acc + s.sets.length, 0)
   const exercisesDone = activeSets.filter((s) => s.sets.length > 0).length
   const alreadyAdded = activeSets.map((s) => s.exercise.id)
+
+  function handleCheckInSubmit(checkIn: WorkoutReadinessCheckIn) {
+    saveCheckIn(checkIn)
+    setActiveCheckIn(checkIn)
+    const result = calculateReadiness({
+      checkIn,
+      workoutExerciseIds: activeSets.map((s) => s.exercise.id),
+    })
+    setReadinessResult(result)
+    setCheckInPhase("result")
+  }
+
+  function handleSkipCheckIn() {
+    const result = calculateReadiness({
+      checkIn: null,
+      workoutExerciseIds: activeSets.map((s) => s.exercise.id),
+    })
+    setReadinessResult(result)
+    setCheckInPhase("training")
+  }
+
+  function handleStartTraining() {
+    setCheckInPhase("training")
+  }
+
+  function handleEditCheckIn() {
+    setCheckInPhase("check_in")
+  }
 
   function handleFinishRequest() {
     if (totalSets === 0 || xpResult) return
@@ -160,6 +205,28 @@ export default function SessaoPage() {
     const customWorkout = getCustomWorkouts().find((w) => w.id === activeSession!.workout_id)
     const workoutColor = mockWorkout?.color ?? categoryColor(workoutType.category).fill
 
+    // Sprint 14: link check-in and compute session outcome
+    const regressingCount = activeSets.filter(
+      (s) => getExerciseStatus(s.exercise.id) === "regressing"
+    ).length
+    const improvingCount = activeSets.filter(
+      (s) => getExerciseStatus(s.exercise.id) === "improving"
+    ).length
+    const sessionVol = activeSets.reduce(
+      (sum, s) => sum + s.sets.reduce((acc, set) => acc + set.weight_kg * set.reps, 0),
+      0
+    )
+    if (readinessResult) {
+      const outcome = calculateSessionOutcome({
+        readinessLevel: readinessResult.level,
+        actualVolume: sessionVol,
+        expectedVolume: sessionVol, // conservative: use actual as expected baseline
+        regressingCount,
+        improvingCount,
+      })
+      setSessionOutcome(outcome)
+    }
+
     const completedWorkout: CompletedWorkout = {
       id: `cw-${Date.now()}`,
       workoutId: activeSession?.workout_id ?? "",
@@ -188,6 +255,7 @@ export default function SessaoPage() {
         }
       }),
       prsCount,
+      checkInId: activeCheckIn?.id,
     }
     saveCompletedWorkout(completedWorkout)
 
@@ -293,6 +361,20 @@ export default function SessaoPage() {
     router.push("/treinos")
   }
 
+  // Compute readiness hints per exercise (only when readiness is available and not high)
+  function getReadinessHint(exerciseId: string): string | null {
+    if (!readinessResult || readinessResult.level === "high") return null
+    const status = getExerciseStatus(exerciseId)
+    if (readinessResult.level === "low") {
+      if (status === "regressing") return "Evite perseguir PR. Use a primeira série como referência."
+      if (status === "stagnant") return "Consolide a carga atual antes de tentar aumentar."
+      return "Hoje pode ser um dia mais leve neste exercício."
+    }
+    // moderate
+    if (status === "regressing") return "Queda recente — priorize técnica."
+    return null
+  }
+
   return (
     <div className="page">
       <SessionHeader
@@ -306,10 +388,41 @@ export default function SessaoPage() {
         onCancel={() => setShowCancelDialog(true)}
       />
 
-      {activeSets.map((activeSet) => {
+      {/* Sprint 14: check-in phase */}
+      {checkInPhase === "check_in" && !xpResult && (
+        <ReadinessCheckIn
+          workoutId={activeSession?.workout_id}
+          onSubmit={handleCheckInSubmit}
+          onSkip={handleSkipCheckIn}
+        />
+      )}
+
+      {/* Sprint 14: readiness result phase */}
+      {checkInPhase === "result" && readinessResult && !xpResult && (
+        <div>
+          <ReadinessCard
+            result={readinessResult}
+            onEditCheckIn={handleEditCheckIn}
+          />
+          {readinessResult.level !== "insufficient_data" && (
+            <button
+              type="button"
+              className="btn btn--primary"
+              style={{ width: "100%", marginBottom: "var(--space-4)" }}
+              onClick={handleStartTraining}
+            >
+              Iniciar treino
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Sprint 14: training phase — exercises */}
+      {checkInPhase === "training" && activeSets.map((activeSet) => {
         const target = workoutTargets.find((t) => t.exerciseId === activeSet.exercise.id)
-        const suggestion = suggestProgression(activeSet.exercise.id, target?.targetWeightKg ?? null)
+        const recommendation = generateRecommendation(activeSet.exercise.id)
         const lastExecution = getLastExecutionSummary(activeSet.exercise.id)
+        const readinessHint = getReadinessHint(activeSet.exercise.id)
 
         return (
           <SessionExerciseCard
@@ -317,9 +430,10 @@ export default function SessaoPage() {
             exercise={activeSet.exercise}
             sets={activeSet.sets}
             target={target}
-            suggestion={suggestion}
+            recommendation={recommendation}
             isPr={prExerciseIds.has(activeSet.exercise.id)}
             lastExecution={lastExecution}
+            readinessHint={readinessHint}
             onAddSet={(weight, reps) =>
               addSet(activeSet.exercise.id, {
                 exercise_id: activeSet.exercise.id,
@@ -334,9 +448,11 @@ export default function SessaoPage() {
         )
       })}
 
-      <button type="button" className="add-exercise-tile" onClick={() => setShowPicker(true)}>
-        <span aria-hidden="true">+</span> Adicionar exercício
-      </button>
+      {checkInPhase === "training" && (
+        <button type="button" className="add-exercise-tile" onClick={() => setShowPicker(true)}>
+          <span aria-hidden="true">+</span> Adicionar exercício
+        </button>
+      )}
 
       {showPicker && (
         <ExercisePickerModal
@@ -376,6 +492,7 @@ export default function SessaoPage() {
           totalExercises={activeSets.length}
           totalSets={totalSets}
           isProcessing={isProcessing}
+          sessionOutcomeMessage={sessionOutcome ? formatOutcome(sessionOutcome) : null}
           onConfirm={handleConfirmResult}
         />
       )}

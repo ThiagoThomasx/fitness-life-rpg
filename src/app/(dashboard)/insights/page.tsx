@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useCharacterStore } from "@/stores/useCharacterStore"
 import { MOCK_CHARACTER } from "@/lib/mock/data"
 import { computeInsights, type InsightsData } from "@/lib/insights"
+import { getAllExerciseIntelligence, type ExerciseIntelligence } from "@/lib/workout-intelligence"
 import { getPreferences, GOAL_LABELS, GOAL_ICONS } from "@/lib/preferences"
 import { SkeletonPageLoader } from "@/components/ui/Skeleton"
 import { InsightsHeader } from "@/components/insights/InsightsHeader"
@@ -18,14 +19,27 @@ import { PrsSection } from "@/components/insights/PrsSection"
 import { AttributesSection } from "@/components/insights/AttributesSection"
 import { TagsSection } from "@/components/insights/TagsSection"
 import { NutritionSection } from "@/components/insights/NutritionSection"
+import { TrainingIntelligenceSection } from "@/components/insights/TrainingIntelligenceSection"
+import { ReadinessInsightsSection } from "@/components/insights/ReadinessInsightsSection"
+import { getCheckIns } from "@/lib/readiness-check-ins"
+import { computeReadinessStats } from "@/lib/workout-readiness"
+import type { ReadinessStats } from "@/lib/workout-readiness"
+import type { WorkoutReadinessCheckIn } from "@/lib/readiness-check-ins"
 
 export default function InsightsPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
   const [data, setData] = useState<InsightsData | null>(null)
   const [goal, setGoal] = useState<{ label: string; icon: string } | null>(null)
+  const [exerciseIntelligence, setExerciseIntelligence] = useState<ExerciseIntelligence[]>([])
+  const [readinessCheckIns, setReadinessCheckIns] = useState<WorkoutReadinessCheckIn[]>([])
+  const [readinessStats, setReadinessStats] = useState<ReadinessStats | null>(null)
 
   useEffect(() => {
     setData(computeInsights())
+    setExerciseIntelligence(getAllExerciseIntelligence())
+    const checkIns = getCheckIns()
+    setReadinessCheckIns(checkIns)
+    setReadinessStats(computeReadinessStats(checkIns))
     const prefs = getPreferences()
     if (prefs.onboardingCompleted) {
       setGoal({ label: GOAL_LABELS[prefs.goal], icon: GOAL_ICONS[prefs.goal] })
@@ -66,6 +80,10 @@ export default function InsightsPage() {
 
           <ExerciseLoadSection data={data} />
           <ExerciseGrowthSection data={data} />
+          <TrainingIntelligenceSection exercises={exerciseIntelligence} />
+          {readinessStats && (
+            <ReadinessInsightsSection checkIns={readinessCheckIns} stats={readinessStats} />
+          )}
 
           <div className="insights-chart-grid">
             <CategorySection data={data} />

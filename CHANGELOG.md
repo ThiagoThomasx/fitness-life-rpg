@@ -13,6 +13,114 @@
 
 ### Entregas
 
+#### Sprint 14 (v2) — Readiness, Recovery & Adaptive Workout Guidance — 2026-07-14
+
+**Auditoria inicial**
+- `workout-recovery.ts` (Sprint 11) fornecia `recoveryPercent` por grupo muscular mas não havia integração com percepção subjetiva do usuário.
+- Único dado subjetivo era `DailyLogEntry.energyLevel` no diário — não ligado à sessão de treino.
+- Nenhum check-in pré-treino existia; progressão da Sprint 13 não tinha contexto de "hoje o usuário está preparado para perseguir essa meta?".
+
+**Novo módulo: `lib/readiness-check-ins.ts`**
+- `WorkoutReadinessCheckIn`: `{ id, workoutId?, createdAt, energy, soreness, sleepQuality, motivation, notes? }` com ratings 1–5.
+- `saveCheckIn`, `getCheckIns`, `getCheckInById`, `getTodayCheckIns`, `getRecentCheckIns`, `importCheckIns` com validação por campo e deduplicação por `id`.
+- Chave `lrpg-fit:readiness-check-ins` adicionada a `STORAGE_KEYS` e `ARRAY_KEYS` em `backup.ts`.
+- `CompletedWorkout.checkInId?` adicionado para link opcional check-in → sessão (compatível com histórico antigo).
+
+**Novo módulo: `lib/workout-readiness.ts`**
+- `calculateReadiness(input)`: engine puro — combina 4 fatores objetivos (recuperação muscular 40%, frequência semanal 25%, tendência de performance 25%, volume semanal 10%) com 4 fatores subjetivos (energia, dor muscular invertida, sono, motivação) quando check-in disponível. Com check-in: 50% subjetivo + 50% objetivo. Sem check-in: 100% objetivo com confiança reduzida.
+- Níveis: `high ≥ 72`, `moderate ≥ 45`, `low < 45`, `insufficient_data` (sem check-in e sem histórico).
+- Confiança: `high` (check-in + ≥3 sessões), `medium` (um dos dois), `low` (nenhum).
+- `getProgressionContext(level)`: integração contextual com Sprint 13 — não modifica a meta original, apenas adiciona "Meta liberada" / "Meta com cautela" / "Hoje não perseguir".
+- `calculateSessionOutcome`: compara prontidão inicial × performance final → `above_expectation | aligned | below_expectation | insufficient_data`.
+- `computeReadinessStats`: agrega check-ins em médias e distribuição de níveis.
+- Thresholds centralizados em `ReadinessConfig` / `DEFAULT_READINESS_CONFIG` — sem números mágicos.
+
+**Componentes novos**
+- `ReadinessCheckIn.tsx`: formulário mobile-first com botões de rating 1–5, labels de escala, notas opcionais. Opções: "Avaliar prontidão" ou "Pular check-in".
+- `ReadinessCard.tsx`: exibe nível, headline, explicação, fatores com ícone de impacto (+/−/·), ajustes sugeridos, botão "Editar check-in".
+- `ReadinessOverviewCard.tsx` (Dashboard): distribuição de prontidão dos últimos 7 dias; estado vazio quando sem check-ins.
+- `ReadinessInsightsSection.tsx` (Insights): médias subjetivas, barras de distribuição por nível, insights determinísticos com amostra mínima configurável.
+
+**Integrações**
+- Página de sessão: 3 fases (check-in → resultado com ReadinessCard + botão "Iniciar treino" → lista de exercícios). Pular check-in vai direto para o treino com avaliação objetiva. Editar check-in disponível enquanto sessão não concluída.
+- `SessionExerciseCard`: nova prop `readinessHint?: string | null` — mostra orientação contextual apenas quando prontidão não é alta e o exercício tem status relevante (regressing/stagnant).
+- `WorkoutSummaryModal`: prop `sessionOutcomeMessage?: string | null` — exibe resultado comparativo apenas quando prontidão foi avaliada.
+- Dashboard: `ReadinessOverviewCard` na coluna direita.
+- Insights: `ReadinessInsightsSection` após `TrainingIntelligenceSection`.
+- Perfil: seção "Prontidão" com total de check-ins, distribuição e médias de energia/sono.
+
+**Testes**
+- 39 testes novos em `workout-readiness.test.ts` cobrindo: todos os níveis de prontidão, fatores subjetivos/objetivos, confiança, ajustes, integração com progressão, outcome de sessão, computeReadinessStats, backup e compatibilidade com histórico antigo.
+- Total: 164 testes, 8 arquivos, todos passando.
+
+**Não regressão confirmada**
+- XP: intocado.
+- Badges: intocados.
+- PRs: intocados.
+- Recomendações Sprint 13: intactas (apenas interpretação contextual adicionada).
+- Workout Planner Sprint 11: intocado.
+- Sessões antigas: abertas sem quebra (`checkInId` opcional).
+- Backup antigo: importado sem erro (nova chave simplesmente ausente).
+- Backup novo: round-trip correto.
+- Nenhuma rota criada; navegação não alterada.
+- Build, lint, typecheck: limpos.
+
+#### Sprint 13 (v2) — Progressive Overload & Training Intelligence — 2026-07-14
+
+**Auditoria inicial**
+- `lib/progression.ts` existia com lógica básica de uma regra: se todas as séries atingiram 10 reps, aumenta o peso; caso contrário, sugere mais 1 rep. Sem análise multi-sessão, sem detecção de estagnação/regressão, sem confiança.
+- `lib/exercise-records.ts` já tinha `getStagnantExercises` e `getTopGrowthExercises` mas baseados apenas no delta entre sessão mais antiga e mais recente (não em sequência consecutiva), e sem expor isso para a UI de treino.
+- `SessionExerciseCard` recebia `suggestion: ProgressionSuggestion` e mostrava apenas `suggestion.note` em texto plano — sem "próxima meta" visual, sem confiança, sem diferenciação entre tipos de recomendação.
+- `ExerciseHistoryModal` mostrava `suggestion.note` em um `stat-cell` — sem bloco dedicado, sem nível de confiança, sem contexto do tipo de progressão sugerido.
+- Dashboard não tinha card de "próximos desafios" — só `RecentRecordsCard` (PRs passados).
+- Insights não tinha seção de inteligência de treino — só `ExerciseGrowthSection` (crescimento bruto de carga desde a primeira sessão).
+- Perfil não tinha stats de inteligência (exercícios evoluindo/estagnados, PRs da semana, comparação de volume).
+
+**Novo módulo: `lib/workout-intelligence.ts`**
+- `WorkoutRecommendation`: tipo central com `type` (5 valores), `suggestedWeight`, `suggestedReps`, `confidence` (low/medium/high), `reason`.
+- `ExerciseStatus`: `'improving' | 'stable' | 'stagnant' | 'regressing' | 'insufficient_data'`
+- `generateRecommendation(exerciseId, config?)`: engine principal — detecta regression (queda consecutiva por N sessões), stagnation (mesmo peso por N sessões), e progride via `increase_weight` / `increase_reps` / `maintain` / `deload`. Confiança sobe com o número de sessões (1 → low, 2 → medium, 3+ → high). Incrementos de peso: +1kg (<20kg), +2.5kg (20–60kg), +5kg (>60kg). Config injetável para stagnationThreshold/regressionThreshold (default 5/3).
+- `getExerciseStatus(exerciseId)`: status por exercício usando os mesmos detectores internos.
+- `getAllExerciseIntelligence()`: agrega status + recomendação para cada exercício único do histórico.
+- `getTopChallenges(limit)`: filtra exercícios com `suggestedWeight` e ordena por status (improving > stable > stagnant > regressing).
+- `getWeeklyIntelligenceSummary()`: compara semana atual vs anterior (PRs, volume em kg), conta exercícios por status.
+- Toda lógica é pura — sem efeitos colaterais. UI apenas consome, nunca calcula.
+
+**Testes: `lib/workout-intelligence.test.ts`**
+- 30 testes cobrindo: sem histórico, sessão única, 2 e 3+ sessões, bodyweight, deload (queda >10%), maintain (queda pequena), stagnation com reps atingidas, stagnation sem reps atingidas, threshold configurável, séries vazias, getExerciseStatus (todos os 5 estados), getAllExerciseIntelligence, getTopChallenges, getWeeklyIntelligenceSummary, suggestWeightIncrease (3 faixas de incremento).
+- Suíte completa: 125 testes, 7 arquivos, 100% verde.
+
+**Componentes criados**
+- `src/components/dashboard/NextChallengesCard.tsx` — card "Próximos Desafios" mostrando até 5 exercícios com ícone de status + meta formatada (peso × reps), com empty state quando sem histórico ponderado.
+- `src/components/insights/TrainingIntelligenceSection.tsx` — seção de inteligência nos Insights, agrupando exercícios por status em cards coloridos (improving/stable/stagnant/regressing), com contagem e metas sugeridas.
+- `src/components/profile/IntelligenceStatsSection.tsx` — grid 2×2 no Perfil: exercícios evoluindo, exercícios estagnados, PRs desta semana, variação de volume vs semana anterior.
+
+**Componentes modificados**
+- `SessionExerciseCard.tsx`: substituído `suggestion: ProgressionSuggestion` por `recommendation: WorkoutRecommendation`. Adicionada linha "Próxima meta: Xkg × Y" com ícone de confiança (🎯 high / 📊 medium / 💡 low), separada do campo "Última vez". AddSetForm pré-preenchido via `recommendation.suggestedWeight` e `recommendation.suggestedReps`.
+- `ExerciseHistoryModal.tsx`: bloco dedicado de "Próxima sessão" com tipo de recomendação, meta formatada, e `reason`. Substituído `suggestProgression` por `generateRecommendation`.
+- `sessao/page.tsx`: substituído `suggestProgression` por `generateRecommendation` (mesma assinatura simplificada, sem precisar do `targetWeightKg` do plano — a inteligência infere do histórico).
+
+**Pages modificadas**
+- `dashboard/page.tsx`: `NextChallengesCard` inserido após `RecentRecordsCard`.
+- `insights/page.tsx`: `TrainingIntelligenceSection` inserido após `ExerciseGrowthSection`; `getAllExerciseIntelligence()` computado no `useEffect` junto com `computeInsights()`.
+- `perfil/page.tsx`: `IntelligenceStatsSection` inserido como nova seção "Inteligência de treino" após "Recordes"; dados computados no `useEffect` já existente.
+
+**Não alterado**
+- Fórmula de XP (`lib/workout.ts`) — intocada.
+- Badges — intocadas.
+- Navegação — intocada.
+- `lib/exercise-records.ts` — intocado (stagnation detection do módulo novo usa algoritmo diferente/mais preciso mas não substitui o existente).
+- Backup (`lib/backup.ts`) — intocado.
+- Compatibilidade com histórico antigo — garantida: campos novos são opcionais, lógica lê apenas `sets` existentes.
+
+**QA**
+- Dashboard: `NextChallengesCard` renderiza empty state "Complete alguns treinos para ver seus próximos desafios" — correto sem histórico.
+- Insights: seção `TrainingIntelligenceSection` não renderiza quando não há grupos ativos — correto.
+- Perfil: `IntelligenceStatsSection` renderiza apenas quando `weekSummary !== null` — correto.
+- TypeScript: `npx tsc --noEmit` — zero erros.
+- Build: `npx next build` — limpo, zero warnings.
+- Testes: `npx vitest run` — 125/125 passando.
+
 #### Sprint 9 (v2) — Dashboard: Estabilidade de Hydration e Consolidação Visual — 2026-07-12
 
 **Auditoria**

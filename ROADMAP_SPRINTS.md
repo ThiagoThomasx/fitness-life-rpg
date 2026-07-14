@@ -157,6 +157,37 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 - [x] QA end-to-end no dev server: sessão real gerou PR de peso + primeira execução, toast disparou, XP (+110) e badge ("Recorde Pessoal") idênticos ao formato pré-existente, Dashboard/Insights/Perfil consistentes — `docs/screenshots/sprint12/`
 - [x] Build, lint, typecheck e testes (95/95) limpos
 
+## Sprint 14 — Readiness, Recovery & Adaptive Workout Guidance ✅
+**Objetivo:** conectar planejamento, histórico e progressão ao estado atual do usuário — "Como devo abordar o treino de hoje?" — via check-in pré-treino e engine de prontidão local, determinístico e testado. Ver `SPRINT-14.md` para o relatório completo.
+
+- [x] Auditoria: `workout-recovery.ts` (Sprint 11) já fornecia `recoveryPercent` por grupo muscular; `workout-intelligence.ts` (Sprint 13) fornecia status de progressão; nenhum dado subjetivo pré-treino existia
+- [x] `src/lib/readiness-check-ins.ts` — novo módulo: tipo `WorkoutReadinessCheckIn` (energy/soreness/sleepQuality/motivation 1-5), CRUD, validação por campo, importação granular, deduplicação por id
+- [x] `lrpg-fit:readiness-check-ins` adicionado ao backup (ARRAY_KEYS); `checkInId?` adicionado a `CompletedWorkout` para link check-in → sessão
+- [x] `src/lib/workout-readiness.ts` — engine puro com `calculateReadiness` (4 fatores objetivos + 4 subjetivos, scores ponderados, thresholds em `ReadinessConfig`), `getProgressionContext` (integração com Sprint 13), `calculateSessionOutcome`, `computeReadinessStats`
+- [x] `ReadinessCheckIn` — componente de check-in pré-treino mobile-first com botões de rating (1–5), notas opcionais, "Avaliar prontidão" e "Pular check-in"
+- [x] `ReadinessCard` — card de resultado (nível, headline, fatores positivos/negativos, ajustes sugeridos, "Editar check-in")
+- [x] Página de sessão integrada: 3 fases (check-in → resultado → treino), check-in pular/editar, `readinessHint` contextual por exercício, outcome calculado no `WorkoutSummaryModal`
+- [x] `ReadinessOverviewCard` — card no Dashboard com distribuição de prontidão dos últimos 7 dias
+- [x] `ReadinessInsightsSection` — seção em Insights com médias subjetivas, barras de distribuição e insights determinísticos
+- [x] Seção de prontidão no Perfil (total de check-ins, alta/baixa, energia/sono médios)
+- [x] 39 testes novos (`workout-readiness.test.ts`) — 164/164 no total, 8 arquivos
+- [x] XP, badges, PRs, Sprint 13, Sprint 11, navegação e histórico antigo intocados
+- [x] Build, lint, typecheck e testes limpos
+
+## Sprint 13 — Progressive Overload & Training Intelligence ✅
+**Objetivo:** transformar o app em um verdadeiro companheiro de progressão — o usuário sai de cada sessão sabendo exatamente o que tentar na próxima, com que confiança, e por quê — tudo local e determinístico, sem IA. Ver `SPRINT-13.md` para o relatório completo.
+
+- [x] Auditoria: `lib/progression.ts` tinha lógica de uma regra (allSetsHitTarget → +peso, senão +1 rep), sem análise multi-sessão, confiança ou detecção de padrões; `SessionExerciseCard` recebia `ProgressionSuggestion` com apenas `note` em texto plano
+- [x] `src/lib/workout-intelligence.ts` — engine novo com `generateRecommendation` (5 tipos × 3 níveis de confiança), `getExerciseStatus`, `getAllExerciseIntelligence`, `getTopChallenges`, `getWeeklyIntelligenceSummary`; detectores puros de regressão, estagnação e melhoria com threshold configurável
+- [x] `SessionExerciseCard` migrado de `ProgressionSuggestion` para `WorkoutRecommendation`; linha "Próxima meta" com ícone de confiança abaixo da "Última vez"
+- [x] `ExerciseHistoryModal` enriquecido com bloco "Próxima sessão" (tipo, meta, razão) usando `generateRecommendation`
+- [x] `NextChallengesCard` — novo card no Dashboard com até 5 exercícios e suas metas, ordenados por status (improving → stable → stagnant → regressing)
+- [x] `TrainingIntelligenceSection` — nova seção nos Insights agrupando exercícios por status (evoluindo / estável / estagnado / em queda)
+- [x] `IntelligenceStatsSection` — nova seção no Perfil: exercícios evoluindo, exercícios estagnados, PRs esta semana, variação de volume vs semana anterior
+- [x] 30 testes novos (`workout-intelligence.test.ts`) — 125/125 no total, 7 arquivos
+- [x] XP, badges, backup, navegação e histórico antigo intocados
+- [x] Build, lint, typecheck e testes limpos
+
 ---
 
 ## Feature Freeze (vigente até a Sprint 6 aceita)

@@ -29,6 +29,12 @@ import { NextMilestone } from "@/components/dashboard/NextMilestone"
 import { LastWorkout } from "@/components/dashboard/LastWorkout"
 import { WorkoutRecommendationCard } from "@/components/dashboard/WorkoutRecommendationCard"
 import { RecentRecordsCard } from "@/components/dashboard/RecentRecordsCard"
+import { NextChallengesCard } from "@/components/dashboard/NextChallengesCard"
+import { ReadinessOverviewCard } from "@/components/dashboard/ReadinessOverviewCard"
+import { getCheckIns } from "@/lib/readiness-check-ins"
+import type { WorkoutReadinessCheckIn } from "@/lib/readiness-check-ins"
+import { computeReadinessStats } from "@/lib/workout-readiness"
+import type { ReadinessStats } from "@/lib/workout-readiness"
 
 export default function DashboardPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
@@ -44,6 +50,8 @@ export default function DashboardPage() {
   const [loaded, setLoaded] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [todayRec, setTodayRec] = useState<WorkoutRecommendation | null>(null)
+  const [readinessStats, setReadinessStats] = useState<ReadinessStats | null>(null)
+  const [lastCheckIn, setLastCheckIn] = useState<WorkoutReadinessCheckIn | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -62,6 +70,12 @@ export default function DashboardPage() {
     } else {
       setTodayRec(getTodayRecommendation(prefs))
     }
+    const checkIns = getCheckIns()
+    const recent7 = checkIns.filter(
+      (c) => new Date(c.createdAt).getTime() >= Date.now() - 7 * 86400000
+    )
+    setReadinessStats(computeReadinessStats(recent7))
+    setLastCheckIn(checkIns[0] ?? null)
     setLoaded(true)
   }, [])
 
@@ -154,6 +168,10 @@ export default function DashboardPage() {
             <TodaySection />
             {earnedBadges.length > 0 && <RecentBadges badges={earnedBadges} />}
             <RecentRecordsCard />
+            <NextChallengesCard />
+            {readinessStats && (
+              <ReadinessOverviewCard stats={readinessStats} lastCheckIn={lastCheckIn} />
+            )}
             <NextMilestone totalWorkouts={totalWorkouts} />
           </div>
         </div>

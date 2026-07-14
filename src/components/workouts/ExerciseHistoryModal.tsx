@@ -3,8 +3,8 @@
 import { useId } from "react"
 import type { Exercise } from "@/types/database"
 import { getExerciseHistory, getExercisePersonalBest } from "@/lib/workout-history"
-import { suggestProgression } from "@/lib/progression"
 import { getExerciseSummary } from "@/lib/exercise-records"
+import { generateRecommendation } from "@/lib/workout-intelligence"
 import { ModalShell } from "@/components/ui/ModalShell"
 
 const HISTORY_LIMIT = 10
@@ -23,6 +23,20 @@ const RECORD_BADGES: Array<{ key: "isFirstTime" | "isWeightPr" | "isVolumePr" | 
   { key: "isRepsPr", icon: "🔁", label: "PR de reps" },
 ]
 
+const REC_TYPE_LABEL: Record<string, string> = {
+  increase_weight: "↑ Aumentar peso",
+  increase_reps: "↑ Aumentar reps",
+  maintain: "→ Manter carga",
+  deload: "↓ Deload",
+  insufficient_data: "— Sem dados",
+}
+
+const CONFIDENCE_COLOR: Record<string, string> = {
+  high: "var(--color-accent)",
+  medium: "var(--color-secondary)",
+  low: "var(--color-text-muted)",
+}
+
 type ExerciseHistoryModalProps = {
   exercise: Exercise
   onClose: () => void
@@ -32,7 +46,7 @@ export function ExerciseHistoryModal({ exercise, onClose }: ExerciseHistoryModal
   const titleId = useId()
   const history = getExerciseHistory(exercise.id)
   const personalBest = getExercisePersonalBest(exercise.id)
-  const suggestion = suggestProgression(exercise.id, null)
+  const recommendation = generateRecommendation(exercise.id)
   const summary = getExerciseSummary(exercise.id)
 
   return (
@@ -47,7 +61,8 @@ export function ExerciseHistoryModal({ exercise, onClose }: ExerciseHistoryModal
         </button>
       </div>
 
-      <div className="mb-5 flex flex-wrap gap-3">
+      {/* Stats row */}
+      <div className="mb-4 flex flex-wrap gap-3">
         {personalBest > 0 && (
           <div className="stat-cell flex-1">
             <div className="stat-cell__label">Recorde (PR)</div>
@@ -74,11 +89,41 @@ export function ExerciseHistoryModal({ exercise, onClose }: ExerciseHistoryModal
             <div className="stat-cell__value">{TREND_ICON[summary.trend]}</div>
           </div>
         )}
-        <div className="stat-cell flex-1" style={{ textAlign: "left" }}>
-          <div className="stat-cell__label">Sugestão</div>
-          <div className="mt-1 text-xs text-secondary">{suggestion.note}</div>
-        </div>
       </div>
+
+      {/* Recommendation block */}
+      {recommendation.type !== "insufficient_data" && (
+        <div
+          className="mb-4 rounded-lg p-3"
+          style={{ background: "var(--color-surface-elevated)", border: "1px solid var(--color-border)" }}
+        >
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <span className="text-xs font-semibold" style={{ color: "var(--color-accent)" }}>
+              Próxima sessão
+            </span>
+            <span
+              className="text-xs"
+              style={{ color: CONFIDENCE_COLOR[recommendation.confidence] }}
+            >
+              {REC_TYPE_LABEL[recommendation.type]}
+            </span>
+          </div>
+          {(recommendation.suggestedWeight != null || recommendation.suggestedReps != null) && (
+            <div className="text-base font-bold text-primary mb-1">
+              {recommendation.suggestedWeight != null
+                ? `${recommendation.suggestedWeight}kg`
+                : ""}
+              {recommendation.suggestedWeight != null && recommendation.suggestedReps != null
+                ? " × "
+                : ""}
+              {recommendation.suggestedReps != null
+                ? `${recommendation.suggestedReps} reps`
+                : ""}
+            </div>
+          )}
+          <div className="text-xs text-muted">{recommendation.reason}</div>
+        </div>
+      )}
 
       {history.length === 0 ? (
         <div className="empty-state">

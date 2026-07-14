@@ -8,6 +8,7 @@ import { getWorkoutHistory } from "@/lib/workout-history"
 import { getDiaryCount } from "@/lib/daily-log"
 import { getRewardHistory, type RewardEvent } from "@/lib/reward-events"
 import { getProfileRecordStats, type ProfileRecordStats } from "@/lib/exercise-records"
+import { getAllExerciseIntelligence, getWeeklyIntelligenceSummary, type WeeklyIntelligenceSummary } from "@/lib/workout-intelligence"
 import { MOCK_CHARACTER } from "@/lib/mock/data"
 import { ProfileHero } from "@/components/profile/ProfileHero"
 import { LevelProgressCard } from "@/components/profile/LevelProgressCard"
@@ -16,6 +17,10 @@ import { BadgesGrid } from "@/components/profile/BadgesGrid"
 import { RecordsSection } from "@/components/profile/RecordsSection"
 import { RewardsHistory } from "@/components/profile/RewardsHistory"
 import { ProfileLinks } from "@/components/profile/ProfileLinks"
+import { IntelligenceStatsSection } from "@/components/profile/IntelligenceStatsSection"
+import { getCheckIns } from "@/lib/readiness-check-ins"
+import { computeReadinessStats } from "@/lib/workout-readiness"
+import type { ReadinessStats } from "@/lib/workout-readiness"
 
 const AVATAR_KEY = "lrpg-fit:avatar"
 const NAME_KEY = "lrpg-fit:char-name"
@@ -36,6 +41,10 @@ export default function PerfilPage() {
   const [stats, setStats] = useState<ProfileStats>({ workouts: 0, diaries: 0, prs: 0 })
   const [recordStats, setRecordStats] = useState<ProfileRecordStats | null>(null)
   const [rewards, setRewards] = useState<RewardEvent[]>([])
+  const [weekSummary, setWeekSummary] = useState<WeeklyIntelligenceSummary | null>(null)
+  const [improvingCount, setImprovingCount] = useState(0)
+  const [stagnantCount, setStagnantCount] = useState(0)
+  const [readinessStats, setReadinessStats] = useState<ReadinessStats | null>(null)
   const [avatar, setAvatar] = useState(DEFAULT_AVATAR)
   const [charName, setCharName] = useState(character.name)
 
@@ -54,6 +63,12 @@ export default function PerfilPage() {
     setRewards(getRewardHistory())
     setRecordStats(getProfileRecordStats())
     setAvatar(window.localStorage.getItem(AVATAR_KEY) ?? DEFAULT_AVATAR)
+    const intelligence = getAllExerciseIntelligence()
+    setImprovingCount(intelligence.filter((e) => e.status === "improving").length)
+    setStagnantCount(intelligence.filter((e) => e.status === "stagnant").length)
+    setWeekSummary(getWeeklyIntelligenceSummary())
+    const checkIns = getCheckIns()
+    setReadinessStats(computeReadinessStats(checkIns))
   }, [])
 
   useEffect(() => {
@@ -124,6 +139,57 @@ export default function PerfilPage() {
         </div>
         {recordStats && <RecordsSection stats={recordStats} />}
       </section>
+
+      {weekSummary && (
+        <section aria-labelledby="perfil-inteligencia">
+          <div className="section-header">
+            <h2 id="perfil-inteligencia" className="section-header__title">
+              Inteligência de treino
+            </h2>
+          </div>
+          <IntelligenceStatsSection
+            summary={weekSummary}
+            improvingCount={improvingCount}
+            stagnantCount={stagnantCount}
+          />
+        </section>
+      )}
+
+      {readinessStats && readinessStats.totalCheckIns > 0 && (
+        <section aria-labelledby="perfil-prontidao">
+          <div className="section-header">
+            <h2 id="perfil-prontidao" className="section-header__title">
+              Prontidão
+            </h2>
+          </div>
+          <div className="card">
+            <div className="stat-grid stat-grid--3 mb-3">
+              <div className="stat-cell">
+                <div className="stat-cell__value numeric">{readinessStats.totalCheckIns}</div>
+                <div className="stat-cell__label">Check-ins</div>
+              </div>
+              <div className="stat-cell">
+                <div className="stat-cell__value numeric">{readinessStats.highReadinessCount}</div>
+                <div className="stat-cell__label">Alta</div>
+              </div>
+              <div className="stat-cell">
+                <div className="stat-cell__value numeric">{readinessStats.lowReadinessCount}</div>
+                <div className="stat-cell__label">Baixa</div>
+              </div>
+            </div>
+            <div className="stat-grid stat-grid--2">
+              <div className="stat-cell">
+                <div className="stat-cell__value numeric">{readinessStats.averageEnergy.toFixed(1)}/5</div>
+                <div className="stat-cell__label">Energia média</div>
+              </div>
+              <div className="stat-cell">
+                <div className="stat-cell__value numeric">{readinessStats.averageSleep.toFixed(1)}/5</div>
+                <div className="stat-cell__label">Sono médio</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section aria-labelledby="perfil-recompensas">
         <div className="section-header">

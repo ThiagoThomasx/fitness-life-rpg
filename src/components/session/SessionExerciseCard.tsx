@@ -2,7 +2,7 @@
 
 import type { Exercise, ExerciseSet } from "@/types/database"
 import type { ExerciseTarget } from "@/lib/custom-workouts"
-import type { ProgressionSuggestion } from "@/lib/progression"
+import type { WorkoutRecommendation } from "@/lib/workout-intelligence"
 import { AddSetForm } from "./AddSetForm"
 
 type SetData = Omit<ExerciseSet, "id" | "session_id" | "created_at" | "is_pr">
@@ -11,30 +11,63 @@ type SessionExerciseCardProps = {
   exercise: Exercise
   sets: SetData[]
   target?: ExerciseTarget
-  suggestion: ProgressionSuggestion
+  recommendation: WorkoutRecommendation
   isPr: boolean
   lastExecution?: { weightKg: number; reps: number; date: string } | null
+  readinessHint?: string | null
   onAddSet: (weight: number, reps: number) => void
   onRemoveSet: (setIndex: number) => void
   onRemoveExercise: () => void
+}
+
+const CONFIDENCE_ICON: Record<WorkoutRecommendation["confidence"], string> = {
+  high: "🎯",
+  medium: "📊",
+  low: "💡",
+}
+
+function formatNextGoal(rec: WorkoutRecommendation): string | null {
+  if (rec.type === "insufficient_data") return null
+  if (rec.type === "deload") {
+    return rec.suggestedWeight != null
+      ? `Deload: ${rec.suggestedWeight}kg × ${rec.suggestedReps ?? 10}`
+      : "Deload leve"
+  }
+  if (rec.type === "maintain") {
+    if (rec.suggestedWeight != null && rec.suggestedReps != null) {
+      return `${rec.suggestedWeight}kg × ${rec.suggestedReps}`
+    }
+    return "Consolide a carga atual"
+  }
+  if (rec.suggestedWeight != null && rec.suggestedReps != null) {
+    return `${rec.suggestedWeight}kg × ${rec.suggestedReps}`
+  }
+  if (rec.suggestedReps != null) return `${rec.suggestedReps} reps`
+  return null
 }
 
 export function SessionExerciseCard({
   exercise,
   sets,
   target,
-  suggestion,
+  recommendation,
   isPr,
   lastExecution,
+  readinessHint,
   onAddSet,
   onRemoveSet,
   onRemoveExercise,
 }: SessionExerciseCardProps) {
   const suggestedWeight =
-    sets.length === 0 ? suggestion.suggestedWeightKg ?? target?.targetWeightKg ?? null : null
+    sets.length === 0
+      ? (recommendation.suggestedWeight ?? target?.targetWeightKg ?? null)
+      : null
   const suggestedReps =
-    sets.length === 0 ? suggestion.suggestedReps ?? target?.targetReps ?? 10 : undefined
+    sets.length === 0
+      ? (recommendation.suggestedReps ?? target?.targetReps ?? 10)
+      : undefined
   const isDone = Boolean(target && sets.length >= target.targetSets)
+  const nextGoal = sets.length === 0 ? formatNextGoal(recommendation) : null
 
   return (
     <article className="exercise-card">
@@ -59,22 +92,35 @@ export function SessionExerciseCard({
       <div className="mb-2 text-xs text-muted">{exercise.muscle_groups.join(", ")}</div>
 
       {lastExecution && sets.length === 0 && (
-        <div className="text-xs text-muted mb-2">
+        <div className="text-xs text-muted mb-1">
           Última vez: {lastExecution.weightKg > 0 ? `${lastExecution.weightKg}kg × ` : ""}
           {lastExecution.reps} reps
         </div>
       )}
 
-      {/* Meta do treino + sugestão baseada no desempenho anterior */}
-      {(target || sets.length === 0) && suggestion.note && (
+      {nextGoal && sets.length === 0 && (
+        <div className="text-xs mb-2" style={{ color: "var(--color-accent)" }}>
+          {CONFIDENCE_ICON[recommendation.confidence]} Próxima meta: {nextGoal}
+        </div>
+      )}
+
+      {readinessHint && sets.length === 0 && (
+        <div className="readiness-hint" role="note" aria-label="Orientação de hoje">
+          <span className="readiness-hint__icon" aria-hidden="true">⚡</span>
+          <span className="readiness-hint__text">{readinessHint}</span>
+        </div>
+      )}
+
+      {/* Meta do treino conforme plano */}
+      {target && sets.length === 0 && (
         <div className="target-hint">
-          {target && (
-            <span className="target-hint__goal">
-              🎯 {target.targetSets}×{target.targetReps ?? "—"}
-              {target.targetWeightKg ? ` @ ${target.targetWeightKg}kg` : ""}
-            </span>
+          <span className="target-hint__goal">
+            🎯 {target.targetSets}×{target.targetReps ?? "—"}
+            {target.targetWeightKg ? ` @ ${target.targetWeightKg}kg` : ""}
+          </span>
+          {recommendation.reason && (
+            <span className="target-hint__note">{recommendation.reason}</span>
           )}
-          <span className="target-hint__note">{suggestion.note}</span>
         </div>
       )}
 
