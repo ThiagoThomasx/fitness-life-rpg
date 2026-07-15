@@ -21,6 +21,7 @@ import { IntelligenceStatsSection } from "@/components/profile/IntelligenceStats
 import { getCheckIns } from "@/lib/readiness-check-ins"
 import { computeReadinessStats } from "@/lib/workout-readiness"
 import type { ReadinessStats } from "@/lib/workout-readiness"
+import { WeeklyStatsSection } from "@/components/profile/WeeklyStatsSection"
 
 const AVATAR_KEY = "lrpg-fit:avatar"
 const NAME_KEY = "lrpg-fit:char-name"
@@ -190,6 +191,15 @@ export default function PerfilPage() {
           </div>
         </section>
       )}
+
+      <section aria-labelledby="perfil-semanas">
+        <div className="section-header">
+          <h2 id="perfil-semanas" className="section-header__title">
+            Médias semanais
+          </h2>
+        </div>
+        <WeeklyStatsSection />
+      </section>
 
       <section aria-labelledby="perfil-recompensas">
         <div className="section-header">

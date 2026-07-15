@@ -11,6 +11,9 @@ import {
   getDefaultGoals,
   PLAN_XP_REWARD,
 } from "@/lib/weekly-plan"
+import { buildTrainingWeek } from "@/lib/training-load"
+import type { TrainingWeek } from "@/lib/training-load"
+import { WeeklyLoadOverview } from "@/components/plano/WeeklyLoadOverview"
 import {
   createCampaign,
   abandonCampaign,
@@ -184,6 +187,7 @@ export default function PlanoPage() {
   const [selectedCampaignType, setSelectedCampaignType] = useState<CampaignType>("gain_consistency")
   const [prevCompletedAt, setPrevCompletedAt] = useState<string | null>(null)
   const [routine, setRoutine] = useState<WeeklyRoutineSuggestion | null>(null)
+  const [trainingWeek, setTrainingWeek] = useState<TrainingWeek | null>(null)
   const [goalLabel, setGoalLabel] = useState<string>("")
   const [goalIcon, setGoalIcon] = useState<string>("")
 
@@ -204,6 +208,7 @@ export default function PlanoPage() {
       setFocus(currentPlan.focus)
       setGoals(currentPlan.goals)
     }
+    setTrainingWeek(buildTrainingWeek())
   }, [])
 
   useEffect(() => {
@@ -366,6 +371,12 @@ export default function PlanoPage() {
 
       {tab === "semana" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {trainingWeek && (
+            <WeeklyLoadOverview
+              week={trainingWeek}
+              onRefresh={() => setTrainingWeek(buildTrainingWeek())}
+            />
+          )}
           {/* Weekly Summary */}
           {progress && (
             <section className="card" style={{ textAlign: "center" }}>

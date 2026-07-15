@@ -21,10 +21,13 @@ import { TagsSection } from "@/components/insights/TagsSection"
 import { NutritionSection } from "@/components/insights/NutritionSection"
 import { TrainingIntelligenceSection } from "@/components/insights/TrainingIntelligenceSection"
 import { ReadinessInsightsSection } from "@/components/insights/ReadinessInsightsSection"
+import { WeeklyLoadSection } from "@/components/insights/WeeklyLoadSection"
 import { getCheckIns } from "@/lib/readiness-check-ins"
 import { computeReadinessStats } from "@/lib/workout-readiness"
 import type { ReadinessStats } from "@/lib/workout-readiness"
 import type { WorkoutReadinessCheckIn } from "@/lib/readiness-check-ins"
+import { buildTrainingWeek } from "@/lib/training-load"
+import type { TrainingWeek } from "@/lib/training-load"
 
 export default function InsightsPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
@@ -33,6 +36,7 @@ export default function InsightsPage() {
   const [exerciseIntelligence, setExerciseIntelligence] = useState<ExerciseIntelligence[]>([])
   const [readinessCheckIns, setReadinessCheckIns] = useState<WorkoutReadinessCheckIn[]>([])
   const [readinessStats, setReadinessStats] = useState<ReadinessStats | null>(null)
+  const [trainingWeek, setTrainingWeek] = useState<TrainingWeek | null>(null)
 
   useEffect(() => {
     setData(computeInsights())
@@ -40,6 +44,7 @@ export default function InsightsPage() {
     const checkIns = getCheckIns()
     setReadinessCheckIns(checkIns)
     setReadinessStats(computeReadinessStats(checkIns))
+    setTrainingWeek(buildTrainingWeek())
     const prefs = getPreferences()
     if (prefs.onboardingCompleted) {
       setGoal({ label: GOAL_LABELS[prefs.goal], icon: GOAL_ICONS[prefs.goal] })
@@ -83,6 +88,13 @@ export default function InsightsPage() {
           <TrainingIntelligenceSection exercises={exerciseIntelligence} />
           {readinessStats && (
             <ReadinessInsightsSection checkIns={readinessCheckIns} stats={readinessStats} />
+          )}
+
+          {trainingWeek && (
+            <section>
+              <h2 className="section-label" style={{ marginBottom: "0.75rem" }}>Carga e distribuição semanal</h2>
+              <WeeklyLoadSection week={trainingWeek} />
+            </section>
           )}
 
           <div className="insights-chart-grid">
