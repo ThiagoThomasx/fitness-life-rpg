@@ -45,6 +45,22 @@ function seedSampleData() {
       },
     ])
   )
+  window.localStorage.setItem(
+    'lrpg-fit:training-goals',
+    JSON.stringify([
+      {
+        id: 'goal-1', title: 'Supino 60kg', type: 'exercise_weight', status: 'active',
+        exerciseId: 'ex-1', exerciseName: 'Supino reto', targetValue: 60,
+        startDate: '2026-08-01', createdAt: '2026-08-01T12:00:00.000Z', updatedAt: '2026-08-01T12:00:00.000Z',
+      },
+    ])
+  )
+  window.localStorage.setItem(
+    'lrpg-fit:goal-milestones',
+    JSON.stringify([
+      { id: 'milestone-goal-1-25', goalId: 'goal-1', percentage: 25, reachedAt: '2026-08-10T12:00:00.000Z' },
+    ])
+  )
 }
 
 beforeEach(() => {
@@ -329,6 +345,56 @@ describe('Sprint 17.1 — cycle reviews & week annotations round-trip', () => {
 
     expect(result.ok).toBe(false)
     expect(result.error).toContain('cycle-reviews')
+  })
+})
+
+describe('Sprint 18 — training goals & milestones round-trip', () => {
+  it('preserves goals and milestones through export -> reset -> import', () => {
+    seedSampleData()
+    const payload = exportBackup()
+    resetAllData()
+    const result = importBackup(payload)
+
+    expect(result.ok).toBe(true)
+    expect(result.restoredKeys).toContain('lrpg-fit:training-goals')
+    expect(result.restoredKeys).toContain('lrpg-fit:goal-milestones')
+    expect(JSON.parse(window.localStorage.getItem('lrpg-fit:training-goals') as string)).toHaveLength(1)
+    expect(JSON.parse(window.localStorage.getItem('lrpg-fit:goal-milestones') as string)).toHaveLength(1)
+  })
+
+  it('imports a Sprint 17.1 backup that predates goals/milestones without error', () => {
+    const legacyPayload: BackupPayload = {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: {
+        'lrpg-fit:training-cycles': [
+          {
+            id: 'cycle-legacy', name: 'Bloco antigo', goal: 'strength', startDate: '2026-05-01',
+            status: 'completed', createdAt: '2026-05-01T00:00:00.000Z', updatedAt: '2026-06-01T00:00:00.000Z',
+          },
+        ],
+      },
+    }
+
+    const result = importBackup(legacyPayload)
+
+    expect(result.ok).toBe(true)
+    expect(result.restoredKeys).toContain('lrpg-fit:training-cycles')
+    expect(result.skippedKeys).toContain('lrpg-fit:training-goals')
+    expect(result.skippedKeys).toContain('lrpg-fit:goal-milestones')
+  })
+
+  it('rejects a backup with malformed training-goals data (not an array)', () => {
+    const payload: BackupPayload = {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: { 'lrpg-fit:training-goals': { not: 'an array' } },
+    }
+
+    const result = importBackup(payload)
+
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('training-goals')
   })
 })
 

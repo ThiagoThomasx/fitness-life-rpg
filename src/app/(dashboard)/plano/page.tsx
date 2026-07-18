@@ -15,6 +15,7 @@ import { buildTrainingWeek } from "@/lib/training-load"
 import type { TrainingWeek } from "@/lib/training-load"
 import { WeeklyLoadOverview } from "@/components/plano/WeeklyLoadOverview"
 import { CycleSection } from "@/components/plano/CycleSection"
+import { GoalsSection } from "@/components/plano/GoalsSection"
 import {
   createCampaign,
   abandonCampaign,
@@ -180,7 +181,7 @@ export default function PlanoPage() {
   const [plan, setPlan] = useState<WeeklyPlan | null>(null)
   const [progress, setProgress] = useState<WeeklyPlanProgress | null>(null)
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
-  const [tab, setTab] = useState<"semana" | "ciclo" | "campanhas">("semana")
+  const [tab, setTab] = useState<"semana" | "ciclo" | "metas" | "campanhas">("semana")
   const [editing, setEditing] = useState(false)
   const [focus, setFocus] = useState("")
   const [goals, setGoals] = useState<WeeklyGoals>(getDefaultGoals())
@@ -351,7 +352,7 @@ export default function PlanoPage() {
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.25rem" }}>
-        {(["semana", "ciclo", "campanhas"] as const).map((t) => (
+        {(["semana", "ciclo", "metas", "campanhas"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -365,7 +366,7 @@ export default function PlanoPage() {
               cursor: "pointer",
             }}
           >
-            {t === "semana" ? "📅 Semana" : t === "ciclo" ? "📈 Ciclo" : "🏆 Campanhas"}
+            {t === "semana" ? "📅 Semana" : t === "ciclo" ? "📈 Ciclo" : t === "metas" ? "🎯 Metas" : "🏆 Campanhas"}
           </button>
         ))}
       </div>
@@ -582,6 +583,8 @@ export default function PlanoPage() {
       )}
 
       {tab === "ciclo" && <CycleSection />}
+
+      {tab === "metas" && <GoalsSection />}
 
       {tab === "campanhas" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

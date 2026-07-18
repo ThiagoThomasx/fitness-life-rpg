@@ -243,6 +243,22 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 - [x] QA funcional completo via Browser pane (criar → revisar meio de ciclo → classificar semana → concluir → revisão final → arquivar → restaurar → comparar com dados insuficientes) + screenshots desktop/mobile via Playwright em `docs/screenshots/sprint17-1/`
 - [x] Nenhuma rota nova; XP, badges, PRs, prontidão, ajustes de sessão e carga semanal intocados
 
+## Sprint 18 — Goals, Milestones & Progress Forecasting (escopo reduzido) ✅
+**Objetivo:** transformar evolução histórica em objetivos pessoais explícitos — "Qual é meu próximo objetivo e quão perto estou dele?" — sem prometer resultados, sem IA, tudo local e determinístico. Ver `SPRINT-18.md` para o relatório completo, incluindo o que foi conscientemente deixado fora deste primeiro corte.
+
+- [x] Auditoria: nenhuma meta quantitativa existia — `TrainingCycle.goal` é só rótulo de categoria; `Campaign` (`campaigns.ts`) já cobre metas de contagem fixa **com XP**, mantido como sistema separado e sem alteração
+- [x] `src/lib/training-goals.ts` — modelo persistente (`TrainingGoal`, storage `lrpg-fit:training-goals`), 5 tipos neste corte (`exercise_weight`/`exercise_reps`/`estimated_1rm`/`weekly_sessions`/`consistency`), CRUD completo (criar/editar/pausar/retomar/concluir/reabrir/arquivar/restaurar/importar), conclusão sempre manual
+- [x] `src/lib/training-goal-milestones.ts` — registro histórico de marcos (25/50/75/100%) por meta, idempotente, nunca removido se o valor cair depois (ex.: deload)
+- [x] `src/lib/training-goal-progress.ts` — motor puro de progresso: baseline explícito ou inferido (histórico anterior ao início, ou primeiro registro após), progresso por tipo, status (`not_started`/`in_progress`/`on_track`/`behind`/`completed`/`paused`/`insufficient_data`), projeção linear com faixa de semanas (nunca uma data), confiança (`low`/`medium`/`high`) sempre com amostra e método explícitos
+- [x] Reaproveita `exercise-records.ts` (`calculateEstimated1RM`, Epley), `workout-history.ts`, `weekly-plan.ts`/`training-load.ts` (`getWeekStart`/`getWeekEnd`) — nenhuma fórmula duplicada
+- [x] Nova aba "🎯 Metas" em `/plano` (sem rota nova, visualmente distinta de Campanhas): estado vazio, formulário progressivo por tipo (reaproveita `ExercisePickerModal`), grupos Ativas/Pausadas/Concluídas/Arquivadas
+- [x] `ActiveGoalsCard` — novo card no Dashboard com até 3 metas ativas e progresso resumido
+- [x] `lrpg-fit:training-goals` e `lrpg-fit:goal-milestones` adicionados ao backup (`STORAGE_KEYS`/`ARRAY_KEYS`), com teste de compatibilidade com backups anteriores à Sprint 18
+- [x] 56 testes novos (`training-goals.test.ts` 28, `training-goal-milestones.test.ts` 8, `training-goal-progress.test.ts` 17, +3 em `backup.test.ts`) — 413/413 no total
+- [x] QA manual no dev server: criar meta de carga → progresso 0% (baseline = primeiro registro) → nova sessão → progresso recalculado e marcos 25%/50% registrados → card do Dashboard refletindo o mesmo estado; console limpo; screenshots desktop/mobile em `docs/screenshots/sprint18/`
+- [x] **Escopo conscientemente reduzido** (confirmado com o usuário antes de implementar): metas de volume semanal, conclusão de ciclo, recorde pessoal e customizada; vínculo com ciclos; integração em Planner/`SessionExerciseCard`/resumo de sessão/Insights/Perfil; transferência entre ciclos — ficaram fora deste corte, tracked para uma sprint 18.1 futura
+- [x] Build, lint, typecheck e testes limpos; XP, badges, PRs, prontidão, ajustes de sessão, ciclos, campanhas e navegação principal intocados
+
 ---
 
 ## Feature Freeze (vigente até a Sprint 6 aceita)
