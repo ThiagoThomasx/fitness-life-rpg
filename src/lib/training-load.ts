@@ -169,18 +169,20 @@ function inWeek(dateStr: string, startDate: string, endDate: string): boolean {
 
 // ─── Volume helpers ───────────────────────────────────────────────────────────
 
-function sessionVolumeKg(workout: CompletedWorkout): number {
+// Exportadas para reuso pelo motor de ciclos (Sprint 17) — evita recalcular
+// a mesma matemática de volume/sets/reps por sessão em outro módulo.
+export function sessionVolumeKg(workout: CompletedWorkout): number {
   return workout.exercises.reduce(
     (sum, ex) => sum + calculateVolumeKg(ex.sets),
     0
   )
 }
 
-function sessionTotalSets(workout: CompletedWorkout): number {
+export function sessionTotalSets(workout: CompletedWorkout): number {
   return workout.exercises.reduce((sum, ex) => sum + ex.sets.length, 0)
 }
 
-function sessionTotalReps(workout: CompletedWorkout): number {
+export function sessionTotalReps(workout: CompletedWorkout): number {
   return workout.exercises.reduce(
     (sum, ex) => ex.sets.reduce((s, set) => s + set.reps, sum),
     0
@@ -194,7 +196,8 @@ function sessionTotalReps(workout: CompletedWorkout): number {
 
 // For a completed workout, derive primary muscle groups from the actual
 // exercises performed (using ExerciseRecord.exerciseId to look up muscle groups).
-function getSessionPrimaryMuscleGroups(
+// Exportada para reuso pelo motor de ciclos (Sprint 17).
+export function getSessionPrimaryMuscleGroups(
   workout: CompletedWorkout,
   allExercises: ReturnType<typeof getAllExercises>
 ): MuscleGroup[] {
@@ -231,7 +234,7 @@ function detectConcentration(
 
 // ─── Muscle group loads ───────────────────────────────────────────────────────
 
-const ALL_MUSCLE_GROUPS: MuscleGroup[] = [
+export const ALL_MUSCLE_GROUPS: MuscleGroup[] = [
   'peito', 'costas', 'pernas', 'ombros', 'biceps', 'triceps', 'core',
 ]
 

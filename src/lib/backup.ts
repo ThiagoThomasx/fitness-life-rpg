@@ -20,6 +20,9 @@ export const STORAGE_KEYS = [
   'rpg_last_seen_level',
   'lrpg-fit:readiness-check-ins',
   'lrpg-fit:session-plan-changes',
+  'lrpg-fit:training-cycles',
+  'lrpg-fit:cycle-reviews',
+  'lrpg-fit:cycle-week-annotations',
 ] as const
 
 export type StorageKey = typeof STORAGE_KEYS[number]
@@ -101,6 +104,9 @@ const ARRAY_KEYS: ReadonlySet<StorageKey> = new Set<StorageKey>([
   'lrpg-fit:custom-exercises',
   'lrpg-fit:readiness-check-ins',
   'lrpg-fit:session-plan-changes',
+  'lrpg-fit:training-cycles',
+  'lrpg-fit:cycle-reviews',
+  'lrpg-fit:cycle-week-annotations',
 ])
 
 // Chaves cujo valor persistido deve ser um objeto (inclui o envelope

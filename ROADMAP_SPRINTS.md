@@ -206,6 +206,43 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 - [x] XP, badges, backup, navegação e histórico antigo intocados
 - [x] Build, lint, typecheck e testes limpos
 
+## Sprint 16 — Training Load Management & Weekly Planning Intelligence ✅
+**Objetivo:** organizar a semana de treino — carga, distribuição por grupo muscular, aderência ao plano e prioridades. Ver `SPRINT-15.md`/memória de projeto para o relatório (commit `a8ad12e`).
+
+- [x] `src/lib/training-load.ts` — motor semanal puro (`buildTrainingWeek`, `getWeekSummaries`, `getWeeklyAggregateStats`), volume atribuído apenas ao grupo muscular primário, detecção de concentração, comparação semana-a-semana, prioridades determinísticas
+- [x] `src/lib/session-plan-changes.ts` — skip/restore manual de sessões planejadas
+- [x] Componentes: `WeeklyTrainingCard` (Dashboard), `WeeklyLoadSection` (Insights), `WeeklyStatsSection` (Perfil), `WeeklyLoadOverview` (Plano)
+- [x] 45 testes novos, 251/251 no total. XP/badges/PRs/readiness/ajustes intocados
+
+## Sprint 17 — Training Cycles & Long-Term Progression (escopo reduzido) ✅
+**Objetivo:** permitir que o usuário organize semanas isoladas em blocos de treino de várias semanas (ciclos/mesociclos), com criação, acompanhamento, encerramento e histórico — sem prescrever periodização automática. Ver `SPRINT-17.md` para o relatório completo, incluindo o que foi conscientemente deixado fora deste primeiro corte (revisão de meio de ciclo, comparação entre ciclos, tipos de semana, arquivamento).
+
+- [x] Auditoria: nenhum conceito de ciclo/bloco/programa existia; `training-load.ts` (Sprint 16) é estritamente semanal; `getWeekStart` estava duplicado em `daily-missions.ts` (não consolidado nesta sprint, registrado como débito)
+- [x] `src/lib/training-cycles.ts` — modelo persistente (`TrainingCycle`, storage `lrpg-fit:training-cycles`), CRUD com invariante de "um único ciclo ativo", `completeCycle`, `importCycles`
+- [x] `src/lib/training-cycle-summary.ts` — motor puro de análise (`buildCycleSummary`): reaproveita `training-load.ts`/`exercise-records.ts`/`workout-readiness.ts` por recorte de data em vez de recalcular; volume semanal, aderência, PRs, prontidão média, evolução por exercício (`improving`/`stable`/`stagnant`/`regressing`), volume por grupo muscular, tendência (`increasing`/`stable`/`decreasing`/`mixed`/`insufficient_data`) ignorando a semana corrente incompleta
+- [x] `training-load.ts` recebeu apenas `export` adicional em helpers já existentes (`sessionVolumeKg`, `sessionTotalSets`, `sessionTotalReps`, `getSessionPrimaryMuscleGroups`, `ALL_MUSCLE_GROUPS`) para reuso — nenhuma mudança de comportamento
+- [x] Nova aba "📈 Ciclo" em `/plano` (sem rota nova): estado vazio, formulário de criação, card do ciclo ativo com métricas, encerrar ciclo (com observação opcional), histórico de ciclos concluídos expansível
+- [x] `lrpg-fit:training-cycles` adicionado ao backup (`STORAGE_KEYS`/`ARRAY_KEYS`)
+- [x] 28 testes novos (`training-cycles.test.ts`, `training-cycle-summary.test.ts`) + seed de round-trip em `backup.test.ts` — 279/279 no total
+- [x] QA manual no dev server: criar ciclo → ativo com métricas zeradas → concluir com observação → aparece no histórico → expandir mostra resumo completo → refresh preserva estado; console limpo; sem overflow horizontal em mobile (375px)
+- [x] **Escopo conscientemente reduzido** (confirmado com o usuário antes de implementar): revisão de meio de ciclo, comparação entre dois ciclos, classificação manual de tipo de semana (recuperação/teste/transição), arquivamento/restauração e integração em Insights/Perfil/Histórico dedicado ficaram fora deste corte — tracked para uma sprint 17.1 futura
+- [x] Build, lint, typecheck e testes limpos; XP, badges, PRs, prontidão, ajustes de sessão, plano semanal e navegação principal intocados
+
+## Sprint 17.1 — Cycle Reviews, Comparisons & Lifecycle Management ✅
+**Objetivo:** completar o ciclo de vida do sistema de ciclos da Sprint 17 — revisões subjetivas, classificação de semana, comparação entre ciclos e arquivamento — sem reescrever o núcleo. Ver `SPRINT-17.1.md` para o relatório completo.
+
+- [x] Auditoria confirmando que nenhuma métrica é persistida (tudo derivado de `training-cycle-summary.ts`) e que `getCompletedCycles()` já isola `'archived'` sem filtro extra
+- [x] `src/lib/training-cycle-reviews.ts` + `training-cycle-review-analytics.ts` — revisão de meio de ciclo/final/manual (escalas 1–5: progresso, recuperação, satisfação), médias e variação, sem inferir causalidade
+- [x] `src/lib/training-cycle-weeks.ts` + `training-cycle-week-summary.ts` — classificação manual de semana (`normal`/`recovery`/`test`/`transition`), narrativa que explica quedas de volume coincidentes com semanas especiais em vez de tratá-las como regressão
+- [x] `src/lib/training-cycle-comparison.ts` — comparação pura entre dois ciclos concluídos (métricas, exercícios e grupos musculares compartilhados/exclusivos, mensagens narrativas limitadas), nunca declara "vencedor"; amostra mínima de 4 sessões para considerar um ciclo comparável com confiança
+- [x] Arquivamento/restauração (`archiveCycle`/`restoreCycle`/`getArchivedCycles`) — ciclo ativo precisa ser encerrado antes de arquivar; restaurar nunca reativa. Exclusão permanente **não implementada de propósito** (nenhum outro domínio do app tem essa funcionalidade)
+- [x] Componentes novos: `CycleReviewForm`, `CycleReviewPrompt`, `CycleWeeksSection`, `CycleComparisonSection`, `CycleHistorySection` (`/plano`); `CurrentCycleCard` (Dashboard); `CycleEvolutionSection` (Insights, reaproveita a comparação); `CycleStatsSection` (Perfil)
+- [x] `lrpg-fit:cycle-reviews` e `lrpg-fit:cycle-week-annotations` no backup, com teste de compatibilidade com backups da Sprint 17 (sem os campos novos)
+- [x] Bug de QA corrigido: `buildCycleWeekBreakdown` incluía sessões após o encerramento do ciclo quando este terminava no meio de uma semana de calendário — corrigido com corte em `min(weekEnd, endDate)`, teste de regressão adicionado
+- [x] 357/357 testes (106 novos desde a Sprint 17); build, lint e typecheck limpos
+- [x] QA funcional completo via Browser pane (criar → revisar meio de ciclo → classificar semana → concluir → revisão final → arquivar → restaurar → comparar com dados insuficientes) + screenshots desktop/mobile via Playwright em `docs/screenshots/sprint17-1/`
+- [x] Nenhuma rota nova; XP, badges, PRs, prontidão, ajustes de sessão e carga semanal intocados
+
 ---
 
 ## Feature Freeze (vigente até a Sprint 6 aceita)

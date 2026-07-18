@@ -22,6 +22,7 @@ import { NutritionSection } from "@/components/insights/NutritionSection"
 import { TrainingIntelligenceSection } from "@/components/insights/TrainingIntelligenceSection"
 import { ReadinessInsightsSection } from "@/components/insights/ReadinessInsightsSection"
 import { WeeklyLoadSection } from "@/components/insights/WeeklyLoadSection"
+import { CycleEvolutionSection } from "@/components/insights/CycleEvolutionSection"
 import { getCheckIns } from "@/lib/readiness-check-ins"
 import { computeReadinessStats } from "@/lib/workout-readiness"
 import type { ReadinessStats } from "@/lib/workout-readiness"
@@ -105,6 +106,7 @@ export default function InsightsPage() {
           <AttributesSection character={character} />
           <TagsSection data={data} />
           <NutritionSection weeks={data.nutritionWeeks} />
+          <CycleEvolutionSection />
         </>
       )}
     </div>

@@ -22,6 +22,7 @@ import { getCheckIns } from "@/lib/readiness-check-ins"
 import { computeReadinessStats } from "@/lib/workout-readiness"
 import type { ReadinessStats } from "@/lib/workout-readiness"
 import { WeeklyStatsSection } from "@/components/profile/WeeklyStatsSection"
+import { CycleStatsSection } from "@/components/profile/CycleStatsSection"
 
 const AVATAR_KEY = "lrpg-fit:avatar"
 const NAME_KEY = "lrpg-fit:char-name"
@@ -200,6 +201,8 @@ export default function PerfilPage() {
         </div>
         <WeeklyStatsSection />
       </section>
+
+      <CycleStatsSection />
 
       <section aria-labelledby="perfil-recompensas">
         <div className="section-header">

@@ -32,6 +32,7 @@ import { RecentRecordsCard } from "@/components/dashboard/RecentRecordsCard"
 import { NextChallengesCard } from "@/components/dashboard/NextChallengesCard"
 import { ReadinessOverviewCard } from "@/components/dashboard/ReadinessOverviewCard"
 import { WeeklyTrainingCard } from "@/components/dashboard/WeeklyTrainingCard"
+import { CurrentCycleCard } from "@/components/dashboard/CurrentCycleCard"
 import { getCheckIns } from "@/lib/readiness-check-ins"
 import type { WorkoutReadinessCheckIn } from "@/lib/readiness-check-ins"
 import { computeReadinessStats } from "@/lib/workout-readiness"
@@ -186,6 +187,7 @@ export default function DashboardPage() {
               />
             )}
             <WeeklyTrainingCard />
+            <CurrentCycleCard />
             <NextMilestone totalWorkouts={totalWorkouts} />
           </div>
         </div>

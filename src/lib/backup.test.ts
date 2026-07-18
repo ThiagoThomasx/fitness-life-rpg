@@ -18,6 +18,33 @@ function seedSampleData() {
   window.localStorage.setItem('lrpg-fit:workout-history', JSON.stringify([{ id: 'w1', name: 'Peito' }]))
   window.localStorage.setItem('lrpg-fit:badges', JSON.stringify([{ id: 'b1' }]))
   window.localStorage.setItem('lrpg-fit:char-name', JSON.stringify('Thiago'))
+  window.localStorage.setItem(
+    'lrpg-fit:training-cycles',
+    JSON.stringify([
+      {
+        id: 'cycle-1', name: 'Bloco de força', goal: 'strength', startDate: '2026-08-01',
+        status: 'active', createdAt: '2026-08-01T12:00:00.000Z', updatedAt: '2026-08-01T12:00:00.000Z',
+      },
+    ])
+  )
+  window.localStorage.setItem(
+    'lrpg-fit:cycle-reviews',
+    JSON.stringify([
+      {
+        id: 'review-1', cycleId: 'cycle-1', phase: 'mid_cycle', createdAt: '2026-08-15T12:00:00.000Z',
+        perceivedProgress: 4, perceivedRecovery: 3, satisfaction: 5,
+      },
+    ])
+  )
+  window.localStorage.setItem(
+    'lrpg-fit:cycle-week-annotations',
+    JSON.stringify([
+      {
+        id: 'week-annotation-1', cycleId: 'cycle-1', weekStartDate: '2026-08-10', type: 'recovery',
+        createdAt: '2026-08-10T12:00:00.000Z', updatedAt: '2026-08-10T12:00:00.000Z',
+      },
+    ])
+  )
 }
 
 beforeEach(() => {
@@ -252,6 +279,56 @@ describe('Sprint 12 — PR metadata round-trip', () => {
 
     expect(result.ok).toBe(true)
     expect(JSON.parse(window.localStorage.getItem('lrpg-fit:workout-history') as string)).toEqual(legacyHistory)
+  })
+})
+
+describe('Sprint 17.1 — cycle reviews & week annotations round-trip', () => {
+  it('preserves reviews and week annotations through export -> reset -> import', () => {
+    seedSampleData()
+    const payload = exportBackup()
+    resetAllData()
+    const result = importBackup(payload)
+
+    expect(result.ok).toBe(true)
+    expect(result.restoredKeys).toContain('lrpg-fit:cycle-reviews')
+    expect(result.restoredKeys).toContain('lrpg-fit:cycle-week-annotations')
+    expect(JSON.parse(window.localStorage.getItem('lrpg-fit:cycle-reviews') as string)).toHaveLength(1)
+    expect(JSON.parse(window.localStorage.getItem('lrpg-fit:cycle-week-annotations') as string)).toHaveLength(1)
+  })
+
+  it('imports a Sprint 17 backup that predates reviews/annotations without error', () => {
+    const legacyPayload: BackupPayload = {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: {
+        'lrpg-fit:training-cycles': [
+          {
+            id: 'cycle-legacy', name: 'Bloco antigo', goal: 'strength', startDate: '2026-05-01',
+            status: 'completed', createdAt: '2026-05-01T00:00:00.000Z', updatedAt: '2026-06-01T00:00:00.000Z',
+          },
+        ],
+      },
+    }
+
+    const result = importBackup(legacyPayload)
+
+    expect(result.ok).toBe(true)
+    expect(result.restoredKeys).toContain('lrpg-fit:training-cycles')
+    expect(result.skippedKeys).toContain('lrpg-fit:cycle-reviews')
+    expect(result.skippedKeys).toContain('lrpg-fit:cycle-week-annotations')
+  })
+
+  it('rejects a backup with malformed cycle-reviews data (not an array)', () => {
+    const payload: BackupPayload = {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: { 'lrpg-fit:cycle-reviews': { not: 'an array' } },
+    }
+
+    const result = importBackup(payload)
+
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('cycle-reviews')
   })
 })
 
