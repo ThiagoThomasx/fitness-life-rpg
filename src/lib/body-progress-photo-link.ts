@@ -76,3 +76,26 @@ export async function stripAllPhotoLinks(): Promise<void> {
     }
   }
 }
+
+export interface ResetBodyProgressResult {
+  entriesDeleted: number
+  photosDeleted: number
+}
+
+/**
+ * Reset granular apenas do progresso corporal (Sprint 19 Parte 4) — apaga todos os
+ * registros de `body-progress`. Quando `deletePhotos` é true, também apaga as fotos
+ * vinculadas via `deleteEntryAndPhotos`; quando false, as fotos ficam órfãs no
+ * IndexedDB (removíveis depois pelo reset dedicado de fotos ou por limpeza de órfãs).
+ */
+export async function resetAllBodyProgress(deletePhotos: boolean): Promise<ResetBodyProgressResult> {
+  const entries = getBodyProgressEntries()
+  let entriesDeleted = 0
+  let photosDeleted = 0
+  for (const entry of entries) {
+    const result = await deleteEntryAndPhotos(entry.id, deletePhotos)
+    if (result.entryDeleted) entriesDeleted++
+    photosDeleted += result.photosDeleted
+  }
+  return { entriesDeleted, photosDeleted }
+}

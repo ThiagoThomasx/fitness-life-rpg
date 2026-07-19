@@ -16,10 +16,22 @@ import { BackupExportSection } from "@/components/settings/BackupExportSection"
 import { BackupImportSection } from "@/components/settings/BackupImportSection"
 import { DataResetSection } from "@/components/settings/DataResetSection"
 import { PhotoResetSection } from "@/components/settings/PhotoResetSection"
+import { BodyProgressResetSection } from "@/components/settings/BodyProgressResetSection"
+import { BodyWellnessExportSection } from "@/components/settings/BodyWellnessExportSection"
 import { clearAllPhotos } from "@/lib/body-progress-photo-db"
-import { stripAllPhotoLinks } from "@/lib/body-progress-photo-link"
+import { stripAllPhotoLinks, resetAllBodyProgress } from "@/lib/body-progress-photo-link"
+import { getBodyProgressEntries } from "@/lib/body-progress"
+import { getCheckIns } from "@/lib/readiness-check-ins"
+import {
+  downloadBodyProgressCsv,
+  downloadWellnessCsv,
+  downloadBodyWellnessMarkdownReport,
+  filterBodyProgressByPeriod,
+  filterCheckInsByPeriod,
+  type ExportPeriodOption,
+} from "@/lib/body-wellness-export"
 
-type Panel = "idle" | "import-confirm" | "reset-confirm" | "photo-reset-confirm"
+type Panel = "idle" | "import-confirm" | "reset-confirm" | "photo-reset-confirm" | "body-reset-confirm"
 
 export default function ConfiguracoesPage() {
   const [panel, setPanel] = useState<Panel>("idle")
@@ -27,6 +39,8 @@ export default function ConfiguracoesPage() {
   const [importFile, setImportFile] = useState<File | null>(null)
   const [resetText, setResetText] = useState("")
   const [photoResetText, setPhotoResetText] = useState("")
+  const [bodyResetText, setBodyResetText] = useState("")
+  const [bodyResetDeletePhotos, setBodyResetDeletePhotos] = useState(true)
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null)
 
   const refreshStatus = useCallback(() => {
@@ -120,6 +134,33 @@ export default function ConfiguracoesPage() {
     showMessage("ok", "Todas as fotos de progresso foram apagadas.")
   }
 
+  async function handleBodyResetConfirm() {
+    if (bodyResetText.trim().toLowerCase() !== "resetar") return
+    const result = await resetAllBodyProgress(bodyResetDeletePhotos)
+    setPanel("idle")
+    setBodyResetText("")
+    // Progresso corporal não passa por nenhuma store Zustand — sem necessidade de reload de página.
+    showMessage(
+      "ok",
+      `${result.entriesDeleted} registro(s) corporal(is) apagado(s)${result.photosDeleted > 0 ? ` e ${result.photosDeleted} foto(s)` : ""}.`
+    )
+  }
+
+  function handleBodyProgressCsvExport(period: ExportPeriodOption) {
+    downloadBodyProgressCsv(filterBodyProgressByPeriod(getBodyProgressEntries(), period))
+    showMessage("ok", "CSV de progresso corporal exportado.")
+  }
+
+  function handleWellnessCsvExport(period: ExportPeriodOption) {
+    downloadWellnessCsv(filterCheckInsByPeriod(getCheckIns(), period))
+    showMessage("ok", "CSV de bem-estar exportado.")
+  }
+
+  function handleMarkdownReportExport(period: ExportPeriodOption) {
+    downloadBodyWellnessMarkdownReport({ entries: getBodyProgressEntries(), checkIns: getCheckIns(), period })
+    showMessage("ok", "Relatório em Markdown exportado.")
+  }
+
   return (
     <div className="page">
       <SettingsHeader />
@@ -144,6 +185,12 @@ export default function ConfiguracoesPage() {
         onCancel={() => { setPanel("idle"); setImportFile(null) }}
       />
 
+      <BodyWellnessExportSection
+        onExportBodyCsv={handleBodyProgressCsvExport}
+        onExportWellnessCsv={handleWellnessCsvExport}
+        onExportMarkdownReport={handleMarkdownReportExport}
+      />
+
       <PhotoResetSection
         isConfirming={panel === "photo-reset-confirm"}
         resetText={photoResetText}
@@ -151,6 +198,17 @@ export default function ConfiguracoesPage() {
         onResetTextChange={setPhotoResetText}
         onConfirm={handlePhotoResetConfirm}
         onCancel={() => { setPanel("idle"); setPhotoResetText("") }}
+      />
+
+      <BodyProgressResetSection
+        isConfirming={panel === "body-reset-confirm"}
+        resetText={bodyResetText}
+        deletePhotos={bodyResetDeletePhotos}
+        onStart={() => setPanel("body-reset-confirm")}
+        onResetTextChange={setBodyResetText}
+        onDeletePhotosChange={setBodyResetDeletePhotos}
+        onConfirm={handleBodyResetConfirm}
+        onCancel={() => { setPanel("idle"); setBodyResetText("") }}
       />
 
       <DataResetSection

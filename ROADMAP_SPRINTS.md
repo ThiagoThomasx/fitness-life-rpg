@@ -302,6 +302,20 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+## Sprint 19 — Consolidation, Export, Backup Compatibility & Release QA (parte 4) ⚠️ concluída parcialmente
+**Objetivo:** encerrar a Sprint 19 como um todo — auditoria global, exportação CSV/Markdown, reset granular, testes faltantes, gates finais e documentação. Ver `SPRINT-19-FINAL.md` para o relatório completo (auditoria, matriz de conclusão, itens adiados, estado do Git).
+
+- [x] Auditoria global: Parte 3C estava implementada e não commitada — commitada isoladamente (`e5f8b4a`) antes de iniciar código novo
+- [x] `src/lib/body-wellness-export.ts` (novo) — CSV de progresso corporal, CSV de bem-estar (com `readiness_score` sempre vazio, por não recalcular o score fora do contexto original), relatório em Markdown reaproveitando os motores existentes, filtro de período (30/90/tudo)
+- [x] `BodyWellnessExportSection.tsx` em Configurações — seletor de período + três downloads
+- [x] `resetAllBodyProgress` (`body-progress-photo-link.ts`) + `BodyProgressResetSection.tsx` — reset granular do progresso corporal, perguntando explicitamente sobre as fotos vinculadas antes de apagar
+- [x] Testes novos para os dois arquivos sem cobertura (`body-progress-photo.ts`, `body-progress-photo-errors.ts`) e para `resetAllBodyProgress`
+- [x] `BODY-WELLNESS-EXPORTS.md` (novo) documentando os três formatos de exportação
+- [x] Gates finais limpos: lint, `tsc --noEmit`, 649/649 testes, `next build`
+- [ ] **Adiado**: reset granular por categoria completa (treinos/ciclos/metas/check-ins separadamente — só progresso corporal foi coberto), auditoria de acessibilidade dedicada e QA visual mobile desta parte, backup ZIP com fotos/criptografia/exportação PDF (já fora de escopo desde o spec original), UI dedicada de integridade de fotos em Configurações
+
+---
+
 ## Sprint 19 — Wellness × Training Associations in Insights (parte 3C, fatia 1) ✅
 **Objetivo:** conectar o motor de associações bem-estar × treino (Parte 3A) e o resumo de bem-estar por ciclo (Parte 3B) a uma UI, sem duplicar os cards de readiness/corpo já existentes em Dashboard/Insights/Perfil. Ver `SPRINT-19-PART3C.md` para o relatório completo e a decisão de escopo.
 

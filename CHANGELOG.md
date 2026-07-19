@@ -13,6 +13,17 @@
 
 ### Entregas
 
+#### Sprint 19 (v2) — Consolidation, Export, Backup Compatibility & Release QA (parte 4) — 2026-07-19
+
+Relatório completo em `SPRINT-19-FINAL.md`. Encerramento da Sprint 19: auditoria global confirmou que a Parte 3C já estava implementada e apenas não commitada (commitada isoladamente antes de qualquer código novo desta parte), e que as lacunas reais eram exportação CSV/Markdown (0% implementado) e reset granular além de "tudo"/"fotos".
+
+- **Novo `src/lib/body-wellness-export.ts`**: CSV de progresso corporal, CSV de bem-estar e relatório em Markdown, todos com filtro de período (30/90 dias/tudo). Reaproveita `body-progress-trends.ts`, `wellness-trends.ts` e `wellness-overview.ts` — nenhuma fórmula nova. `readiness_score` no CSV de bem-estar fica sempre vazio, por não recalcular o score fora do contexto de treino original (ver `BODY-WELLNESS-EXPORTS.md`).
+- **UI**: `BodyWellnessExportSection.tsx` em Configurações (seletor de período + 3 downloads); `BodyProgressResetSection.tsx` — reset granular do progresso corporal com pergunta explícita sobre apagar as fotos vinculadas, reaproveitando `resetAllBodyProgress` (novo, em `body-progress-photo-link.ts`, composto sobre `deleteEntryAndPhotos` já existente).
+- **Testes**: 20 testes novos para os dois arquivos antes sem cobertura (`body-progress-photo.ts`, `body-progress-photo-errors.ts`), 17 para a exportação e 3 para `resetAllBodyProgress` — 649/649 no total, sem regressão nos 629 pré-existentes.
+- Lint, `tsc --noEmit`, testes e `next build` limpos. `.gitignore` passou a ignorar `/test-results` (artefato do Playwright).
+- **Escopo conscientemente reduzido**: reset granular por categoria completa (treinos/ciclos/metas/check-ins), auditoria de acessibilidade dedicada e QA visual mobile desta parte, UI de integridade de fotos em Configurações — todos documentados como pendência em `SPRINT-19-FINAL.md`. Backup ZIP com fotos, criptografia local e exportação em PDF permanecem fora de escopo, como já definido no spec original da sprint.
+- **Sprint 19 encerrada como concluída parcialmente** — núcleo técnico pronto e testado; QA visual/mobile/acessibilidade dedicados ficam para uma sessão futura.
+
 #### Sprint 19 (v2) — Wellness × Training Associations in Insights (parte 3C, fatia 1) — 2026-07-19
 
 Relatório completo em `SPRINT-19-PART3C.md`. Primeira fatia de integração de bem-estar em Insights, com escopo reduzido combinado com o usuário após auditoria: Dashboard e Perfil já tinham cards de readiness/corpo próprios, então esta fatia cobre só a lacuna real — o motor `wellness-associations.ts` (Parte 3A) e o resumo de bem-estar por ciclo (Parte 3B) não estavam conectados a nenhuma UI fora de Plano/Ciclo.

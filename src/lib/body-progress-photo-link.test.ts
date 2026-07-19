@@ -8,6 +8,7 @@ import {
   unlinkPhotoFromEntry,
   deleteEntryAndPhotos,
   stripAllPhotoLinks,
+  resetAllBodyProgress,
 } from './body-progress-photo-link'
 import type { BodyProgressPhotoRecord } from './body-progress-photo'
 
@@ -127,6 +128,40 @@ describe('deleteEntryAndPhotos', () => {
 
   it('returns entryDeleted: false for a non-existent entry', async () => {
     expect(await deleteEntryAndPhotos('missing', true)).toEqual({ entryDeleted: false, photosDeleted: 0 })
+  })
+})
+
+describe('resetAllBodyProgress', () => {
+  it('deletes every body progress entry and cascades photo deletion when requested', async () => {
+    // createBodyProgressEntry derives its id from Date.now(); a tiny delay avoids
+    // an id collision when two entries are created back-to-back in the same test.
+    const entryA = createBodyProgressEntry({ recordedAt: '2026-08-01', weightKg: 80 }).entry!
+    await new Promise((r) => setTimeout(r, 2))
+    const entryB = createBodyProgressEntry({ recordedAt: '2026-08-02', weightKg: 81 }).entry!
+    await savePhoto(makePhotoRecord({ id: 'p1', entryId: entryA.id }))
+    await linkPhotoToEntry(entryA.id, 'p1')
+
+    const result = await resetAllBodyProgress(true)
+
+    expect(result).toEqual({ entriesDeleted: 2, photosDeleted: 1 })
+    expect(getBodyProgressEntries()).toHaveLength(0)
+    expect(getBodyProgressEntryById(entryB.id)).toBeNull()
+    expect((await getPhotoRecord('p1')).ok).toBe(false)
+  })
+
+  it('leaves linked photos as orphans when deletePhotos is false', async () => {
+    const entry = createBodyProgressEntry({ recordedAt: '2026-08-01', weightKg: 80 }).entry!
+    await savePhoto(makePhotoRecord({ id: 'p1', entryId: entry.id }))
+    await linkPhotoToEntry(entry.id, 'p1')
+
+    const result = await resetAllBodyProgress(false)
+
+    expect(result).toEqual({ entriesDeleted: 1, photosDeleted: 0 })
+    expect((await getPhotoRecord('p1')).ok).toBe(true)
+  })
+
+  it('returns zeros when there are no entries', async () => {
+    expect(await resetAllBodyProgress(true)).toEqual({ entriesDeleted: 0, photosDeleted: 0 })
   })
 })
 
