@@ -15,7 +15,41 @@ const PLANNED_WORKOUTS_KEY = 'lrpg-fit:planned-workouts'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type PlannedWorkoutStatus = 'pending' | 'done' | 'skipped'
+export type PlannedWorkoutStatus = 'pending' | 'done' | 'skipped' | 'cancelled'
+
+/** Motivos descritivos e opcionais — nunca usados para julgar ou recomendar (Fase 9). */
+export type SkippedWorkoutReason =
+  | 'schedule'
+  | 'recovery'
+  | 'health'
+  | 'travel'
+  | 'equipment'
+  | 'personal'
+  | 'other'
+
+/** Histórico pequeno e explícito — nunca sobrescreve a remarcação anterior (Fase 13). */
+export interface PlannedWorkoutReschedule {
+  from: string
+  to: string
+  changedAt: string
+  reason?: string
+}
+
+/**
+ * Metadados de execução — sempre opcionais, nunca duplicam o `status` (Fase 4).
+ * `status` continua a única fonte de verdade sobre o estado atual da sessão.
+ */
+export interface PlannedWorkoutExecution {
+  completedWorkoutId?: string
+  completedAt?: string
+  skippedAt?: string
+  skippedReason?: SkippedWorkoutReason
+  skippedNote?: string
+  cancelledAt?: string
+  cancellationReason?: string
+  reschedules?: PlannedWorkoutReschedule[]
+  updatedAt: string
+}
 
 /** Origem opcional para analytics — nunca é dependência viva (Fase 42/43). */
 export interface PlannedWorkoutSource {
@@ -41,6 +75,8 @@ export interface PlannedWorkout {
   /** Sprint 20 Parte 2 — marcação estrutural, nunca prescrita automaticamente. */
   isDeload?: boolean
   notes?: string
+  /** Sprint 20 Parte 3A — opcional, compatível com sessões planejadas antigas. */
+  execution?: PlannedWorkoutExecution
   createdAt: string
   updatedAt: string
 }
@@ -148,6 +184,111 @@ export function updatePlannedWorkoutStatus(id: string, status: PlannedWorkoutSta
   return updated
 }
 
+function updateExecution(
+  workout: PlannedWorkout,
+  patch: Partial<PlannedWorkoutExecution>
+): PlannedWorkoutExecution {
+  return { ...workout.execution, ...patch, updatedAt: new Date().toISOString() }
+}
+
+/** Sessão fazia parte do plano mas não foi realizada — nunca é chamada de fracasso na UI (Fase 10). */
+export function skipPlannedWorkout(
+  id: string,
+  reason?: SkippedWorkoutReason,
+  note?: string
+): PlannedWorkout | null {
+  const items = loadPlannedWorkouts()
+  const index = items.findIndex((p) => p.id === id)
+  if (index === -1) return null
+
+  const now = new Date().toISOString()
+  const updated: PlannedWorkout = {
+    ...items[index],
+    status: 'skipped',
+    execution: updateExecution(items[index], { skippedAt: now, skippedReason: reason, skippedNote: note }),
+    updatedAt: now,
+  }
+  const next = [...items]
+  next[index] = updated
+  persistPlannedWorkouts(next)
+  return updated
+}
+
+/** Sessão deixou de fazer parte do plano — distinta de pulada (Fase 11). */
+export function cancelPlannedWorkout(id: string, reason?: string): PlannedWorkout | null {
+  const items = loadPlannedWorkouts()
+  const index = items.findIndex((p) => p.id === id)
+  if (index === -1) return null
+
+  const now = new Date().toISOString()
+  const updated: PlannedWorkout = {
+    ...items[index],
+    status: 'cancelled',
+    execution: updateExecution(items[index], { cancelledAt: now, cancellationReason: reason }),
+    updatedAt: now,
+  }
+  const next = [...items]
+  next[index] = updated
+  persistPlannedWorkouts(next)
+  return updated
+}
+
+/** Relata sessões já planejadas na nova data — nunca substitui automaticamente (Fase 14). */
+export function checkRescheduleConflict(date: string): PlannedWorkout[] {
+  return getPlannedWorkoutsByDate(date)
+}
+
+/**
+ * Move a sessão para uma nova data, preservando o histórico de remarcações
+ * (Fase 12/13). Não cria sessão duplicada e não sobrescreve remarcações
+ * anteriores — cada movimento é empilhado em `execution.reschedules`.
+ */
+export function reschedulePlannedWorkout(
+  id: string,
+  newDate: string,
+  reason?: string
+): PlannedWorkout | null {
+  const items = loadPlannedWorkouts()
+  const index = items.findIndex((p) => p.id === id)
+  if (index === -1) return null
+
+  const now = new Date().toISOString()
+  const fromDate = items[index].date
+  const reschedules = [
+    ...(items[index].execution?.reschedules ?? []),
+    { from: fromDate, to: newDate, changedAt: now, reason },
+  ]
+  const updated: PlannedWorkout = {
+    ...items[index],
+    date: newDate,
+    execution: updateExecution(items[index], { reschedules }),
+    updatedAt: now,
+  }
+  const next = [...items]
+  next[index] = updated
+  persistPlannedWorkouts(next)
+  return updated
+}
+
+/** Vincula a sessão planejada à sessão concluída correspondente (Fase 5-7). */
+export function linkPlannedWorkoutToCompleted(id: string, completedWorkoutId: string): PlannedWorkout | null {
+  const items = loadPlannedWorkouts()
+  const index = items.findIndex((p) => p.id === id)
+  if (index === -1) return null
+
+  const now = new Date().toISOString()
+  const updated: PlannedWorkout = {
+    ...items[index],
+    status: 'done',
+    execution: updateExecution(items[index], { completedWorkoutId, completedAt: now }),
+    updatedAt: now,
+  }
+  const next = [...items]
+  next[index] = updated
+  persistPlannedWorkouts(next)
+  return updated
+}
+
 /** Remove sessões planejadas num intervalo de datas (usado por "substituir" na instanciação). */
 export function deletePlannedWorkoutsInRange(startDate: string, endDate: string): number {
   const items = loadPlannedWorkouts()
@@ -174,7 +315,7 @@ function isValidPlannedWorkout(raw: unknown): raw is PlannedWorkout {
     typeof p.name === 'string' &&
     typeof p.templateSnapshot === 'object' &&
     p.templateSnapshot !== null &&
-    (p.status === 'pending' || p.status === 'done' || p.status === 'skipped') &&
+    (p.status === 'pending' || p.status === 'done' || p.status === 'skipped' || p.status === 'cancelled') &&
     typeof p.createdAt === 'string' &&
     typeof p.updatedAt === 'string'
   )

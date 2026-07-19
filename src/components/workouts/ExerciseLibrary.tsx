@@ -9,6 +9,7 @@ import {
   saveCustomExercise,
   updateCustomExercise,
   deleteCustomExercise,
+  isCustomExerciseUsed,
   type CustomExercise,
 } from "@/lib/custom-workouts"
 import { getExercisePersonalBest, getExerciseHistory } from "@/lib/workout-history"
@@ -26,6 +27,7 @@ export function ExerciseLibrary({ onClose }: ExerciseLibraryProps) {
   const [showCreateEx, setShowCreateEx] = useState(false)
   const [editingEx, setEditingEx] = useState<CustomExercise | null>(null)
   const [deletingEx, setDeletingEx] = useState<CustomExercise | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [customExs, setCustomExs] = useState<CustomExercise[]>([])
   const [typeFilter, setTypeFilter] = useState("all")
 
@@ -43,7 +45,12 @@ export function ExerciseLibrary({ onClose }: ExerciseLibraryProps) {
 
   function confirmDeleteExercise() {
     if (!deletingEx) return
-    deleteCustomExercise(deletingEx.id)
+    const result = deleteCustomExercise(deletingEx.id, isCustomExerciseUsed(deletingEx.id))
+    if (!result.ok) {
+      setDeleteError(result.error ?? "Não foi possível excluir este exercício.")
+      setDeletingEx(null)
+      return
+    }
     setCustomExs((prev) => prev.filter((e) => e.id !== deletingEx.id))
     setDeletingEx(null)
   }
@@ -185,6 +192,16 @@ export function ExerciseLibrary({ onClose }: ExerciseLibraryProps) {
           isDanger
           onConfirm={confirmDeleteExercise}
           onCancel={() => setDeletingEx(null)}
+        />
+      )}
+
+      {deleteError && (
+        <ConfirmDialog
+          title="Não foi possível excluir"
+          description={deleteError}
+          confirmLabel="Entendi"
+          onConfirm={() => setDeleteError(null)}
+          onCancel={() => setDeleteError(null)}
         />
       )}
     </div>

@@ -1,6 +1,8 @@
 import type { Exercise } from '@/types/database'
 import { MOCK_WORKOUT_TYPES, MOCK_EXERCISES } from './mock/data'
 import { categoryColor } from './theme-colors'
+import { getPlannedWorkouts } from './planned-workouts'
+import { getTrainingPrograms } from './training-programs'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -157,11 +159,39 @@ export function updateCustomExercise(
   return updated
 }
 
-export function deleteCustomExercise(id: string): void {
+/**
+ * Verifica se o exercício está referenciado em alguma sessão planejada ou
+ * programa — evita que a exclusão quebre silenciosamente `exerciseId` já
+ * congelado em snapshots (auditoria Sprint 20 Parte 3, risco #7).
+ */
+export function isCustomExerciseUsed(exerciseId: string): boolean {
+  const usedInPlanner = getPlannedWorkouts().some((p) =>
+    p.templateSnapshot.exerciseBlocks.some((b) => b.exercise.exerciseId === exerciseId)
+  )
+  if (usedInPlanner) return true
+
+  return getTrainingPrograms().some((program) =>
+    program.weeks.some((week) =>
+      week.sessions.some((session) =>
+        session.templateSnapshot.exerciseBlocks.some((b) => b.exercise.exerciseId === exerciseId)
+      )
+    )
+  )
+}
+
+/** Segue o mesmo padrão de `deleteWorkoutTemplate` — nunca exclui silenciosamente um exercício em uso. */
+export function deleteCustomExercise(id: string, isInUse: boolean): { ok: boolean; error?: string } {
+  if (isInUse) {
+    return {
+      ok: false,
+      error: 'Este exercício já foi usado em sessões planejadas ou programas. Não é possível excluir.',
+    }
+  }
   safeSet(
     EXERCISES_KEY,
     safeGet<CustomExercise[]>(EXERCISES_KEY, []).filter((e) => e.id !== id)
   )
+  return { ok: true }
 }
 
 export function getAllExercises(): Exercise[] {

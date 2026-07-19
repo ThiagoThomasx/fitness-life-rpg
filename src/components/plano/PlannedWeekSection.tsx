@@ -28,6 +28,7 @@ const STATUS_LABELS: Record<PlannedWorkout["status"], string> = {
   pending: "Pendente",
   done: "Concluído",
   skipped: "Pulado",
+  cancelled: "Cancelado",
 }
 
 /**

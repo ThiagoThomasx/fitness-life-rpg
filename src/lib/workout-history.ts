@@ -1,4 +1,23 @@
+import type { TrainingBlockObjective } from './training-blocks'
+
 const HISTORY_KEY = 'lrpg-fit:workout-history'
+
+/**
+ * Proveniência opcional de programa/Planner (Sprint 20 Parte 3A). Preenchida
+ * apenas quando a sessão foi concluída a partir de uma sessão planejada —
+ * histórico antigo e sessões livres continuam válidos sem este campo.
+ */
+export interface CompletedWorkoutSource {
+  plannedWorkoutId?: string
+  programId?: string
+  programVersion?: number
+  programWeekId?: string
+  programWeekNumber?: number
+  trainingBlockId?: string
+  trainingBlockObjective?: TrainingBlockObjective
+  templateId?: string
+  templateVersion?: number
+}
 
 export interface SetRecord {
   weight_kg: number
@@ -35,6 +54,8 @@ export interface CompletedWorkout {
   checkInId?: string
   // Sprint 15: snapshot do ajuste aplicado nesta sessão (opcional, compatível com histórico antigo)
   appliedSessionAdjustment?: import('./session-adjustments').AppliedSessionAdjustmentSnapshot
+  // Sprint 20 Parte 3A: origem no Planner/programa (opcional, compatível com histórico antigo)
+  source?: CompletedWorkoutSource
 }
 
 function loadHistory(): CompletedWorkout[] {
