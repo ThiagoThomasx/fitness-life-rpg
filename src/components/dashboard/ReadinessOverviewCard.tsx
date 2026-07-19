@@ -70,6 +70,8 @@ export function ReadinessOverviewCard({ stats, lastCheckIn, adjustmentStats }: P
       {lastCheckIn && (
         <p className="text-xs text-muted mt-2">
           Último check-in: energia {lastCheckIn.energy}/5 · sono {lastCheckIn.sleepQuality}/5
+          {lastCheckIn.stress !== undefined && ` · estresse ${lastCheckIn.stress}/5`}
+          {lastCheckIn.mood !== undefined && ` · humor ${lastCheckIn.mood}/5`}
         </p>
       )}
 

@@ -261,6 +261,26 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+## Sprint 19 — Body Progress, Measurements & Wellness Trends (parte 1) ✅
+**Objetivo:** camada opcional e privada de progresso corporal (peso/medidas) e tendências de bem-estar, respondendo "como meu corpo e bem-estar mudam ao longo do tempo?" sem diagnosticar, classificar corpos ou prometer resultado. Ver `SPRINT-19-v2.md` para o relatório completo, incluindo o que foi conscientemente deixado fora deste primeiro corte.
+
+- [x] Auditoria: nenhum campo de peso corporal existia; sem IndexedDB no projeto; padrão de domínio é módulo funcional (`src/lib/<domínio>.ts`) + `localStorage`, não Zustand store; `readiness-check-ins.ts` já cobria energia/dor/sono/motivação
+- [x] **Decisão**: bem-estar estende o `WorkoutReadinessCheckIn` existente (`stress`/`mood`/`sleepHours` opcionais) em vez de criar um domínio "wellness" paralelo — evita duplicar check-in diário
+- [x] **Decisão**: fotos de progresso adiadas para uma sub-sprint 19.1 (exigem IndexedDB, inexistente no projeto, e uma estratégia de backup para blobs que o `backup.ts` atual não suporta)
+- [x] `src/lib/body-progress.ts` — modelo persistente (`BodyProgressEntry`/`BodyMeasurements`, storage `lrpg-fit:body-progress`), CRUD completo (criar/editar/excluir/importar), todos os campos opcionais
+- [x] `src/lib/trend-math.ts` — motor compartilhado de classificação de tendência (regressão linear simples + detecção de irregularidade por inversão de direção), reaproveitado por peso, medidas e bem-estar
+- [x] `src/lib/body-progress-trends.ts` — tendência de peso/medidas, comparação de dois períodos (30/90 dias) sem declarar "vencedor"
+- [x] `src/lib/wellness-trends.ts` — médias/tendências de bem-estar + associações com treino (sono×energia, estresse×frequência semanal), sempre com amostra mínima e linguagem de associação ("no seu histórico", "coincidiram"), nunca causal ("causou", "porque")
+- [x] `lrpg-fit:body-progress` adicionado ao backup (`STORAGE_KEYS`/`ARRAY_KEYS`), com teste de compatibilidade com backups anteriores à Sprint 19
+- [x] `BodyProgressForm`/`BodyProgressSection` (Perfil, com histórico/editar/excluir e confirmação de exclusão), `BodyProgressCard` (Dashboard), `BodyWellnessSection`/`BodyPeriodComparisonCard` (Insights, gráfico de peso via Recharts + tendência de medidas + associações)
+- [x] `ReadinessCheckIn` ganhou seção opcional de bem-estar (estresse/humor) recolhida por padrão
+- [x] 50 testes novos (`body-progress.test.ts` 19, `trend-math.test.ts` 7, `body-progress-trends.test.ts` 8, `wellness-trends.test.ts` 7, `readiness-check-ins.test.ts` 6, +3 em `backup.test.ts`) — 511/511 no total, sem regressão
+- [x] QA manual no dev server: criar registro com peso+medida → aparece em Dashboard/Perfil/Insights → editar prefil correto → excluir com confirmação → estado vazio retorna corretamente; console limpo (à exceção de um warning de hidratação pré-existente em `WeeklyStatsSection.tsx`, não tocado nesta sprint); mobile verificado
+- [x] **Escopo conscientemente reduzido**: fotos de progresso/IndexedDB/privacidade de fotos (Sprint 19.1); comparação por ciclo atual/anterior (só 30/90 dias implementados); exportação CSV/Markdown; novos tipos de meta de peso/medida em `training-goals.ts` — vínculo com meta é só por `cycleId`/data
+- [x] Build, lint, typecheck e testes limpos; XP, badges, PRs, ciclos, campanhas, metas e navegação principal intocados
+
+---
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:

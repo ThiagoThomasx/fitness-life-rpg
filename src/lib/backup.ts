@@ -25,6 +25,7 @@ export const STORAGE_KEYS = [
   'lrpg-fit:cycle-week-annotations',
   'lrpg-fit:training-goals',
   'lrpg-fit:goal-milestones',
+  'lrpg-fit:body-progress',
 ] as const
 
 export type StorageKey = typeof STORAGE_KEYS[number]
@@ -111,6 +112,7 @@ const ARRAY_KEYS: ReadonlySet<StorageKey> = new Set<StorageKey>([
   'lrpg-fit:cycle-week-annotations',
   'lrpg-fit:training-goals',
   'lrpg-fit:goal-milestones',
+  'lrpg-fit:body-progress',
 ])
 
 // Chaves cujo valor persistido deve ser um objeto (inclui o envelope

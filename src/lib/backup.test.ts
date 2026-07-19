@@ -348,6 +348,57 @@ describe('Sprint 17.1 — cycle reviews & week annotations round-trip', () => {
   })
 })
 
+describe('Sprint 19 — body progress round-trip', () => {
+  it('preserves body-progress entries through export -> reset -> import', () => {
+    window.localStorage.setItem(
+      'lrpg-fit:body-progress',
+      JSON.stringify([
+        {
+          id: 'body-progress-1',
+          recordedAt: '2026-08-01',
+          weightKg: 80,
+          createdAt: '2026-08-01T00:00:00.000Z',
+          updatedAt: '2026-08-01T00:00:00.000Z',
+        },
+      ])
+    )
+
+    const payload = exportBackup()
+    resetAllData()
+    const result = importBackup(payload)
+
+    expect(result.ok).toBe(true)
+    expect(result.restoredKeys).toContain('lrpg-fit:body-progress')
+    expect(JSON.parse(window.localStorage.getItem('lrpg-fit:body-progress') as string)).toHaveLength(1)
+  })
+
+  it('imports a pre-Sprint 19 backup that predates body-progress without error', () => {
+    const legacyPayload: BackupPayload = {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: { 'lrpg-fit:training-goals': [] },
+    }
+
+    const result = importBackup(legacyPayload)
+
+    expect(result.ok).toBe(true)
+    expect(result.skippedKeys).toContain('lrpg-fit:body-progress')
+  })
+
+  it('rejects a backup with malformed body-progress data (not an array)', () => {
+    const payload: BackupPayload = {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: { 'lrpg-fit:body-progress': { not: 'an array' } },
+    }
+
+    const result = importBackup(payload)
+
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('body-progress')
+  })
+})
+
 describe('Sprint 18 — training goals & milestones round-trip', () => {
   it('preserves goals and milestones through export -> reset -> import', () => {
     seedSampleData()

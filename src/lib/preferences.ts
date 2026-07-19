@@ -25,6 +25,10 @@ export interface UserPreferences {
   fitnessLevel: FitnessLevel
   workoutStyle: WorkoutStyle
   onboardingCompleted: boolean
+  // Sprint 19: quais campos de medida corporal aparecem abertos por padrão no
+  // formulário de progresso corporal. Puramente uma preferência de UI — não
+  // afeta nenhum registro já salvo, nem é exigida antes do primeiro uso.
+  favoriteMeasurements?: string[]
   updatedAt: string
 }
 
@@ -109,3 +113,11 @@ export const STYLE_LABELS: Record<WorkoutStyle, string> = {
 export const DAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 export const DURATION_OPTIONS = [20, 30, 45, 60, 90] as const
+
+export function getFavoriteMeasurements(): string[] {
+  return getPreferences().favoriteMeasurements ?? []
+}
+
+export function setFavoriteMeasurements(fields: string[]): void {
+  savePreferences({ ...getPreferences(), favoriteMeasurements: fields })
+}

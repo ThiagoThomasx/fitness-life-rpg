@@ -10,6 +10,13 @@ export interface WorkoutReadinessCheckIn {
   soreness: 1 | 2 | 3 | 4 | 5
   sleepQuality: 1 | 2 | 3 | 4 | 5
   motivation: 1 | 2 | 3 | 4 | 5
+  // Campos opcionais de bem-estar — Sprint 19: estende o check-in existente em
+  // vez de criar um domínio de "wellness" paralelo, evitando duas entradas
+  // diárias parecidas. Ausentes em registros anteriores à Sprint 19 (sem
+  // migração necessária, pois são opcionais).
+  stress?: 1 | 2 | 3 | 4 | 5
+  mood?: 1 | 2 | 3 | 4 | 5
+  sleepHours?: number
   notes?: string
 }
 
@@ -40,6 +47,10 @@ function isValidRating(value: unknown): value is 1 | 2 | 3 | 4 | 5 {
   return value === 1 || value === 2 || value === 3 || value === 4 || value === 5
 }
 
+function isValidOptionalRating(value: unknown): boolean {
+  return value === undefined || isValidRating(value)
+}
+
 function isValidCheckIn(raw: unknown): raw is WorkoutReadinessCheckIn {
   if (typeof raw !== 'object' || raw === null) return false
   const c = raw as Record<string, unknown>
@@ -50,7 +61,10 @@ function isValidCheckIn(raw: unknown): raw is WorkoutReadinessCheckIn {
     isValidRating(c.energy) &&
     isValidRating(c.soreness) &&
     isValidRating(c.sleepQuality) &&
-    isValidRating(c.motivation)
+    isValidRating(c.motivation) &&
+    isValidOptionalRating(c.stress) &&
+    isValidOptionalRating(c.mood) &&
+    (c.sleepHours === undefined || (typeof c.sleepHours === 'number' && Number.isFinite(c.sleepHours) && c.sleepHours >= 0))
   )
 }
 

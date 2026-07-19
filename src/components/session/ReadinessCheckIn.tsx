@@ -10,6 +10,7 @@ interface Props {
 }
 
 type RatingKey = "energy" | "soreness" | "sleepQuality" | "motivation"
+type WellnessRatingKey = "stress" | "mood"
 
 const FIELDS: {
   key: RatingKey
@@ -23,7 +24,20 @@ const FIELDS: {
   { key: "motivation", label: "Motivação", lowLabel: "Muito baixa", highLabel: "Muito alta" },
 ]
 
+// Sprint 19: campos opcionais de bem-estar — não pré-preenchidos, para não
+// forçar uma resposta que o usuário talvez não queira dar no check-in rápido.
+const WELLNESS_FIELDS: {
+  key: WellnessRatingKey
+  label: string
+  lowLabel: string
+  highLabel: string
+}[] = [
+  { key: "stress", label: "Estresse", lowLabel: "Nenhum", highLabel: "Muito alto" },
+  { key: "mood", label: "Humor", lowLabel: "Muito baixo", highLabel: "Muito bom" },
+]
+
 type Ratings = Record<RatingKey, 1 | 2 | 3 | 4 | 5>
+type WellnessRatings = Partial<Record<WellnessRatingKey, 1 | 2 | 3 | 4 | 5>>
 
 const DEFAULT_RATINGS: Ratings = {
   energy: 3,
@@ -34,10 +48,16 @@ const DEFAULT_RATINGS: Ratings = {
 
 export function ReadinessCheckIn({ workoutId, onSubmit, onSkip }: Props) {
   const [ratings, setRatings] = useState<Ratings>(DEFAULT_RATINGS)
+  const [wellness, setWellness] = useState<WellnessRatings>({})
+  const [showWellness, setShowWellness] = useState(false)
   const [notes, setNotes] = useState("")
 
   function setRating(key: RatingKey, value: 1 | 2 | 3 | 4 | 5) {
     setRatings((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function setWellnessRating(key: WellnessRatingKey, value: 1 | 2 | 3 | 4 | 5) {
+    setWellness((prev) => ({ ...prev, [key]: value }))
   }
 
   function handleSubmit() {
@@ -49,6 +69,8 @@ export function ReadinessCheckIn({ workoutId, onSubmit, onSkip }: Props) {
       soreness: ratings.soreness,
       sleepQuality: ratings.sleepQuality,
       motivation: ratings.motivation,
+      stress: wellness.stress,
+      mood: wellness.mood,
       notes: notes.trim() || undefined,
     }
     onSubmit(checkIn)
@@ -91,6 +113,48 @@ export function ReadinessCheckIn({ workoutId, onSubmit, onSkip }: Props) {
           </fieldset>
         ))}
       </div>
+
+      <button
+        type="button"
+        onClick={() => setShowWellness((v) => !v)}
+        className="btn btn--ghost"
+        style={{ width: "100%", marginBottom: "0.75rem" }}
+      >
+        {showWellness ? "Ocultar bem-estar ▲" : "Adicionar bem-estar (opcional) ▼"}
+      </button>
+
+      {showWellness && (
+        <div className="readiness-checkin__fields">
+          {WELLNESS_FIELDS.map(({ key, label, lowLabel, highLabel }) => (
+            <fieldset key={key} className="readiness-checkin__field">
+              <legend className="readiness-checkin__field-label">{label}</legend>
+              <div className="readiness-checkin__scale-labels">
+                <span className="readiness-checkin__scale-low">{lowLabel}</span>
+                <span className="readiness-checkin__scale-high">{highLabel}</span>
+              </div>
+              <div
+                className="readiness-checkin__buttons"
+                role="radiogroup"
+                aria-label={label}
+              >
+                {([1, 2, 3, 4, 5] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={wellness[key] === v}
+                    className={`readiness-checkin__btn${wellness[key] === v ? " readiness-checkin__btn--active" : ""}`}
+                    onClick={() => setWellnessRating(key, v)}
+                    aria-label={`${label}: ${v}`}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          ))}
+        </div>
+      )}
 
       <div className="readiness-checkin__notes">
         <label htmlFor="checkin-notes" className="readiness-checkin__notes-label">

@@ -23,6 +23,7 @@ import { computeReadinessStats } from "@/lib/workout-readiness"
 import type { ReadinessStats } from "@/lib/workout-readiness"
 import { WeeklyStatsSection } from "@/components/profile/WeeklyStatsSection"
 import { CycleStatsSection } from "@/components/profile/CycleStatsSection"
+import { BodyProgressSection } from "@/components/profile/BodyProgressSection"
 
 const AVATAR_KEY = "lrpg-fit:avatar"
 const NAME_KEY = "lrpg-fit:char-name"
@@ -203,6 +204,15 @@ export default function PerfilPage() {
       </section>
 
       <CycleStatsSection />
+
+      <section aria-labelledby="perfil-progresso-corporal">
+        <div className="section-header">
+          <h2 id="perfil-progresso-corporal" className="section-header__title">
+            Progresso corporal
+          </h2>
+        </div>
+        <BodyProgressSection />
+      </section>
 
       <section aria-labelledby="perfil-recompensas">
         <div className="section-header">

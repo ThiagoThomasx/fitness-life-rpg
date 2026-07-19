@@ -120,6 +120,44 @@ BackupPayload {
 }
 ```
 
+> **Nota (Sprint 19):** este documento descreve o modelo original em formato de "stores". Desde a Sprint 10+, a maior parte dos domínios novos (prontidão, ciclos, metas, progresso corporal, etc.) segue o padrão real do código: módulo funcional `src/lib/<domínio>.ts` + `localStorage` direto (não Zustand), documentado no cabeçalho de cada arquivo. `BackupPayload` real está em `src/lib/backup.ts` (`STORAGE_KEYS`), não neste formato. Ver `SPRINT-19-v2.md` para o modelo completo de progresso corporal introduzido nesta sprint.
+
+## Progresso corporal e bem-estar (Sprint 19 — `src/lib/body-progress.ts` + extensão de `readiness-check-ins.ts`)
+
+Domínio opcional e privado, local-first, sem XP/badges/recompensas. Ver `SPRINT-19-v2.md` para a decisão de não criar um domínio "wellness" separado.
+
+```ts
+// src/lib/body-progress.ts — storage: lrpg-fit:body-progress
+BodyProgressEntry {
+  id: string
+  recordedAt: string           // YYYY-MM-DD
+  weightKg?: number
+  measurements?: BodyMeasurements
+  notes?: string
+  cycleId?: string              // vínculo informativo, não um novo tipo de meta
+  createdAt: string
+  updatedAt: string
+}
+
+BodyMeasurements {
+  waistCm?: number; abdomenCm?: number; chestCm?: number; hipsCm?: number
+  rightArmCm?: number; leftArmCm?: number
+  rightThighCm?: number; leftThighCm?: number
+  rightCalfCm?: number; leftCalfCm?: number; neckCm?: number
+  custom?: { id: string; label: string; valueCm: number }[]
+}
+
+// src/lib/readiness-check-ins.ts — estendido, mesma storage (lrpg-fit:readiness-check-ins)
+WorkoutReadinessCheckIn {
+  // ...campos da Sprint 14 (energy, soreness, sleepQuality, motivation)
+  stress?: 1 | 2 | 3 | 4 | 5    // Sprint 19
+  mood?: 1 | 2 | 3 | 4 | 5      // Sprint 19
+  sleepHours?: number           // Sprint 19
+}
+```
+
+Tendências (`src/lib/trend-math.ts`, `body-progress-trends.ts`, `wellness-trends.ts`) são sempre derivadas em runtime — nunca persistidas. Fotos de progresso (IndexedDB) ficam fora deste modelo até a Sprint 19.1.
+
 **Chaves reais de `localStorage` (prefixo `lrpg-fit:*`, confirmadas contra o código na Sprint 1 da v2):**
 ```
 lrpg-fit:character            lrpg-fit:active-session
