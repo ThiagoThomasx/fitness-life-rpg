@@ -4,6 +4,18 @@ import { useMemo, useState } from "react"
 import type { TrainingCycle } from "@/lib/training-cycles"
 import { buildCycleSummary } from "@/lib/training-cycle-summary"
 import { compareCycles, type MetricComparison } from "@/lib/training-cycle-comparison"
+import { buildCycleWellnessSummary, compareCycleWellness } from "@/lib/training-cycle-wellness"
+import type { WellnessMetric } from "@/lib/wellness-associations"
+
+const WELLNESS_METRIC_LABELS: Record<WellnessMetric, string> = {
+  energy: "Energia",
+  soreness: "Dor muscular",
+  sleepQuality: "Qualidade do sono",
+  motivation: "Motivação",
+  stress: "Estresse",
+  mood: "Humor",
+  sleepHours: "Sono (h)",
+}
 
 interface CycleComparisonSectionProps {
   completedCycles: TrainingCycle[]
@@ -36,6 +48,14 @@ export function CycleComparisonSection({ completedCycles }: CycleComparisonSecti
       { cycle: firstCycle, summary: buildCycleSummary(firstCycle) },
       { cycle: secondCycle, summary: buildCycleSummary(secondCycle) }
     )
+  }, [firstId, secondId, completedCycles])
+
+  const wellnessComparison = useMemo(() => {
+    if (!firstId || !secondId || firstId === secondId) return null
+    const firstCycle = completedCycles.find((c) => c.id === firstId)
+    const secondCycle = completedCycles.find((c) => c.id === secondId)
+    if (!firstCycle || !secondCycle) return null
+    return compareCycleWellness(buildCycleWellnessSummary(firstCycle), buildCycleWellnessSummary(secondCycle))
   }, [firstId, secondId, completedCycles])
 
   if (completedCycles.length < 2) {
@@ -143,6 +163,40 @@ export function CycleComparisonSection({ completedCycles }: CycleComparisonSecti
                     </span>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {wellnessComparison && (
+            <div style={{ marginTop: "0.875rem", paddingTop: "0.875rem", borderTop: "1px solid var(--color-border-subtle)" }}>
+              <h4 className="section-label" style={{ marginBottom: 6 }}>Bem-estar</h4>
+
+              {wellnessComparison.messages.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: "0.625rem" }}>
+                  {wellnessComparison.messages.map((msg, i) => (
+                    <div key={i} style={{
+                      padding: "0.5rem 0.75rem", borderRadius: 8, background: "var(--color-bg-subtle)",
+                      fontSize: "0.75rem", color: "var(--color-text-secondary)",
+                    }}>
+                      {msg}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {wellnessComparison.metrics
+                  .filter((m) => m.dataStatus === "comparable")
+                  .map((m) => (
+                    <div key={m.metric} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem" }}>
+                      <span style={{ color: "var(--color-text-secondary)" }}>{WELLNESS_METRIC_LABELS[m.metric]}</span>
+                      <span style={{ color: "var(--color-text-muted)", display: "flex", gap: 8 }}>
+                        <span>{m.valueA} · {m.sampleSizeA} reg.</span>
+                        <span>→</span>
+                        <span style={{ fontWeight: 700, color: "var(--color-text-primary)" }}>{m.valueB} · {m.sampleSizeB} reg.</span>
+                      </span>
+                    </div>
+                  ))}
               </div>
             </div>
           )}

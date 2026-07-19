@@ -6,8 +6,10 @@ import { buildCycleSummary } from "@/lib/training-cycle-summary"
 import { getReviewsByCycle, type CycleReviewPhase } from "@/lib/training-cycle-reviews"
 import { buildCycleReviewAnalytics } from "@/lib/training-cycle-review-analytics"
 import { buildCycleWeekBreakdown } from "@/lib/training-cycle-week-summary"
+import { buildCycleWellnessSummary } from "@/lib/training-cycle-wellness"
 import { CycleSummaryCard } from "./CycleSummaryCard"
 import { CycleWeeksSection } from "./CycleWeeksSection"
+import { CycleWellnessSection } from "./CycleWellnessSection"
 
 interface CycleHistorySectionProps {
   completedCycles: TrainingCycle[]
@@ -52,6 +54,9 @@ export function CycleHistorySection({
                     reviewAnalytics={reviewAnalytics}
                     onAddReview={() => onAddReview(cycle.id, reviewAnalytics.endCycleReview ? "manual" : "end_cycle")}
                   />
+                  <div style={{ marginTop: "0.75rem" }}>
+                    <CycleWellnessSection summary={buildCycleWellnessSummary(cycle)} averageReadiness={summary.averageReadiness} />
+                  </div>
                   <div style={{ marginTop: "0.75rem" }}>
                     <CycleWeeksSection
                       key={weeksVersion}
@@ -106,6 +111,9 @@ export function CycleHistorySection({
               return (
                 <div key={cycle.id}>
                   <CycleSummaryCard cycle={cycle} summary={summary} reviewAnalytics={reviewAnalytics} />
+                  <div style={{ marginTop: "0.75rem" }}>
+                    <CycleWellnessSection summary={buildCycleWellnessSummary(cycle)} averageReadiness={summary.averageReadiness} />
+                  </div>
                   <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                     <button className="btn btn--ghost" onClick={() => onToggle(cycle.id)} style={{ flex: 1 }}>
                       Recolher

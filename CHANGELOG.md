@@ -13,6 +13,18 @@
 
 ### Entregas
 
+#### Sprint 19 (v2) — Wellness Associations in Training Cycles (parte 3B) — 2026-07-19
+
+Relatório completo em `SPRINT-19-PART3B.md`. Camada derivada de bem-estar por ciclo de treino: médias, cobertura, tendência interna (primeira vs. segunda metade do ciclo) e associações bem-estar × treino restritas ao intervalo do ciclo, integradas ao resumo de ciclo, à revisão e à comparação entre ciclos.
+
+- **Auditoria prévia**: confirmou que `training-cycle-summary.ts` já filtrava check-ins pelo ciclo para `averageReadiness`; que `archiveCycle` preserva `completedAt` (arquivamento não altera a análise); e que `wellness-associations.ts` (Sprint 19 Parte 3A) já nunca compara bem-estar contra o score de prontidão — não havia associação circular a filtrar no motor em si.
+- **Novo `src/lib/training-cycle-wellness.ts`**: `getCycleDateRange`/`filterCheckInsForCycle` (mesma regra de corte de `training-cycle-summary.ts`), `buildCycleWellnessSummary` (médias que nunca tratam campo ausente como zero, cobertura, tendência por metade do ciclo com uma direção `irregular` distinta detectada por coeficiente de variação, seleção de até 3 associações priorizando achados com direção clara) e `compareCycleWellness` (nunca declara vencedor, sinaliza amostra insuficiente por lado e diferença de duração entre ciclos).
+- **Decisão**: semanas que atravessam a borda do ciclo são resolvidas construindo os agregados semanais de treino só a partir de sessões já filtradas pelo intervalo do ciclo, em vez de um adaptador de corte de semana separado — mais simples e correto por construção.
+- **Decisão**: a prontidão média do resumo de bem-estar reaproveita `buildCycleSummary` em vez de duplicar a fórmula já existente.
+- **UI**: novo `CycleWellnessSection.tsx` ("Bem-estar durante o ciclo", com expansão "Ver detalhes"), integrado ao ciclo ativo (`CycleSection.tsx`) e ao histórico (`CycleHistorySection.tsx`); bloco somente leitura "Contexto do ciclo" em `CycleReviewForm.tsx`, oculto quando não há check-ins e nunca persistido com a revisão; nova seção "Bem-estar" em `CycleComparisonSection.tsx`.
+- 29 testes novos (`training-cycle-wellness.test.ts`) — 603/603 no total, sem regressão nos 574 testes pré-existentes. QA manual no dev server (dados existentes, sem check-ins de bem-estar): estado vazio correto do bloco, seção de bem-estar na comparação sem quebrar layout, contexto de revisão corretamente ausente com dado zerado. Lint, typecheck e build de produção limpos.
+- **Escopo conscientemente reduzido**: Dashboard, Insights e Perfil não tocados; nenhum campo novo de check-in; nenhuma métrica derivada persistida; screenshots formais desktop/mobile e auditoria de acessibilidade dedicada adiadas por falta de dados de bem-estar reais no ambiente de QA desta sessão (cobertos pelos 29 testes automatizados com dados sintéticos).
+
 #### Sprint 19 (v2) — Body Progress, Measurements & Wellness Trends (parte 1) — 2026-07-19
 
 Relatório completo em `SPRINT-19-v2.md`. Primeira camada opcional e privada de progresso corporal (peso/medidas) e tendências de bem-estar, conectando evolução de treino, corpo e bem-estar — sem diagnosticar, classificar corpos, prescrever metas de peso ou afirmar causalidade entre bem-estar e desempenho.

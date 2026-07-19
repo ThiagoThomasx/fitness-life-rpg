@@ -302,6 +302,21 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+## Sprint 19 — Wellness Associations in Training Cycles (parte 3B) ✅
+**Objetivo:** consolidar bem-estar por ciclo de treino (médias, cobertura, tendência interna, associações restritas ao intervalo do ciclo) e integrar ao resumo de ciclo, revisão e comparação — sem tocar Dashboard/Insights/Perfil. Ver `SPRINT-19-PART3B.md` para o relatório completo.
+
+- [x] Auditoria confirmada: `WorkoutReadinessCheckIn` é a única fonte de bem-estar; `wellness-associations.ts` já nunca compara bem-estar contra prontidão (só contra frequência/volume/ajustes), então não havia associação circular a filtrar; ciclos arquivados preservam `completedAt`
+- [x] `src/lib/training-cycle-wellness.ts` — `getCycleDateRange`/`filterCheckInsForCycle`, `buildCycleWellnessSummary` (médias sem tratar campo ausente como zero, cobertura, tendência por metade do ciclo com direção `irregular` via coeficiente de variação, seleção de até 3 associações) e `compareCycleWellness` (nunca declara vencedor, sinaliza amostra insuficiente por lado e diferença de duração)
+- [x] **Decisão**: semanas parciais na borda do ciclo são resolvidas construindo os agregados semanais só a partir de sessões já filtradas pelo intervalo do ciclo, em vez de um adaptador de corte de semana separado
+- [x] **Decisão**: `averageReadiness` do resumo de bem-estar reaproveita `buildCycleSummary` em vez de duplicar a fórmula de prontidão
+- [x] UI: `CycleWellnessSection.tsx` (novo, card "Bem-estar durante o ciclo" com expansão "Ver detalhes"), integrado em `CycleSection.tsx` (ciclo ativo) e `CycleHistorySection.tsx` (histórico); bloco somente leitura "Contexto do ciclo" em `CycleReviewForm.tsx` (não preenche respostas, não é persistido); seção "Bem-estar" adicionada a `CycleComparisonSection.tsx`
+- [x] 29 testes novos (`training-cycle-wellness.test.ts`) — 603/603 no total, sem regressão
+- [x] QA manual no dev server: estado vazio do bloco de bem-estar, seção de bem-estar na comparação de ciclos, contexto de revisão corretamente ausente quando não há check-ins
+- [x] **Escopo conscientemente reduzido**: screenshots formais desktop/mobile e auditoria de acessibilidade dedicada adiadas por falta de dados de bem-estar reais no ambiente de QA (cobertos pelos 29 testes automatizados com dados sintéticos)
+- [x] Build, lint, typecheck e testes limpos; Dashboard, Insights, Perfil, XP, badges e lógica de prontidão intocados
+
+---
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:

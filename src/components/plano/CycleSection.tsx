@@ -22,6 +22,7 @@ import {
 } from "@/lib/training-cycle-reviews"
 import { buildCycleReviewAnalytics } from "@/lib/training-cycle-review-analytics"
 import { buildCycleWeekBreakdown } from "@/lib/training-cycle-week-summary"
+import { buildCycleWellnessSummary } from "@/lib/training-cycle-wellness"
 import { CycleForm } from "./CycleForm"
 import { CycleSummaryCard } from "./CycleSummaryCard"
 import { CycleReviewForm } from "./CycleReviewForm"
@@ -29,6 +30,7 @@ import { CycleReviewPrompt } from "./CycleReviewPrompt"
 import { CycleWeeksSection } from "./CycleWeeksSection"
 import { CycleComparisonSection } from "./CycleComparisonSection"
 import { CycleHistorySection } from "./CycleHistorySection"
+import { CycleWellnessSection } from "./CycleWellnessSection"
 
 export function CycleSection() {
   const [activeCycle, setActiveCycle] = useState<TrainingCycle | null>(null)
@@ -91,11 +93,16 @@ export function CycleSection() {
     load()
   }
 
+  const reviewFormTargetCycle =
+    reviewFormTarget &&
+    ([activeCycle, ...completedCycles, ...archivedCycles].find((c) => c?.id === reviewFormTarget.cycleId) ?? null)
+
   const reviewFormBanner = reviewFormTarget && (
     <CycleReviewForm
       cycleId={reviewFormTarget.cycleId}
       phase={reviewFormTarget.phase}
       title={reviewFormTarget.phase === "end_cycle" ? "Adicionar revisão final" : "Registrar revisão"}
+      wellnessSummary={reviewFormTargetCycle ? buildCycleWellnessSummary(reviewFormTargetCycle) : undefined}
       onSubmit={handleSubmitReview}
       onCancel={() => setReviewFormTarget(null)}
     />
@@ -165,6 +172,13 @@ export function CycleSection() {
           summary={activeSummary}
           reviewAnalytics={buildCycleReviewAnalytics(getReviewsByCycle(activeCycle.id))}
           onAddReview={() => setReviewFormTarget({ cycleId: activeCycle.id, phase: "manual" })}
+        />
+      )}
+
+      {activeCycle && (
+        <CycleWellnessSection
+          summary={buildCycleWellnessSummary(activeCycle)}
+          averageReadiness={activeSummary?.averageReadiness}
         />
       )}
 
