@@ -18,6 +18,7 @@ type WorkoutCardProps = {
   lastCompletedAt?: string
   recovery?: WorkoutRecoveryInfo
   isTopRecoveryPick?: boolean
+  extraActions?: React.ReactNode
 }
 
 function formatLastCompleted(iso: string): string {
@@ -34,6 +35,7 @@ export function WorkoutCard({
   lastCompletedAt,
   recovery,
   isTopRecoveryPick,
+  extraActions,
 }: WorkoutCardProps) {
   // Cor dinâmica por categoria — mapa centralizado em theme-colors.ts
   const colors = categoryColor(workout.workout_type.category)
@@ -77,6 +79,7 @@ export function WorkoutCard({
       </div>
 
       <div className="workout-row__actions">
+        {extraActions}
         {onDuplicate && (
           <button
             className="workout-row__icon-btn"

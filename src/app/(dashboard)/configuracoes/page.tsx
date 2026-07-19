@@ -17,11 +17,14 @@ import { BackupImportSection } from "@/components/settings/BackupImportSection"
 import { DataResetSection } from "@/components/settings/DataResetSection"
 import { PhotoResetSection } from "@/components/settings/PhotoResetSection"
 import { BodyProgressResetSection } from "@/components/settings/BodyProgressResetSection"
+import { TemplatesProgramsResetSection } from "@/components/settings/TemplatesProgramsResetSection"
 import { BodyWellnessExportSection } from "@/components/settings/BodyWellnessExportSection"
 import { clearAllPhotos } from "@/lib/body-progress-photo-db"
 import { stripAllPhotoLinks, resetAllBodyProgress } from "@/lib/body-progress-photo-link"
 import { getBodyProgressEntries } from "@/lib/body-progress"
 import { getCheckIns } from "@/lib/readiness-check-ins"
+import { resetWorkoutTemplates } from "@/lib/workout-templates"
+import { resetTrainingPrograms } from "@/lib/training-programs"
 import {
   downloadBodyProgressCsv,
   downloadWellnessCsv,
@@ -31,7 +34,7 @@ import {
   type ExportPeriodOption,
 } from "@/lib/body-wellness-export"
 
-type Panel = "idle" | "import-confirm" | "reset-confirm" | "photo-reset-confirm" | "body-reset-confirm"
+type Panel = "idle" | "import-confirm" | "reset-confirm" | "photo-reset-confirm" | "body-reset-confirm" | "templates-programs-reset-confirm"
 
 export default function ConfiguracoesPage() {
   const [panel, setPanel] = useState<Panel>("idle")
@@ -41,6 +44,9 @@ export default function ConfiguracoesPage() {
   const [photoResetText, setPhotoResetText] = useState("")
   const [bodyResetText, setBodyResetText] = useState("")
   const [bodyResetDeletePhotos, setBodyResetDeletePhotos] = useState(true)
+  const [templatesProgramsResetText, setTemplatesProgramsResetText] = useState("")
+  const [resetTemplatesSelected, setResetTemplatesSelected] = useState(true)
+  const [resetProgramsSelected, setResetProgramsSelected] = useState(true)
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null)
 
   const refreshStatus = useCallback(() => {
@@ -161,6 +167,17 @@ export default function ConfiguracoesPage() {
     showMessage("ok", "Relatório em Markdown exportado.")
   }
 
+  function handleTemplatesProgramsResetConfirm() {
+    if (templatesProgramsResetText.trim().toLowerCase() !== "resetar") return
+    if (!resetTemplatesSelected && !resetProgramsSelected) return
+    if (resetTemplatesSelected) resetWorkoutTemplates()
+    if (resetProgramsSelected) resetTrainingPrograms()
+    setPanel("idle")
+    setTemplatesProgramsResetText("")
+    const parts = [resetTemplatesSelected && "templates", resetProgramsSelected && "programas"].filter(Boolean)
+    showMessage("ok", `Apagado(s): ${parts.join(" e ")}.`)
+  }
+
   return (
     <div className="page">
       <SettingsHeader />
@@ -209,6 +226,19 @@ export default function ConfiguracoesPage() {
         onDeletePhotosChange={setBodyResetDeletePhotos}
         onConfirm={handleBodyResetConfirm}
         onCancel={() => { setPanel("idle"); setBodyResetText("") }}
+      />
+
+      <TemplatesProgramsResetSection
+        isConfirming={panel === "templates-programs-reset-confirm"}
+        resetText={templatesProgramsResetText}
+        resetTemplates={resetTemplatesSelected}
+        resetPrograms={resetProgramsSelected}
+        onStart={() => setPanel("templates-programs-reset-confirm")}
+        onResetTextChange={setTemplatesProgramsResetText}
+        onResetTemplatesChange={setResetTemplatesSelected}
+        onResetProgramsChange={setResetProgramsSelected}
+        onConfirm={handleTemplatesProgramsResetConfirm}
+        onCancel={() => { setPanel("idle"); setTemplatesProgramsResetText("") }}
       />
 
       <DataResetSection

@@ -13,6 +13,44 @@
 
 ### Entregas
 
+#### Sprint 20 (v2) — Workout Templates, Weekly Programs & Program Builder Foundation (parte 1) — 2026-07-19
+
+Relatório completo em `SPRINT-20-PART1.md`, documentação de domínio em `WORKOUT-TEMPLATES.md` e
+`TRAINING-PROGRAMS.md`. Fundação de templates de treino reutilizáveis e programas semanais — primeira vez
+que o app ganha uma agenda persistida real (Planner mínimo), já que a auditoria confirmou que `/plano` era
+só metas/campanhas/ciclos e nenhum agendamento por data existia antes.
+
+- **Novo `src/lib/workout-templates.ts`**: CRUD com versionamento (`version` incrementa a cada edição sem
+  afetar snapshots já capturados por programas), duplicação com IDs independentes, arquivamento preferido a
+  exclusão destrutiva, `createTemplateFromWorkout` (transforma um treino existente em template sem copiar
+  histórico/PRs).
+- **Novo `src/lib/training-programs.ts`**: programa → semanas → sessões, cada sessão com
+  `WorkoutTemplateSnapshot` (cópia profunda, capturado no momento da escolha do template — testado
+  explicitamente contra mutação do template original depois), avisos estruturais neutros (nunca bloqueiam
+  salvamento nem qualificam o programa).
+- **Novo `src/lib/planned-workouts.ts`** (Planner mínimo): sessões planejadas por data com status
+  pendente/concluído/pulado; origem (`PlannedWorkoutSource`) é sempre contexto opcional para analytics,
+  nunca dependência viva de template/programa.
+- **Novo `src/lib/program-instantiation.ts`**: prévia sem persistência + 4 estratégias de aplicação
+  (manter/substituir/pular/cancelar) com detecção real de conflito por data.
+- **UI**: `TemplateLibrary`/`TemplateEditorModal` (`/treinos/templates`), `ProgramLibrary`/
+  `ProgramEditorWizard` sobre um `Stepper.tsx` genérico novo (`/programas`), `ProgramInstantiationDialog`
+  (data inicial, prévia, conflitos, criação opcional de ciclo via `training-cycles.ts`), `PlannedWeekSection`
+  em `/plano`.
+- **Backup/reset**: três chaves novas em `STORAGE_KEYS`; backups anteriores à Sprint 20 continuam
+  importando (listas vazias, sem migração destrutiva); reset granular por checkbox
+  (`TemplatesProgramsResetSection.tsx`), sem apagar Planner/ciclos/histórico.
+- **Testes**: 65 testes novos — 714/714 no total, sem regressão nos 649 pré-existentes.
+- QA funcional real no dev server (não só testes automatizados): criação/duplicação/arquivamento de
+  template, criação de programa via wizard, instanciação com conflito real, resolução por substituição +
+  criação de ciclo, e independência confirmada por mutação direta do template original após a
+  instanciação. QA visual: 14 screenshots (7 fluxos × desktop/mobile) via Playwright + Edge em
+  `docs/screenshots/sprint20-part1/`. Lint, `tsc --noEmit`, testes e `next build` limpos.
+- **Escopo conscientemente reduzido**: superset/circuit em blocos de exercício, drag-and-drop, execução
+  real de treino a partir do Planner, matriz exaustiva de screenshots por estado, auditoria de
+  acessibilidade dedicada — todos documentados como pendência em `SPRINT-20-PART1.md`. IA, prescrição
+  automática, progressão de carga e periodização permanecem fora de escopo, como definido no spec original.
+
 #### Sprint 19 (v2) — Consolidation, Export, Backup Compatibility & Release QA (parte 4) — 2026-07-19
 
 Relatório completo em `SPRINT-19-FINAL.md`. Encerramento da Sprint 19: auditoria global confirmou que a Parte 3C já estava implementada e apenas não commitada (commitada isoladamente antes de qualquer código novo desta parte), e que as lacunas reais eram exportação CSV/Markdown (0% implementado) e reset granular além de "tudo"/"fotos".

@@ -14,6 +14,7 @@ import {
 import { buildTrainingWeek } from "@/lib/training-load"
 import type { TrainingWeek } from "@/lib/training-load"
 import { WeeklyLoadOverview } from "@/components/plano/WeeklyLoadOverview"
+import { PlannedWeekSection } from "@/components/plano/PlannedWeekSection"
 import { CycleSection } from "@/components/plano/CycleSection"
 import { GoalsSection } from "@/components/plano/GoalsSection"
 import {
@@ -379,6 +380,7 @@ export default function PlanoPage() {
               onRefresh={() => setTrainingWeek(buildTrainingWeek())}
             />
           )}
+          <PlannedWeekSection />
           {/* Weekly Summary */}
           {progress && (
             <section className="card" style={{ textAlign: "center" }}>

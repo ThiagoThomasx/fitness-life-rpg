@@ -31,6 +31,7 @@ import { WorkoutsHero } from "@/components/workouts/WorkoutsHero"
 import { WorkoutEmptyState } from "@/components/workouts/WorkoutEmptyState"
 import { WorkoutBuilderModal } from "@/components/workouts/WorkoutBuilderModal"
 import { ExerciseLibrary } from "@/components/workouts/ExerciseLibrary"
+import { SaveAsTemplateAction } from "@/components/workouts/SaveAsTemplateAction"
 
 export default function TreinosPage() {
   const router = useRouter()
@@ -47,7 +48,13 @@ export default function TreinosPage() {
   const [pendingStart, setPendingStart] = useState<AnyWorkout | null>(null)
   const [totalExercises, setTotalExercises] = useState(0)
   const [lastByWorkoutId, setLastByWorkoutId] = useState<Record<string, string>>({})
+  const [templateSavedMessage, setTemplateSavedMessage] = useState(false)
   const startingRef = useRef(false)
+
+  function showTemplateSavedMessage() {
+    setTemplateSavedMessage(true)
+    setTimeout(() => setTemplateSavedMessage(false), 3000)
+  }
 
   const loadWorkouts = useCallback(() => {
     const allExercises = getAllExercises()
@@ -179,6 +186,10 @@ export default function TreinosPage() {
         onCreateWorkout={() => { setEditingWorkout(null); setShowBuilder(true) }}
       />
 
+      {templateSavedMessage && (
+        <div role="status" className="alert alert--success">✓ Template salvo com sucesso.</div>
+      )}
+
       {/* ─── Sessão ativa (prioridade máxima) ─────────────────────────── */}
       {activeSession && <ActiveSessionBanner workoutName={activeWorkoutName} />}
 
@@ -230,6 +241,7 @@ export default function TreinosPage() {
                 lastCompletedAt={lastByWorkoutId[workout.id]}
                 recovery={recoveryByWorkoutId[workout.id]}
                 isTopRecoveryPick={workout.id === topRecoveryPick?.workoutId}
+                extraActions={<SaveAsTemplateAction workout={workout} onSaved={() => showTemplateSavedMessage()} />}
               />
             ))}
           </div>

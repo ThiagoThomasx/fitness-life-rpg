@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+
 type WorkoutsHeaderProps = {
   totalVisible: number
   onOpenLibrary: () => void
@@ -16,6 +18,12 @@ export function WorkoutsHeader({ totalVisible, onOpenLibrary, onCreateWorkout }:
         </p>
       </div>
       <div className="flex flex-shrink-0 gap-2">
+        <Link href="/treinos/templates" className="btn btn--ghost">
+          Templates
+        </Link>
+        <Link href="/programas" className="btn btn--ghost">
+          Programas
+        </Link>
         <button type="button" className="btn btn--ghost" onClick={onOpenLibrary}>
           Biblioteca
         </button>

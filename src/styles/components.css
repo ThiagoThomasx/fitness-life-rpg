@@ -667,6 +667,85 @@
   letter-spacing: var(--tracking-tight);
 }
 
+/* ─── Tag chip removível (templates/programas) ──────────────────────────── */
+
+.tag-chip--removable {
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.tag-chip__remove {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: inherit;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.7;
+}
+
+.tag-chip__remove:hover {
+  opacity: 1;
+}
+
+/* ─── Stepper (wizard genérico sobre ModalShell) ────────────────────────── */
+
+.stepper-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-5);
+}
+
+.stepper-progress__step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.stepper-progress__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-round);
+  background: var(--color-border-strong);
+  flex-shrink: 0;
+}
+
+.stepper-progress__step--current {
+  color: var(--color-text-primary);
+  font-weight: var(--font-semibold);
+}
+
+.stepper-progress__step--current .stepper-progress__dot {
+  background: var(--color-accent);
+}
+
+.stepper-progress__step--done .stepper-progress__dot {
+  background: var(--color-accent-active);
+}
+
+.stepper-progress__step--done {
+  color: var(--color-text-secondary);
+}
+
+.stepper-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.stepper-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
 /* ─── Empty state ───────────────────────────────────────────────────────── */
 
 .empty-state {

@@ -344,6 +344,24 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+## Sprint 20 — Workout Templates, Weekly Programs & Program Builder Foundation (parte 1) ✅
+**Objetivo:** fundação de templates de treino reutilizáveis e programas semanais que combinam templates em semanas com sessões planejadas, mais um Planner mínimo (não existia antes desta sprint). Ver `SPRINT-20-PART1.md` para o relatório completo, `WORKOUT-TEMPLATES.md` e `TRAINING-PROGRAMS.md` para a documentação de domínio.
+
+- [x] Auditoria confirmada: não existia Planner persistido (`/plano` era só metas/campanhas/ciclos) — decisão de construir um Planner mínimo (`lrpg-fit:planned-workouts`) como pré-requisito real para instanciar programas
+- [x] `src/lib/workout-templates.ts` (novo) — CRUD, versionamento (`version` incrementa a cada edição, snapshots existentes não são afetados), duplicação com IDs independentes, arquivamento preferido a exclusão, `createTemplateFromWorkout` (não copia histórico/PRs)
+- [x] `src/lib/training-programs.ts` (novo) — programa → semanas → sessões, cada sessão com `WorkoutTemplateSnapshot` (cópia profunda, capturado no momento da escolha do template), avisos estruturais neutros (nunca bloqueiam salvamento, nunca qualificam o programa)
+- [x] `src/lib/planned-workouts.ts` (novo, Planner mínimo) — sessões planejadas por data, status (pendente/concluído/pulado), origem opcional só para analytics (nunca dependência viva)
+- [x] `src/lib/program-instantiation.ts` (novo) — prévia sem persistência, detecção de conflito, 4 estratégias de aplicação (manter/substituir/pular/cancelar); prova testada de que editar o programa depois não afeta sessões já instanciadas
+- [x] UI: `TemplateLibrary`/`TemplateEditorModal` (rota `/treinos/templates`), `ProgramLibrary`/`ProgramEditorWizard` sobre `Stepper.tsx` genérico novo (rota `/programas`), `ProgramInstantiationDialog` (data inicial, prévia, conflitos, criação opcional de ciclo), `PlannedWeekSection` em `/plano`
+- [x] Backup/reset: `lrpg-fit:workout-templates`, `lrpg-fit:training-programs`, `lrpg-fit:planned-workouts` adicionados a `STORAGE_KEYS`; backups anteriores importam com listas vazias; reset granular por checkbox (`TemplatesProgramsResetSection.tsx`)
+- [x] 65 testes novos — 714/714 no total, sem regressão
+- [x] QA funcional real no dev server: criar/editar/duplicar/arquivar template, criar programa via wizard, instanciar com conflito real detectado, resolver por substituição + criar ciclo, e confirmar por mutação direta que o template original alterado depois não afeta a sessão já planejada
+- [x] QA visual: 14 screenshots (7 fluxos × desktop/mobile) via Playwright/Edge em `docs/screenshots/sprint20-part1/`
+- [x] Build, lint, typecheck e testes limpos
+- [ ] **Adiado para partes seguintes**: superset/circuit em blocos de exercício, drag-and-drop, execução real de treino a partir do Planner, matriz exaustiva de screenshots, auditoria de acessibilidade dedicada, progressão planejada/deload
+
+---
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:

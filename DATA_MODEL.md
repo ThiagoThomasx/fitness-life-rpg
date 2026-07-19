@@ -194,6 +194,50 @@ Nunca enviadas a servidor, nunca analisadas, nunca incluídas no backup JSON (`B
 
 **Deixado fora desta sprint** (candidato a Sprint 19.3): exportação/importação ZIP com blobs, UI de "espaço aproximado usado".
 
+## Templates, Programas e Planner (Sprint 20 Parte 1 — `src/lib/workout-templates.ts`, `training-programs.ts`, `planned-workouts.ts`, `program-instantiation.ts`)
+
+Ver `WORKOUT-TEMPLATES.md` e `TRAINING-PROGRAMS.md` para a documentação completa. Fronteira dura entre as
+quatro entidades: editar template/programa nunca modifica `PlannedWorkout`/`CompletedWorkout` já criados —
+tudo cruza via snapshot congelado, nunca por referência mutável.
+
+```ts
+// src/lib/workout-templates.ts — storage: lrpg-fit:workout-templates
+WorkoutTemplate {
+  id: string; name: string; description?: string
+  objective?: 'strength' | 'hypertrophy' | 'conditioning' | 'mobility' | 'recovery' | 'technique' | 'mixed' | 'custom'
+  difficulty?: 'beginner' | 'intermediate' | 'advanced' | 'custom'
+  estimatedDurationMinutes?: number
+  exerciseBlocks: { id: string; type: 'single'; exercise: WorkoutTemplateExercise }[]  // só 'single' nesta parte
+  tags: string[]; isFavorite: boolean; isArchived: boolean
+  sourceTemplateId?: string; version: number   // version incrementa a cada edição
+  createdAt: string; updatedAt: string
+}
+
+// src/lib/training-programs.ts — storage: lrpg-fit:training-programs
+TrainingProgram {
+  id: string; name: string; description?: string; objective?: string; level?: string
+  weeks: { id: string; weekNumber: number; sessions: TrainingProgramSession[] }[]
+  tags: string[]; isFavorite: boolean; isArchived: boolean
+  sourceProgramId?: string; version: number
+  createdAt: string; updatedAt: string
+}
+TrainingProgramSession {
+  id: string; dayIndex?: number; preferredWeekday?: 0|1|2|3|4|5|6  // ausência de ambos = "dia flexível"
+  name: string; templateId?: string  // referência opcional, só analytics
+  templateSnapshot: { name: string; exerciseBlocks: [...]; capturedAt: string; sourceTemplateId?: string; sourceTemplateVersion?: number }  // cópia profunda
+  isOptional: boolean; notes?: string
+}
+
+// src/lib/planned-workouts.ts — storage: lrpg-fit:planned-workouts (Planner mínimo, novo nesta sprint)
+PlannedWorkout {
+  id: string; date: string /* YYYY-MM-DD */; weekday: number
+  name: string; templateSnapshot: WorkoutTemplateSnapshot
+  source?: { programId?: string; programVersion?: number; programWeekId?: string; templateId?: string; templateVersion?: number }
+  status: 'pending' | 'done' | 'skipped'; isOptional: boolean; notes?: string
+  createdAt: string; updatedAt: string
+}
+```
+
 **Chaves reais de `localStorage` (prefixo `lrpg-fit:*`, confirmadas contra o código na Sprint 1 da v2):**
 ```
 lrpg-fit:character            lrpg-fit:active-session
@@ -204,6 +248,8 @@ lrpg-fit:missions-completed   lrpg-fit:weekly-plan
 lrpg-fit:campaigns            lrpg-fit:preferences
 lrpg-fit:custom-workouts      lrpg-fit:custom-exercises
 lrpg-fit:avatar               lrpg-fit:char-name
+lrpg-fit:workout-templates    lrpg-fit:training-programs     (Sprint 20 Parte 1)
+lrpg-fit:planned-workouts                                    (Sprint 20 Parte 1)
 rpg_last_seen_level (auxiliar, detecção de level-up)
 ```
 
