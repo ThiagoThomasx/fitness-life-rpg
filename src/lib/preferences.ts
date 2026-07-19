@@ -29,6 +29,9 @@ export interface UserPreferences {
   // formulário de progresso corporal. Puramente uma preferência de UI — não
   // afeta nenhum registro já salvo, nem é exigida antes do primeiro uso.
   favoriteMeasurements?: string[]
+  // Sprint 19 Parte 2: se o usuário já confirmou o aviso de privacidade das
+  // fotos de progresso. Mostrado uma única vez, antes do primeiro upload.
+  bodyPhotosPrivacyAcknowledged?: boolean
   updatedAt: string
 }
 
@@ -120,4 +123,12 @@ export function getFavoriteMeasurements(): string[] {
 
 export function setFavoriteMeasurements(fields: string[]): void {
   savePreferences({ ...getPreferences(), favoriteMeasurements: fields })
+}
+
+export function hasAcknowledgedBodyPhotosPrivacy(): boolean {
+  return getPreferences().bodyPhotosPrivacyAcknowledged ?? false
+}
+
+export function acknowledgeBodyPhotosPrivacy(): void {
+  savePreferences({ ...getPreferences(), bodyPhotosPrivacyAcknowledged: true })
 }

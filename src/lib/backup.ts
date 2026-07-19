@@ -1,3 +1,5 @@
+import { clearAllPhotos, countPhotos } from './body-progress-photo-db'
+
 export const BACKUP_VERSION = 1
 
 export const STORAGE_KEYS = [
@@ -30,10 +32,17 @@ export const STORAGE_KEYS = [
 
 export type StorageKey = typeof STORAGE_KEYS[number]
 
+export interface BackupMediaInfo {
+  bodyPhotoCount: number
+  /** Sempre `false` — blobs nunca fazem parte do backup JSON. Ver `body-progress-photo-db.ts`. */
+  bodyPhotosIncluded: false
+}
+
 export interface BackupPayload {
   version: number
   exportedAt: string
   data: Partial<Record<StorageKey, unknown>>
+  media?: BackupMediaInfo
 }
 
 export interface StorageStatus {
@@ -52,7 +61,14 @@ function safeParseJSON(raw: string | null): unknown {
   }
 }
 
-export function exportBackup(): BackupPayload {
+/**
+ * Fotos de progresso (IndexedDB) nunca entram no backup JSON — apenas a
+ * contagem, para que o usuário saiba quantas existem localmente. `photoIds`
+ * dentro de `lrpg-fit:body-progress` continuam no backup normalmente (são só
+ * strings); referências que não resolvem após uma importação são tratadas
+ * como quebradas por `resolveEntryPhotos`, não como erro de importação.
+ */
+export async function exportBackup(): Promise<BackupPayload> {
   const data: Partial<Record<StorageKey, unknown>> = {}
   for (const key of STORAGE_KEYS) {
     const raw = typeof window !== 'undefined' ? window.localStorage.getItem(key) : null
@@ -64,11 +80,12 @@ export function exportBackup(): BackupPayload {
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
     data,
+    media: { bodyPhotoCount: await countPhotos(), bodyPhotosIncluded: false },
   }
 }
 
-export function downloadBackup(): void {
-  const payload = exportBackup()
+export async function downloadBackup(): Promise<void> {
+  const payload = await exportBackup()
   const json = JSON.stringify(payload, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
@@ -255,11 +272,18 @@ export function parseBackupFile(text: string): BackupPayload | null {
   }
 }
 
-export function resetAllData(): void {
+/**
+ * Reset completo: limpa `STORAGE_KEYS` (localStorage) e, em melhor esforço,
+ * as fotos de progresso (IndexedDB) — um domínio de armazenamento separado
+ * que não faz parte de `STORAGE_KEYS`. Falha ao limpar fotos (ex.: IndexedDB
+ * indisponível) não impede o reset do restante dos dados.
+ */
+export async function resetAllData(): Promise<void> {
   if (typeof window === 'undefined') return
   for (const key of STORAGE_KEYS) {
     window.localStorage.removeItem(key)
   }
+  await clearAllPhotos()
 }
 
 export function getStorageStatus(): StorageStatus {

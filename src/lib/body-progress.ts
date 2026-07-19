@@ -1,8 +1,9 @@
-// Progresso corporal — Sprint 19 (parte 1: peso, medidas e tendências).
+// Progresso corporal — Sprint 19 (parte 1: peso, medidas e tendências;
+// parte 2: fotos de progresso, ver `body-progress-photo*.ts`).
 // Domínio separado do Readiness (que cobre bem-estar) — este módulo só trata
-// dados físicos opcionais: peso e medidas. Fotos de progresso ficam para uma
-// sub-sprint 19.1 (exigem IndexedDB, inexistente no projeto). Nenhuma análise
-// aqui classifica corpos, prescreve metas de peso ou infere causalidade —
+// dados físicos opcionais: peso, medidas e a lista de IDs de fotos vinculadas
+// (as fotos em si vivem no IndexedDB, nunca aqui). Nenhuma análise aqui
+// classifica corpos, prescreve metas de peso ou infere causalidade —
 // tendências vivem em `body-progress-trends.ts`, nunca neste arquivo.
 
 const BODY_PROGRESS_KEY = 'lrpg-fit:body-progress'
@@ -38,6 +39,10 @@ export interface BodyProgressEntry {
   measurements?: BodyMeasurements
   notes?: string
   cycleId?: string
+  // IDs de `BodyProgressPhoto` (IndexedDB) vinculadas a este registro.
+  // Opcional para compatibilidade com registros anteriores à Sprint 19
+  // Parte 2 — ausência não é migrada, apenas tratada como lista vazia.
+  photoIds?: string[]
 
   createdAt: string
   updatedAt: string
@@ -149,7 +154,12 @@ function isValidEntry(raw: unknown): raw is BodyProgressEntry {
   if (typeof e.createdAt !== 'string' || typeof e.updatedAt !== 'string') return false
   if (e.weightKg !== undefined && !isPositiveNumber(e.weightKg)) return false
   if (e.measurements !== undefined && !isValidMeasurements(e.measurements)) return false
+  if (e.photoIds !== undefined && !isValidPhotoIds(e.photoIds)) return false
   return true
+}
+
+function isValidPhotoIds(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((id) => typeof id === 'string')
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -190,7 +200,7 @@ export function createBodyProgressEntry(input: NewBodyProgressInput): CreateBody
 
 export function updateBodyProgressEntry(
   id: string,
-  patch: Partial<Pick<BodyProgressEntry, 'recordedAt' | 'weightKg' | 'measurements' | 'notes' | 'cycleId'>>
+  patch: Partial<Pick<BodyProgressEntry, 'recordedAt' | 'weightKg' | 'measurements' | 'notes' | 'cycleId' | 'photoIds'>>
 ): BodyProgressEntry | null {
   const entries = loadEntries()
   const index = entries.findIndex((e) => e.id === id)

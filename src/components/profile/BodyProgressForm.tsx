@@ -10,6 +10,7 @@ import {
 } from "@/lib/body-progress"
 import { getTrainingCycles } from "@/lib/training-cycles"
 import { getFavoriteMeasurements } from "@/lib/preferences"
+import { BodyProgressPhotoSection } from "./BodyProgressPhotoSection"
 
 const MEASUREMENT_LABELS: Record<MeasurementField, string> = {
   waistCm: "Cintura",
@@ -63,6 +64,7 @@ export function BodyProgressForm({ onSubmit, onCancel, initialEntry }: BodyProgr
   )
   const [notes, setNotes] = useState(initialEntry?.notes ?? "")
   const [cycleId, setCycleId] = useState(initialEntry?.cycleId ?? "")
+  const [showPhotos, setShowPhotos] = useState(Boolean(initialEntry?.photoIds?.length))
   const [error, setError] = useState<string | null>(null)
   const cycles = getTrainingCycles()
 
@@ -184,6 +186,30 @@ export function BodyProgressForm({ onSubmit, onCancel, initialEntry }: BodyProgr
             ))}
           </select>
         </>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setShowPhotos((v) => !v)}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+          background: "transparent", border: "none", cursor: "pointer", padding: "0.875rem 0 0",
+        }}
+      >
+        <span style={labelStyle}>Fotos de progresso (opcional)</span>
+        <span style={{ color: "var(--color-text-muted)", fontSize: "0.75rem" }}>
+          {showPhotos ? "Ocultar ▲" : "Mostrar ▼"}
+        </span>
+      </button>
+
+      {showPhotos && (
+        initialEntry ? (
+          <BodyProgressPhotoSection entryId={initialEntry.id} initialPhotoIds={initialEntry.photoIds} />
+        ) : (
+          <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: "0.5rem" }}>
+            Salve o registro primeiro para poder adicionar fotos.
+          </p>
+        )
       )}
 
       <label style={{ ...labelStyle, marginTop: "0.875rem" }}>Observações (opcional)</label>

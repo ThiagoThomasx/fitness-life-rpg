@@ -41,6 +41,10 @@ A fase atual de redesign toca **apenas** na camada de componentes de UI — stor
 
 Chaves auxiliares: `lrpg-fit:avatar`, `lrpg-fit:char-name`, `rpg_last_seen_level` (detecção de level-up no Dashboard).
 
+## IndexedDB (Sprint 19 Parte 2 — único uso no app)
+
+Fotos privadas de progresso (`src/lib/body-progress-photo-db.ts`) usam IndexedDB (`lrpg-fit-photos`, versão 1, store `photos`) em vez de `localStorage` — blobs de imagem não cabem bem nesse mecanismo (limite de armazenamento menor, custo de serialização, e o requisito explícito de nunca incluir imagens no backup JSON). É o único domínio do app que não segue o padrão `localStorage` acima. `BodyProgressEntry.photoIds` (em `lrpg-fit:body-progress`) guarda apenas os IDs — a resolução para metadados/blob acontece em runtime via `body-progress-photo-link.ts`, nunca persistida cruzada. Ver `DATA_MODEL.md` e `SPRINT-19-PART2.md`.
+
 ## Camada visual (Sprint 1 — consolidada)
 
 ### Design tokens — `src/styles/tokens.css`

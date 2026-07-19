@@ -122,6 +122,24 @@ describe('updateBodyProgressEntry', () => {
     expect(updated).toBeNull()
     expect(getBodyProgressEntryById(created.id)?.weightKg).toBe(80)
   })
+
+  it('round-trips photoIds', () => {
+    const created = createBodyProgressEntry(weightOnlyInput).entry!
+    expect(created.photoIds).toBeUndefined()
+
+    const updated = updateBodyProgressEntry(created.id, { photoIds: ['photo-1', 'photo-2'] })
+    expect(updated?.photoIds).toEqual(['photo-1', 'photo-2'])
+    expect(getBodyProgressEntryById(created.id)?.photoIds).toEqual(['photo-1', 'photo-2'])
+  })
+
+  it('rejects a photoIds patch containing non-string entries', () => {
+    const created = createBodyProgressEntry(weightOnlyInput).entry!
+    const updated = updateBodyProgressEntry(created.id, {
+      photoIds: [123 as unknown as string],
+    })
+    expect(updated).toBeNull()
+    expect(getBodyProgressEntryById(created.id)?.photoIds).toBeUndefined()
+  })
 })
 
 describe('deleteBodyProgressEntry', () => {
@@ -151,5 +169,32 @@ describe('importBodyProgressEntries', () => {
 
   it('handles non-array input gracefully', () => {
     expect(importBodyProgressEntries('not-an-array' as unknown as unknown[])).toEqual({ imported: 0, skipped: 0 })
+  })
+
+  it('imports legacy entries without photoIds and entries with valid photoIds', () => {
+    const result = importBodyProgressEntries([
+      { id: 'legacy-1', recordedAt: '2026-08-02', weightKg: 81, createdAt: 'x', updatedAt: 'x' },
+      {
+        id: 'with-photos-1',
+        recordedAt: '2026-08-03',
+        weightKg: 82,
+        photoIds: ['photo-a', 'photo-b'],
+        createdAt: 'x',
+        updatedAt: 'x',
+      },
+      {
+        id: 'bad-photos-1',
+        recordedAt: '2026-08-04',
+        weightKg: 83,
+        photoIds: ['ok', 123],
+        createdAt: 'x',
+        updatedAt: 'x',
+      },
+    ])
+    expect(result.imported).toBe(2)
+    expect(result.skipped).toBe(1)
+    expect(getBodyProgressEntryById('legacy-1')?.photoIds).toBeUndefined()
+    expect(getBodyProgressEntryById('with-photos-1')?.photoIds).toEqual(['photo-a', 'photo-b'])
+    expect(getBodyProgressEntryById('bad-photos-1')).toBeNull()
   })
 })

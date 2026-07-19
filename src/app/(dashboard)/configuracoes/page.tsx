@@ -15,14 +15,18 @@ import { StorageStatusSection } from "@/components/settings/StorageStatusSection
 import { BackupExportSection } from "@/components/settings/BackupExportSection"
 import { BackupImportSection } from "@/components/settings/BackupImportSection"
 import { DataResetSection } from "@/components/settings/DataResetSection"
+import { PhotoResetSection } from "@/components/settings/PhotoResetSection"
+import { clearAllPhotos } from "@/lib/body-progress-photo-db"
+import { stripAllPhotoLinks } from "@/lib/body-progress-photo-link"
 
-type Panel = "idle" | "import-confirm" | "reset-confirm"
+type Panel = "idle" | "import-confirm" | "reset-confirm" | "photo-reset-confirm"
 
 export default function ConfiguracoesPage() {
   const [panel, setPanel] = useState<Panel>("idle")
   const [status, setStatus] = useState<StorageStatus | null>(null)
   const [importFile, setImportFile] = useState<File | null>(null)
   const [resetText, setResetText] = useState("")
+  const [photoResetText, setPhotoResetText] = useState("")
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null)
 
   const refreshStatus = useCallback(() => {
@@ -56,9 +60,9 @@ export default function ConfiguracoesPage() {
     setTimeout(() => setMessage(null), 4000)
   }
 
-  function handleExport() {
+  async function handleExport() {
     try {
-      downloadBackup()
+      await downloadBackup()
       showMessage("ok", "Backup exportado com sucesso!")
     } catch {
       showMessage("err", "Falha ao exportar. Tente novamente.")
@@ -99,11 +103,21 @@ export default function ConfiguracoesPage() {
     }
   }
 
-  function handleResetConfirm() {
+  async function handleResetConfirm() {
     if (resetText.trim().toLowerCase() !== "resetar") return
-    resetAllData()
+    await resetAllData()
     // Full page reload clears all in-memory Zustand stores; redirect back here to show success
     window.location.href = "/configuracoes?resetado=true"
+  }
+
+  async function handlePhotoResetConfirm() {
+    if (photoResetText.trim().toLowerCase() !== "resetar") return
+    await clearAllPhotos()
+    await stripAllPhotoLinks()
+    setPanel("idle")
+    setPhotoResetText("")
+    // Fotos não passam por nenhuma store Zustand — sem necessidade de reload de página.
+    showMessage("ok", "Todas as fotos de progresso foram apagadas.")
   }
 
   return (
@@ -128,6 +142,15 @@ export default function ConfiguracoesPage() {
         onFileSelected={handleFileSelected}
         onConfirm={handleImportConfirm}
         onCancel={() => { setPanel("idle"); setImportFile(null) }}
+      />
+
+      <PhotoResetSection
+        isConfirming={panel === "photo-reset-confirm"}
+        resetText={photoResetText}
+        onStart={() => setPanel("photo-reset-confirm")}
+        onResetTextChange={setPhotoResetText}
+        onConfirm={handlePhotoResetConfirm}
+        onCancel={() => { setPanel("idle"); setPhotoResetText("") }}
       />
 
       <DataResetSection

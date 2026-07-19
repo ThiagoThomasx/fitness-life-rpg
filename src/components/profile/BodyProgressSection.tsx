@@ -11,6 +11,9 @@ import {
 } from "@/lib/body-progress"
 import { summarizeWeightTrend } from "@/lib/body-progress-trends"
 import { BodyProgressForm } from "./BodyProgressForm"
+import { BodyProgressPhotoGallery } from "./BodyProgressPhotoGallery"
+import { PhotoDetailModal } from "./PhotoDetailModal"
+import { PhotoComparisonModal, type ComparableEntry } from "./PhotoComparisonModal"
 
 function formatDate(iso: string): string {
   const [year, month, day] = iso.split("-")
@@ -22,6 +25,8 @@ export function BodyProgressSection() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null)
+  const [selectedPhoto, setSelectedPhoto] = useState<{ photoId: string; entryId: string } | null>(null)
+  const [showComparison, setShowComparison] = useState(false)
 
   const load = useCallback(() => {
     setEntries(getBodyProgressEntries())
@@ -55,12 +60,20 @@ export function BodyProgressSection() {
 
   const editingEntry = editingId ? entries.find((e) => e.id === editingId) : undefined
 
+  function handleCancelEdit() {
+    // Fotos podem ter sido adicionadas/removidas durante a edição mesmo sem
+    // "Salvar" — elas persistem direto (linkPhotoToEntry), então a lista
+    // precisa recarregar para refletir isso mesmo ao cancelar.
+    setEditingId(null)
+    load()
+  }
+
   if (editingEntry) {
     return (
       <BodyProgressForm
         initialEntry={editingEntry}
         onSubmit={(input) => handleUpdate(editingEntry.id, input)}
-        onCancel={() => setEditingId(null)}
+        onCancel={handleCancelEdit}
       />
     )
   }
@@ -90,6 +103,9 @@ export function BodyProgressSection() {
   const weightSummary = summarizeWeightTrend(entries)
   const first = entries[0]
   const latest = entries[entries.length - 1]
+  const comparableEntries: ComparableEntry[] = entries
+    .filter((e) => (e.photoIds?.length ?? 0) > 0)
+    .map((e) => ({ id: e.id, recordedAt: e.recordedAt, photoIds: e.photoIds ?? [] }))
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -126,7 +142,19 @@ export function BodyProgressSection() {
       </button>
 
       <section>
-        <h3 className="section-label">Histórico</h3>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <h3 className="section-label">Histórico</h3>
+          {comparableEntries.length >= 2 && (
+            <button
+              type="button"
+              className="btn btn--ghost"
+              style={{ fontSize: "0.7rem", padding: "4px 10px" }}
+              onClick={() => setShowComparison(true)}
+            >
+              Comparar fotos
+            </button>
+          )}
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
           {[...entries].reverse().map((entry) => (
             <div key={entry.id} className="card card--sm">
@@ -144,6 +172,10 @@ export function BodyProgressSection() {
                   {entry.notes && (
                     <div style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", marginTop: 4 }}>{entry.notes}</div>
                   )}
+                  <BodyProgressPhotoGallery
+                    photoIds={entry.photoIds ?? []}
+                    onSelectPhoto={(photoId) => setSelectedPhoto({ photoId, entryId: entry.id })}
+                  />
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
                   <button
@@ -190,6 +222,19 @@ export function BodyProgressSection() {
           ))}
         </div>
       </section>
+
+      {selectedPhoto && (
+        <PhotoDetailModal
+          photoId={selectedPhoto.photoId}
+          entryId={selectedPhoto.entryId}
+          onClose={() => setSelectedPhoto(null)}
+          onChanged={load}
+        />
+      )}
+
+      {showComparison && (
+        <PhotoComparisonModal entries={comparableEntries} onClose={() => setShowComparison(false)} />
+      )}
     </div>
   )
 }

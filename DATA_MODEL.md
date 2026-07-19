@@ -156,7 +156,43 @@ WorkoutReadinessCheckIn {
 }
 ```
 
-Tendências (`src/lib/trend-math.ts`, `body-progress-trends.ts`, `wellness-trends.ts`) são sempre derivadas em runtime — nunca persistidas. Fotos de progresso (IndexedDB) ficam fora deste modelo até a Sprint 19.1.
+Tendências (`src/lib/trend-math.ts`, `body-progress-trends.ts`, `wellness-trends.ts`) são sempre derivadas em runtime — nunca persistidas.
+
+## Fotos de progresso (Sprint 19 Parte 2 — `src/lib/body-progress-photo*.ts`)
+
+Único uso de IndexedDB no app — blobs de imagem não cabem bem em `localStorage`. Ver `SPRINT-19-PART2.md` para a auditoria e decisões arquiteturais completas.
+
+```ts
+// IndexedDB — banco "lrpg-fit-photos", versão 1, store "photos" (keyPath: id)
+// Índices: by-entryId, by-takenAt, by-category (todos não-únicos)
+BodyProgressPhoto {                    // metadados (sem blobs)
+  id: string
+  entryId: string                      // dono único — uma foto pertence a exatamente um registro
+  category: 'front' | 'side' | 'back' | 'other'
+  takenAt: string                      // YYYY-MM-DD
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp'
+  width: number
+  height: number
+  sizeBytes: number
+  createdAt: string
+  updatedAt: string
+}
+
+BodyProgressPhotoRecord extends BodyProgressPhoto {
+  blob: Blob            // imagem principal, redimensionada (máx. 1600px) e comprimida
+  thumbnailBlob: Blob   // miniatura (máx. 320px), usada em listas/galeria
+}
+
+// src/lib/body-progress.ts — campo novo, opcional (registros antigos continuam válidos)
+BodyProgressEntry {
+  // ...campos existentes...
+  photoIds?: string[]   // IDs de BodyProgressPhoto vinculadas a este registro
+}
+```
+
+Nunca enviadas a servidor, nunca analisadas, nunca incluídas no backup JSON (`BackupPayload.media.bodyPhotosIncluded` é sempre `false` — só a contagem é exportada). Referências quebradas (`photoId` sem registro correspondente no IndexedDB) não quebram a tela — `resolveEntryPhotos`/`getPhotoMetadata` retornam `null` e a UI mostra um placeholder neutro.
+
+**Deixado fora desta sprint** (candidato a Sprint 19.3): exportação/importação ZIP com blobs, UI de "espaço aproximado usado".
 
 **Chaves reais de `localStorage` (prefixo `lrpg-fit:*`, confirmadas contra o código na Sprint 1 da v2):**
 ```

@@ -68,13 +68,13 @@ beforeEach(() => {
 })
 
 describe('exportBackup / importBackup round trip', () => {
-  it('restores every seeded key without duplication after export -> reset -> import', () => {
+  it('restores every seeded key without duplication after export -> reset -> import', async () => {
     seedSampleData()
     const before: Record<string, string | null> = {}
     for (const key of STORAGE_KEYS) before[key] = window.localStorage.getItem(key)
 
-    const payload = exportBackup()
-    resetAllData()
+    const payload = await exportBackup()
+    await resetAllData()
     for (const key of STORAGE_KEYS) expect(window.localStorage.getItem(key)).toBeNull()
 
     const result = importBackup(payload)
@@ -83,10 +83,10 @@ describe('exportBackup / importBackup round trip', () => {
     for (const key of STORAGE_KEYS) expect(window.localStorage.getItem(key)).toEqual(before[key])
   })
 
-  it('reports restored keys and skipped (absent) keys correctly', () => {
+  it('reports restored keys and skipped (absent) keys correctly', async () => {
     seedSampleData()
-    const payload = exportBackup()
-    resetAllData()
+    const payload = await exportBackup()
+    await resetAllData()
     const result = importBackup(payload)
 
     expect(result.restoredKeys).toContain('lrpg-fit:character')
@@ -96,33 +96,33 @@ describe('exportBackup / importBackup round trip', () => {
 })
 
 describe('parseBackupFile', () => {
-  it('rejects malformed JSON', () => {
+  it('rejects malformed JSON', async () => {
     expect(parseBackupFile('{"version": 1, "data":')).toBeNull()
   })
 
-  it('rejects an empty file', () => {
+  it('rejects an empty file', async () => {
     expect(parseBackupFile('')).toBeNull()
   })
 
-  it('rejects a file that is not JSON at all', () => {
+  it('rejects a file that is not JSON at all', async () => {
     expect(parseBackupFile('isso não é um backup')).toBeNull()
   })
 
-  it('rejects a payload missing required envelope fields', () => {
+  it('rejects a payload missing required envelope fields', async () => {
     expect(validateBackupPayload({ data: {} })).toBe(false)
     expect(validateBackupPayload({ version: 1, data: {} })).toBe(false) // missing exportedAt
     expect(validateBackupPayload(null)).toBe(false)
     expect(validateBackupPayload('not an object')).toBe(false)
   })
 
-  it('accepts a well-formed payload', () => {
+  it('accepts a well-formed payload', async () => {
     const payload = { version: 1, exportedAt: new Date().toISOString(), data: {} }
     expect(parseBackupFile(JSON.stringify(payload))).toEqual(payload)
   })
 })
 
 describe('importBackup version handling', () => {
-  it('rejects a backup from a future/unsupported version and preserves current data', () => {
+  it('rejects a backup from a future/unsupported version and preserves current data', async () => {
     seedSampleData()
     const before = window.localStorage.getItem('lrpg-fit:workout-history')
 
@@ -135,7 +135,7 @@ describe('importBackup version handling', () => {
 })
 
 describe('importBackup schema validation (atomicity)', () => {
-  it('rejects a backup where an array-shaped key was replaced by a string, and touches nothing', () => {
+  it('rejects a backup where an array-shaped key was replaced by a string, and touches nothing', async () => {
     seedSampleData()
     const before = window.localStorage.getItem('lrpg-fit:badges')
 
@@ -150,7 +150,7 @@ describe('importBackup schema validation (atomicity)', () => {
     expect(window.localStorage.getItem('lrpg-fit:badges')).toEqual(before)
   })
 
-  it('rejects negative XP inside the character envelope without writing anything', () => {
+  it('rejects negative XP inside the character envelope without writing anything', async () => {
     seedSampleData()
     const beforeCharacter = window.localStorage.getItem('lrpg-fit:character')
     const beforeHistory = window.localStorage.getItem('lrpg-fit:workout-history')
@@ -172,7 +172,7 @@ describe('importBackup schema validation (atomicity)', () => {
     expect(window.localStorage.getItem('lrpg-fit:workout-history')).toEqual(beforeHistory)
   })
 
-  it('rejects a backup with a partially valid domain (good profile, corrupt history) entirely', () => {
+  it('rejects a backup with a partially valid domain (good profile, corrupt history) entirely', async () => {
     seedSampleData()
     const beforeHistory = window.localStorage.getItem('lrpg-fit:workout-history')
 
@@ -192,7 +192,7 @@ describe('importBackup schema validation (atomicity)', () => {
 })
 
 describe('importBackup and the character envelope (Hotfix 10.1)', () => {
-  it('preserves a valid, already-progressed character exactly as exported', () => {
+  it('preserves a valid, already-progressed character exactly as exported', async () => {
     const progressed = {
       state: { character: { level: 7, current_xp: 120, total_xp: 5000, strength: 12 } },
       version: 0,
@@ -209,7 +209,7 @@ describe('importBackup and the character envelope (Hotfix 10.1)', () => {
     expect(JSON.parse(window.localStorage.getItem('lrpg-fit:character') as string)).toEqual(progressed)
   })
 
-  it('accepts a legacy character: null envelope instead of rejecting it (healing happens at boot, not at import)', () => {
+  it('accepts a legacy character: null envelope instead of rejecting it (healing happens at boot, not at import)', async () => {
     const legacy = { state: { character: null }, version: 0 }
     const payload: BackupPayload = {
       version: 1,
@@ -229,7 +229,7 @@ describe('importBackup and the character envelope (Hotfix 10.1)', () => {
 })
 
 describe('Sprint 12 — PR metadata round-trip', () => {
-  it('preserves new optional ExerciseRecord PR fields through export -> reset -> import', () => {
+  it('preserves new optional ExerciseRecord PR fields through export -> reset -> import', async () => {
     const historyWithPrFields = [
       {
         id: 'w1',
@@ -258,8 +258,8 @@ describe('Sprint 12 — PR metadata round-trip', () => {
     ]
     window.localStorage.setItem('lrpg-fit:workout-history', JSON.stringify(historyWithPrFields))
 
-    const payload = exportBackup()
-    resetAllData()
+    const payload = await exportBackup()
+    await resetAllData()
     const result = importBackup(payload)
 
     expect(result.ok).toBe(true)
@@ -267,7 +267,7 @@ describe('Sprint 12 — PR metadata round-trip', () => {
     expect(restored).toEqual(historyWithPrFields)
   })
 
-  it('still validates and imports an old-format history entry missing the new PR fields', () => {
+  it('still validates and imports an old-format history entry missing the new PR fields', async () => {
     const legacyHistory = [
       {
         id: 'w-legacy',
@@ -299,10 +299,10 @@ describe('Sprint 12 — PR metadata round-trip', () => {
 })
 
 describe('Sprint 17.1 — cycle reviews & week annotations round-trip', () => {
-  it('preserves reviews and week annotations through export -> reset -> import', () => {
+  it('preserves reviews and week annotations through export -> reset -> import', async () => {
     seedSampleData()
-    const payload = exportBackup()
-    resetAllData()
+    const payload = await exportBackup()
+    await resetAllData()
     const result = importBackup(payload)
 
     expect(result.ok).toBe(true)
@@ -312,7 +312,7 @@ describe('Sprint 17.1 — cycle reviews & week annotations round-trip', () => {
     expect(JSON.parse(window.localStorage.getItem('lrpg-fit:cycle-week-annotations') as string)).toHaveLength(1)
   })
 
-  it('imports a Sprint 17 backup that predates reviews/annotations without error', () => {
+  it('imports a Sprint 17 backup that predates reviews/annotations without error', async () => {
     const legacyPayload: BackupPayload = {
       version: BACKUP_VERSION,
       exportedAt: new Date().toISOString(),
@@ -334,7 +334,7 @@ describe('Sprint 17.1 — cycle reviews & week annotations round-trip', () => {
     expect(result.skippedKeys).toContain('lrpg-fit:cycle-week-annotations')
   })
 
-  it('rejects a backup with malformed cycle-reviews data (not an array)', () => {
+  it('rejects a backup with malformed cycle-reviews data (not an array)', async () => {
     const payload: BackupPayload = {
       version: BACKUP_VERSION,
       exportedAt: new Date().toISOString(),
@@ -349,7 +349,7 @@ describe('Sprint 17.1 — cycle reviews & week annotations round-trip', () => {
 })
 
 describe('Sprint 19 — body progress round-trip', () => {
-  it('preserves body-progress entries through export -> reset -> import', () => {
+  it('preserves body-progress entries through export -> reset -> import', async () => {
     window.localStorage.setItem(
       'lrpg-fit:body-progress',
       JSON.stringify([
@@ -363,8 +363,8 @@ describe('Sprint 19 — body progress round-trip', () => {
       ])
     )
 
-    const payload = exportBackup()
-    resetAllData()
+    const payload = await exportBackup()
+    await resetAllData()
     const result = importBackup(payload)
 
     expect(result.ok).toBe(true)
@@ -372,7 +372,7 @@ describe('Sprint 19 — body progress round-trip', () => {
     expect(JSON.parse(window.localStorage.getItem('lrpg-fit:body-progress') as string)).toHaveLength(1)
   })
 
-  it('imports a pre-Sprint 19 backup that predates body-progress without error', () => {
+  it('imports a pre-Sprint 19 backup that predates body-progress without error', async () => {
     const legacyPayload: BackupPayload = {
       version: BACKUP_VERSION,
       exportedAt: new Date().toISOString(),
@@ -385,7 +385,7 @@ describe('Sprint 19 — body progress round-trip', () => {
     expect(result.skippedKeys).toContain('lrpg-fit:body-progress')
   })
 
-  it('rejects a backup with malformed body-progress data (not an array)', () => {
+  it('rejects a backup with malformed body-progress data (not an array)', async () => {
     const payload: BackupPayload = {
       version: BACKUP_VERSION,
       exportedAt: new Date().toISOString(),
@@ -400,10 +400,10 @@ describe('Sprint 19 — body progress round-trip', () => {
 })
 
 describe('Sprint 18 — training goals & milestones round-trip', () => {
-  it('preserves goals and milestones through export -> reset -> import', () => {
+  it('preserves goals and milestones through export -> reset -> import', async () => {
     seedSampleData()
-    const payload = exportBackup()
-    resetAllData()
+    const payload = await exportBackup()
+    await resetAllData()
     const result = importBackup(payload)
 
     expect(result.ok).toBe(true)
@@ -413,7 +413,7 @@ describe('Sprint 18 — training goals & milestones round-trip', () => {
     expect(JSON.parse(window.localStorage.getItem('lrpg-fit:goal-milestones') as string)).toHaveLength(1)
   })
 
-  it('imports a Sprint 17.1 backup that predates goals/milestones without error', () => {
+  it('imports a Sprint 17.1 backup that predates goals/milestones without error', async () => {
     const legacyPayload: BackupPayload = {
       version: BACKUP_VERSION,
       exportedAt: new Date().toISOString(),
@@ -435,7 +435,7 @@ describe('Sprint 18 — training goals & milestones round-trip', () => {
     expect(result.skippedKeys).toContain('lrpg-fit:goal-milestones')
   })
 
-  it('rejects a backup with malformed training-goals data (not an array)', () => {
+  it('rejects a backup with malformed training-goals data (not an array)', async () => {
     const payload: BackupPayload = {
       version: BACKUP_VERSION,
       exportedAt: new Date().toISOString(),
@@ -450,11 +450,18 @@ describe('Sprint 18 — training goals & milestones round-trip', () => {
 })
 
 describe('resetAllData', () => {
-  it('removes every known storage key and leaves nothing behind', () => {
+  it('removes every known storage key and leaves nothing behind', async () => {
     seedSampleData()
-    resetAllData()
+    await resetAllData()
     for (const key of STORAGE_KEYS) {
       expect(window.localStorage.getItem(key)).toBeNull()
     }
+  })
+})
+
+describe('exportBackup media info', () => {
+  it('always reports bodyPhotosIncluded: false, with a count matching IndexedDB', async () => {
+    const payload = await exportBackup()
+    expect(payload.media).toEqual({ bodyPhotoCount: 0, bodyPhotosIncluded: false })
   })
 })

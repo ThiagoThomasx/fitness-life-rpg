@@ -281,6 +281,27 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+## Sprint 19 — Private Progress Photos, IndexedDB & Local Data Safety (parte 2) ✅
+**Objetivo:** infraestrutura local (IndexedDB) para fotos privadas de progresso, vinculadas a registros corporais, sem nenhum envio a servidor ou análise automática. Ver `SPRINT-19-PART2.md` para o relatório completo.
+
+- [x] Auditoria confirmada: zero uso de IndexedDB no projeto; `backup.ts` era JSON-only; decisões confirmadas com o usuário antes de implementar (escopo reduzido, ownership de foto, Canvas API nativa, `fake-indexeddb` para testes)
+- [x] **Decisão**: foto pertence a exatamente um registro corporal (Opção A) — sem contagem de referências nem reuso entre registros
+- [x] **Decisão**: compressão/redimensionamento via Canvas API nativa (`toBlob()`), sem dependência de imagem nova; PNG só é preservado se o input já era PNG, resto normaliza para JPEG
+- [x] `src/lib/body-progress-photo.ts` — modelo (`BodyProgressPhoto`/`BodyProgressPhotoRecord`/`BodyPhotoConfig`/`BodyPhotoValidationError`) + `photoIds?: string[]` opcional em `BodyProgressEntry`
+- [x] `src/lib/body-progress-photo-db.ts` — wrapper IndexedDB (`lrpg-fit-photos` v1, store `photos`, índices `by-entryId`/`by-takenAt`/`by-category`), nunca lança, trata quota excedida e IndexedDB indisponível
+- [x] `src/lib/body-progress-photo-validation.ts` + `body-progress-photo-processing.ts` — validação de arquivo e decodificação/redimensionamento/thumbnail via canvas
+- [x] `src/lib/body-progress-photo-link.ts` — vínculo com `BodyProgressEntry`, referências quebradas tratadas como `metadata: null` (nunca lança), exclusão em cascata opcional
+- [x] UI: seção de upload no `BodyProgressForm` (modo edição), aviso de privacidade único (`PhotoPrivacyNotice`), galeria por registro, modal de detalhe (editar categoria/excluir), modal de comparação lado a lado (2 colunas desktop / empilhado mobile) com seletor de datas
+- [x] Reset granular (`PhotoResetSection`, apenas fotos) + `resetAllData()` agora assíncrono, também limpa fotos
+- [x] Backup: `BackupPayload.media.bodyPhotosIncluded` sempre `false` (só a contagem é exportada); `exportBackup`/`downloadBackup` assíncronos; aviso de privacidade na seção de exportação
+- [x] 53 testes novos (`body-progress-photo-db.test.ts` 18, `body-progress-photo-validation.test.ts` 10, `body-progress-photo-processing.test.ts` 10, `body-progress-photo-link.test.ts` 11, +4 em `body-progress.test.ts`) — 564/564 no total, sem regressão
+- [x] QA visual (desktop 1280px + mobile 375px) via Playwright/msedge: estado vazio, aviso de privacidade, upload, registro com foto, galeria no histórico, modal de detalhe, confirmação de exclusão, comparação — screenshots em `docs/screenshots/sprint19-part2/`
+- [x] **Bug real encontrado e corrigido durante QA**: cancelar a edição de um registro não recarregava a lista, então fotos adicionadas (que persistem direto no IndexedDB/localStorage, independente do botão "Salvar") não apareciam até um reload manual — corrigido em `BodyProgressSection.handleCancelEdit`
+- [x] **Escopo conscientemente reduzido**: exportação/importação ZIP completa e UI de "espaço usado em MB" adiadas para Sprint 19.3
+- [x] Build, lint, typecheck e testes limpos; nenhuma imagem enviada, analisada ou incluída em `localStorage`/backup JSON; body-progress/backup/reset da Parte 1 continuam funcionando sem alteração
+
+---
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:
