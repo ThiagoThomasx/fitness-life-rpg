@@ -3,6 +3,8 @@ import { devtools, persist, createJSONStorage } from 'zustand/middleware'
 import type { WorkoutSession, ExerciseSet, Exercise } from '@/types/database'
 import type { SessionAdjustment } from '@/lib/session-adjustments'
 import { ORIGINAL_ADJUSTMENT } from '@/lib/session-adjustments'
+import type { ActiveWorkoutSource, PlannedWorkoutExecutionSnapshot } from '@/lib/active-workout'
+import { FREE_WORKOUT_SOURCE } from '@/lib/active-workout'
 
 interface ActiveSet {
   exercise: Exercise
@@ -16,10 +18,19 @@ interface SessionState {
   isLoading: boolean
   error: string | null
   sessionAdjustment: SessionAdjustment
+  /** Origem da sessão ativa — `free` por padrão, preservando o fluxo de treino livre já existente. */
+  source: ActiveWorkoutSource
+  /** Presente só quando `source.type === 'planned'`. Imutável após o início (Fase 6). */
+  plannedSnapshot: PlannedWorkoutExecutionSnapshot | null
+}
+
+interface StartSessionOptions {
+  source?: ActiveWorkoutSource
+  plannedSnapshot?: PlannedWorkoutExecutionSnapshot
 }
 
 interface SessionActions {
-  startSession: (session: WorkoutSession) => void
+  startSession: (session: WorkoutSession, options?: StartSessionOptions) => void
   endSession: () => void
   setSessionAdjustment: (adjustment: SessionAdjustment) => void
   addExercise: (exercise: Exercise) => void
@@ -40,6 +51,8 @@ const INITIAL_STATE: SessionState = {
   isLoading: false,
   error: null,
   sessionAdjustment: ORIGINAL_ADJUSTMENT,
+  source: FREE_WORKOUT_SOURCE,
+  plannedSnapshot: null,
 }
 
 const safeStorage = {
@@ -63,9 +76,17 @@ export const useSessionStore = create<SessionState & SessionActions>()(
       (set) => ({
         ...INITIAL_STATE,
 
-        startSession: (session) =>
+        startSession: (session, options) =>
           set(
-            { activeSession: session, activeSets: [], elapsedSeconds: 0, error: null, sessionAdjustment: ORIGINAL_ADJUSTMENT },
+            {
+              activeSession: session,
+              activeSets: [],
+              elapsedSeconds: 0,
+              error: null,
+              sessionAdjustment: ORIGINAL_ADJUSTMENT,
+              source: options?.source ?? FREE_WORKOUT_SOURCE,
+              plannedSnapshot: options?.plannedSnapshot ?? null,
+            },
             false,
             'session/start'
           ),
@@ -173,6 +194,8 @@ export const useSessionStore = create<SessionState & SessionActions>()(
           activeSets: state.activeSets,
           elapsedSeconds: state.elapsedSeconds,
           sessionAdjustment: state.sessionAdjustment,
+          source: state.source,
+          plannedSnapshot: state.plannedSnapshot,
         }),
       }
     ),

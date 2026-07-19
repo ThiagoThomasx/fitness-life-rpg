@@ -15,7 +15,7 @@ const PLANNED_WORKOUTS_KEY = 'lrpg-fit:planned-workouts'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type PlannedWorkoutStatus = 'pending' | 'done' | 'skipped' | 'cancelled'
+export type PlannedWorkoutStatus = 'pending' | 'in_progress' | 'done' | 'skipped' | 'cancelled'
 
 /** Motivos descritivos e opcionais — nunca usados para julgar ou recomendar (Fase 9). */
 export type SkippedWorkoutReason =
@@ -184,6 +184,40 @@ export function updatePlannedWorkoutStatus(id: string, status: PlannedWorkoutSta
   return updated
 }
 
+/**
+ * Marca a sessão como em andamento — chamado ao iniciar pelo Planner (Fase 14/17).
+ * Só permitido a partir de `pending`; `canStartPlannedWorkout` (active-workout.ts)
+ * já garante isso antes de chegar aqui, mas a função reforça o próprio invariante.
+ */
+export function startPlannedWorkoutExecution(id: string): PlannedWorkout | null {
+  const items = loadPlannedWorkouts()
+  const index = items.findIndex((p) => p.id === id)
+  if (index === -1 || items[index].status !== 'pending') return null
+
+  const updated: PlannedWorkout = { ...items[index], status: 'in_progress', updatedAt: new Date().toISOString() }
+  const next = [...items]
+  next[index] = updated
+  persistPlannedWorkouts(next)
+  return updated
+}
+
+/**
+ * Reverte para `pending` — usado quando uma sessão em andamento é descartada
+ * (Fase 23) sem gerar histórico. Só permitido a partir de `in_progress`, para
+ * nunca reabrir sessões já concluídas/puladas/canceladas por engano.
+ */
+export function revertPlannedWorkoutToPending(id: string): PlannedWorkout | null {
+  const items = loadPlannedWorkouts()
+  const index = items.findIndex((p) => p.id === id)
+  if (index === -1 || items[index].status !== 'in_progress') return null
+
+  const updated: PlannedWorkout = { ...items[index], status: 'pending', updatedAt: new Date().toISOString() }
+  const next = [...items]
+  next[index] = updated
+  persistPlannedWorkouts(next)
+  return updated
+}
+
 function updateExecution(
   workout: PlannedWorkout,
   patch: Partial<PlannedWorkoutExecution>
@@ -315,7 +349,11 @@ function isValidPlannedWorkout(raw: unknown): raw is PlannedWorkout {
     typeof p.name === 'string' &&
     typeof p.templateSnapshot === 'object' &&
     p.templateSnapshot !== null &&
-    (p.status === 'pending' || p.status === 'done' || p.status === 'skipped' || p.status === 'cancelled') &&
+    (p.status === 'pending' ||
+      p.status === 'in_progress' ||
+      p.status === 'done' ||
+      p.status === 'skipped' ||
+      p.status === 'cancelled') &&
     typeof p.createdAt === 'string' &&
     typeof p.updatedAt === 'string'
   )

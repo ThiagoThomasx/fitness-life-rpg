@@ -16,6 +16,8 @@ import {
   checkRescheduleConflict,
   reschedulePlannedWorkout,
   linkPlannedWorkoutToCompleted,
+  startPlannedWorkoutExecution,
+  revertPlannedWorkoutToPending,
   type WorkoutTemplateSnapshot,
 } from './planned-workouts'
 
@@ -79,6 +81,38 @@ describe('updatePlannedWorkoutStatus', () => {
 
   it('returns null for unknown id', () => {
     expect(updatePlannedWorkoutStatus('missing', 'done')).toBeNull()
+  })
+})
+
+describe('startPlannedWorkoutExecution', () => {
+  it('moves a pending workout to in_progress', () => {
+    const pw = savePlannedWorkout({ date: '2026-07-20', weekday: 1, name: 'A', templateSnapshot: snapshot(), isOptional: false })
+    const started = startPlannedWorkoutExecution(pw.id)
+    expect(started?.status).toBe('in_progress')
+  })
+
+  it('refuses to start a workout that is not pending', () => {
+    const pw = savePlannedWorkout({ date: '2026-07-20', weekday: 1, name: 'A', templateSnapshot: snapshot(), isOptional: false })
+    updatePlannedWorkoutStatus(pw.id, 'done')
+    expect(startPlannedWorkoutExecution(pw.id)).toBeNull()
+  })
+
+  it('returns null for unknown id', () => {
+    expect(startPlannedWorkoutExecution('missing')).toBeNull()
+  })
+})
+
+describe('revertPlannedWorkoutToPending', () => {
+  it('reverts an in_progress workout back to pending', () => {
+    const pw = savePlannedWorkout({ date: '2026-07-20', weekday: 1, name: 'A', templateSnapshot: snapshot(), isOptional: false })
+    startPlannedWorkoutExecution(pw.id)
+    const reverted = revertPlannedWorkoutToPending(pw.id)
+    expect(reverted?.status).toBe('pending')
+  })
+
+  it('refuses to revert a workout that is not in_progress', () => {
+    const pw = savePlannedWorkout({ date: '2026-07-20', weekday: 1, name: 'A', templateSnapshot: snapshot(), isOptional: false })
+    expect(revertPlannedWorkoutToPending(pw.id)).toBeNull()
   })
 })
 
