@@ -40,6 +40,9 @@ export interface TrainingCycle {
   completedAt?: string
   createdAt: string
   updatedAt: string
+  /** Sprint 20 Parte 2 — presente apenas quando o ciclo nasce de um programa instanciado. */
+  sourceProgramId?: string
+  sourceProgramVersion?: number
 }
 
 export interface NewTrainingCycleInput {
@@ -49,6 +52,8 @@ export interface NewTrainingCycleInput {
   startDate: string
   plannedWeeks?: number
   notes?: string
+  sourceProgramId?: string
+  sourceProgramVersion?: number
 }
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
@@ -159,6 +164,8 @@ export function createCycle(input: NewTrainingCycleInput): CreateCycleResult {
     notes: input.notes?.trim() || undefined,
     createdAt: now,
     updatedAt: now,
+    sourceProgramId: input.sourceProgramId,
+    sourceProgramVersion: input.sourceProgramVersion,
   }
 
   persistCycles([cycle, ...loadCycles()])

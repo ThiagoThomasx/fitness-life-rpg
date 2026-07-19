@@ -7,6 +7,8 @@
 
 import type { WorkoutTemplate, WorkoutTemplateExerciseBlock } from './workout-templates'
 import { getWorkoutTemplateById } from './workout-templates'
+import type { TrainingBlock, ProgramProgressionSettings, ProgramSessionOverride } from './training-blocks'
+import { DEFAULT_PROGRESSION_SETTINGS, validateTrainingBlocks } from './training-blocks'
 
 const PROGRAMS_KEY = 'lrpg-fit:training-programs'
 
@@ -70,6 +72,10 @@ export interface TrainingProgram {
   version: number
   createdAt: string
   updatedAt: string
+  /** Sprint 20 Parte 2 — todos opcionais: programas antigos continuam válidos sem migração. */
+  blocks?: TrainingBlock[]
+  progressionSettings?: ProgramProgressionSettings
+  sessionOverrides?: ProgramSessionOverride[]
 }
 
 export type NewTrainingProgramInput = Omit<
@@ -89,7 +95,14 @@ function loadPrograms(): TrainingProgram[] {
     const raw = window.localStorage.getItem(PROGRAMS_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw) as TrainingProgram[]
-    return parsed.map((p) => ({ ...p, tags: p.tags ?? [], weeks: p.weeks ?? [] }))
+    return parsed.map((p) => ({
+      ...p,
+      tags: p.tags ?? [],
+      weeks: p.weeks ?? [],
+      blocks: p.blocks ?? [],
+      progressionSettings: p.progressionSettings ?? DEFAULT_PROGRESSION_SETTINGS,
+      sessionOverrides: p.sessionOverrides ?? [],
+    }))
   } catch {
     return []
   }
@@ -312,6 +325,12 @@ export function saveTrainingProgram(input: NewTrainingProgramInput): SaveTrainin
   const validation = validateTrainingProgram({ name: input.name, weeks: input.weeks, tags })
   if (!validation.ok) return { ok: false, errors: validation.errors }
 
+  const blocks = input.blocks ?? []
+  const blockValidation = validateTrainingBlocks(blocks, input.weeks.length)
+  if (!blockValidation.ok) {
+    return { ok: false, errors: blockValidation.errors.map((e) => ({ field: 'blocks', message: e.message })) }
+  }
+
   const now = new Date().toISOString()
   const program: TrainingProgram = {
     id: `prog-${Date.now()}`,
@@ -327,6 +346,9 @@ export function saveTrainingProgram(input: NewTrainingProgramInput): SaveTrainin
     version: 1,
     createdAt: now,
     updatedAt: now,
+    blocks,
+    progressionSettings: input.progressionSettings ?? DEFAULT_PROGRESSION_SETTINGS,
+    sessionOverrides: input.sessionOverrides ?? [],
   }
 
   persistPrograms([program, ...loadPrograms()])
@@ -334,7 +356,19 @@ export function saveTrainingProgram(input: NewTrainingProgramInput): SaveTrainin
 }
 
 export type UpdateTrainingProgramInput = Partial<
-  Pick<TrainingProgram, 'name' | 'description' | 'objective' | 'level' | 'weeks' | 'tags' | 'isFavorite'>
+  Pick<
+    TrainingProgram,
+    | 'name'
+    | 'description'
+    | 'objective'
+    | 'level'
+    | 'weeks'
+    | 'tags'
+    | 'isFavorite'
+    | 'blocks'
+    | 'progressionSettings'
+    | 'sessionOverrides'
+  >
 >
 
 export function updateTrainingProgram(id: string, input: UpdateTrainingProgramInput): SaveTrainingProgramResult {
@@ -346,9 +380,15 @@ export function updateTrainingProgram(id: string, input: UpdateTrainingProgramIn
   const tags = input.tags ? normalizeTags(input.tags) : current.tags
   const weeks = input.weeks ?? current.weeks
   const name = input.name !== undefined ? input.name : current.name
+  const blocks = input.blocks ?? current.blocks ?? []
 
   const validation = validateTrainingProgram({ name, weeks, tags })
   if (!validation.ok) return { ok: false, errors: validation.errors }
+
+  const blockValidation = validateTrainingBlocks(blocks, weeks.length)
+  if (!blockValidation.ok) {
+    return { ok: false, errors: blockValidation.errors.map((e) => ({ field: 'blocks', message: e.message })) }
+  }
 
   const updated: TrainingProgram = {
     ...current,
@@ -356,6 +396,7 @@ export function updateTrainingProgram(id: string, input: UpdateTrainingProgramIn
     name: name.trim(),
     tags,
     weeks,
+    blocks,
     version: current.version + 1,
     updatedAt: new Date().toISOString(),
   }
@@ -394,11 +435,40 @@ export function duplicateTrainingProgram(id: string): TrainingProgram | null {
   if (!original) return null
 
   const now = new Date().toISOString()
+
+  // Blocos referenciam weekNumber (não weekId) — copiam sem remapeamento.
+  // Overrides referenciam weekId/sessionId, que mudam ao clonar — precisam de mapa.
+  const weekIdMap = new Map<string, string>()
+  const sessionIdMap = new Map<string, string>()
+  const weeks = original.weeks.map((w) => {
+    const newWeekId = `week-${uniqueSuffix()}`
+    weekIdMap.set(w.id, newWeekId)
+    const sessions = w.sessions.map((s) => {
+      const newSessionId = `sess-${uniqueSuffix()}`
+      sessionIdMap.set(s.id, newSessionId)
+      return cloneSession(s, newSessionId)
+    })
+    return { ...w, id: newWeekId, sessions }
+  })
+
+  const sessionOverrides = (original.sessionOverrides ?? [])
+    .map((o): ProgramSessionOverride | null => {
+      const newWeekId = weekIdMap.get(o.weekId)
+      const newSessionId = sessionIdMap.get(o.sessionId)
+      if (!newWeekId || !newSessionId) return null
+      return { ...o, id: `povr-${uniqueSuffix()}`, weekId: newWeekId, sessionId: newSessionId, createdAt: now, updatedAt: now }
+    })
+    .filter((o): o is ProgramSessionOverride => o !== null)
+
+  const blocks = (original.blocks ?? []).map((b) => ({ ...b, id: `block-${uniqueSuffix()}` }))
+
   const copy: TrainingProgram = {
     ...original,
     id: `prog-${uniqueSuffix()}`,
     name: `${original.name} (Cópia)`,
-    weeks: original.weeks.map((w) => cloneWeek(w, `week-${uniqueSuffix()}`)),
+    weeks,
+    blocks,
+    sessionOverrides,
     tags: [...original.tags],
     sourceProgramId: original.id,
     version: 1,

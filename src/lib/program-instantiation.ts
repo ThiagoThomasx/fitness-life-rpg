@@ -14,6 +14,7 @@ import {
   type PlannedWorkout,
   type NewPlannedWorkoutInput,
 } from './planned-workouts'
+import { resolveProgramSessionForWeek, resolveProgramSessionSnapshot, type TrainingBlock } from './training-blocks'
 
 export type ProgramInstantiationConflictStrategy = 'keep' | 'replace' | 'skip' | 'cancel'
 
@@ -233,21 +234,37 @@ export function instantiateProgramIntoPlanner(
   }
   // 'keep' inserts everything alongside what already exists.
 
-  const inputs: NewPlannedWorkoutInput[] = toInsert.map((d): NewPlannedWorkoutInput => ({
-    date: d.date,
-    weekday: d.weekday,
-    name: d.session.name,
-    templateSnapshot: d.session.templateSnapshot,
-    isOptional: d.session.isOptional,
-    notes: d.session.notes,
-    source: {
-      programId: program.id,
-      programVersion: program.version,
-      programWeekId: d.weekId,
-      templateId: d.session.templateId,
-      templateVersion: d.session.templateSnapshot.sourceTemplateVersion,
-    },
-  }))
+  const weekById = new Map(program.weeks.map((w) => [w.id, w]))
+  const findBlockForWeek = (weekNumber: number): TrainingBlock | undefined =>
+    (program.blocks ?? []).find((b) => weekNumber >= b.startWeek && weekNumber <= b.endWeek)
+
+  const inputs: NewPlannedWorkoutInput[] = toInsert.map((d): NewPlannedWorkoutInput => {
+    const week = weekById.get(d.weekId)
+    const resolved = week
+      ? resolveProgramSessionForWeek(program, week, d.session)
+      : null
+    const block = findBlockForWeek(d.weekNumber)
+
+    return {
+      date: d.date,
+      weekday: d.weekday,
+      name: resolved?.name ?? d.session.name,
+      templateSnapshot: resolved ? resolveProgramSessionSnapshot(d.session, resolved) : d.session.templateSnapshot,
+      isOptional: resolved?.isOptional ?? d.session.isOptional,
+      isDeload: resolved?.isDeload ?? false,
+      notes: resolved?.notes ?? d.session.notes,
+      source: {
+        programId: program.id,
+        programVersion: program.version,
+        programWeekId: d.weekId,
+        programWeekNumber: d.weekNumber,
+        trainingBlockId: block?.id,
+        trainingBlockObjective: block?.objective,
+        templateId: d.session.templateId,
+        templateVersion: d.session.templateSnapshot.sourceTemplateVersion,
+      },
+    }
+  })
 
   const created = inputs.length > 0 ? savePlannedWorkouts(inputs) : []
   return { ok: true, created, skippedDates, cancelled: false }

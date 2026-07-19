@@ -7,6 +7,7 @@
 // calendário complexo — isso fica para partes futuras da Sprint 20.
 
 import type { WorkoutTemplateSnapshot } from './training-programs'
+import type { TrainingBlockObjective } from './training-blocks'
 
 export type { WorkoutTemplateSnapshot }
 
@@ -21,6 +22,9 @@ export interface PlannedWorkoutSource {
   programId?: string
   programVersion?: number
   programWeekId?: string
+  programWeekNumber?: number
+  trainingBlockId?: string
+  trainingBlockObjective?: TrainingBlockObjective
   templateId?: string
   templateVersion?: number
 }
@@ -34,6 +38,8 @@ export interface PlannedWorkout {
   source?: PlannedWorkoutSource
   status: PlannedWorkoutStatus
   isOptional: boolean
+  /** Sprint 20 Parte 2 — marcação estrutural, nunca prescrita automaticamente. */
+  isDeload?: boolean
   notes?: string
   createdAt: string
   updatedAt: string
@@ -41,7 +47,7 @@ export interface PlannedWorkout {
 
 export type NewPlannedWorkoutInput = Pick<
   PlannedWorkout,
-  'date' | 'weekday' | 'name' | 'templateSnapshot' | 'source' | 'isOptional' | 'notes'
+  'date' | 'weekday' | 'name' | 'templateSnapshot' | 'source' | 'isOptional' | 'isDeload' | 'notes'
 >
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
@@ -98,6 +104,7 @@ export function savePlannedWorkout(input: NewPlannedWorkoutInput): PlannedWorkou
     source: input.source,
     status: 'pending',
     isOptional: input.isOptional,
+    isDeload: input.isDeload,
     notes: input.notes,
     createdAt: now,
     updatedAt: now,
@@ -119,6 +126,7 @@ export function savePlannedWorkouts(inputs: NewPlannedWorkoutInput[]): PlannedWo
       source: input.source,
       status: 'pending',
       isOptional: input.isOptional,
+      isDeload: input.isDeload,
       notes: input.notes,
       createdAt: now,
       updatedAt: now,
