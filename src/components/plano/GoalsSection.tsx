@@ -13,6 +13,7 @@ import {
   reopenGoal,
   archiveGoal,
   restoreGoal,
+  updateGoalManualProgress,
   type TrainingGoal,
   type NewTrainingGoalInput,
 } from "@/lib/training-goals"
@@ -88,6 +89,7 @@ export function GoalsSection() {
                 onPause={() => { pauseGoal(goal.id); load() }}
                 onComplete={() => { completeGoal(goal.id); load() }}
                 onArchive={() => { archiveGoal(goal.id); load() }}
+                onMarkProgress={(pct) => { updateGoalManualProgress(goal.id, pct); load() }}
               />
             ))}
           </div>
@@ -110,6 +112,7 @@ export function GoalsSection() {
                 onResume={() => { resumeGoal(goal.id); load() }}
                 onComplete={() => { completeGoal(goal.id); load() }}
                 onArchive={() => { archiveGoal(goal.id); load() }}
+                onMarkProgress={(pct) => { updateGoalManualProgress(goal.id, pct); load() }}
               />
             ))}
           </div>

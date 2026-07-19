@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { calculateGoalProgress, DEFAULT_GOAL_PROGRESS_CONFIG } from './training-goal-progress'
-import { createGoal, pauseGoal, completeGoal } from './training-goals'
+import { createGoal, pauseGoal, completeGoal, updateGoalManualProgress } from './training-goals'
 import { getMilestonesForGoal } from './training-goal-milestones'
 import type { CompletedWorkout } from './workout-history'
 
@@ -283,5 +283,29 @@ describe('goal status overrides', () => {
     const progress = calculateGoalProgress(completed, new Date('2026-08-05T12:00:00.000Z'))
     expect(progress.status).toBe('completed')
     expect(progress.milestones.every((m) => m.reachedAt)).toBe(true)
+  })
+})
+
+describe('custom goal progress (manual only)', () => {
+  it('starts at not_started with 0% manual progress', () => {
+    const goal = createGoal({ title: 'Melhorar técnica', type: 'custom', startDate: '2026-08-01' }).goal!
+    const progress = calculateGoalProgress(goal, new Date('2026-08-05T12:00:00.000Z'))
+    expect(progress.status).toBe('not_started')
+    expect(progress.progressPercentage).toBe(0)
+  })
+
+  it('reflects manually-set progress with no automatic calculation', () => {
+    const goal = createGoal({ title: 'Melhorar técnica', type: 'custom', startDate: '2026-08-01' }).goal!
+    const updated = updateGoalManualProgress(goal.id, 60)!
+    const progress = calculateGoalProgress(updated, new Date('2026-08-05T12:00:00.000Z'))
+    expect(progress.status).toBe('in_progress')
+    expect(progress.progressPercentage).toBe(60)
+  })
+
+  it('reports completed only once manual progress reaches 100%', () => {
+    const goal = createGoal({ title: 'Melhorar técnica', type: 'custom', startDate: '2026-08-01' }).goal!
+    const updated = updateGoalManualProgress(goal.id, 100)!
+    const progress = calculateGoalProgress(updated, new Date('2026-08-05T12:00:00.000Z'))
+    expect(progress.status).toBe('completed')
   })
 })

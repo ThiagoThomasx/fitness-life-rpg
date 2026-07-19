@@ -15,6 +15,9 @@ import { getWeekStart } from './weekly-plan'
 import { getWeekEnd } from './training-load'
 import { getMilestonesForGoal, recordMilestoneReached, MILESTONE_PERCENTAGES } from './training-goal-milestones'
 import type { TrainingGoal } from './training-goals'
+import { computeWeeklyVolumeProgress } from './training-goal-volume-progress'
+import { computeCycleCompletionProgress } from './training-goal-cycle-progress'
+import { computePersonalRecordProgress } from './training-goal-pr-progress'
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -118,7 +121,7 @@ function weeksBetween(fromIso: string, toIso: string): number {
   return ms / (7 * 24 * 60 * 60 * 1000)
 }
 
-function confidenceFromSampleSize(sampleSize: number, config: GoalProgressConfig): GoalConfidence {
+export function confidenceFromSampleSize(sampleSize: number, config: GoalProgressConfig): GoalConfidence {
   if (sampleSize >= config.highConfidenceSampleThreshold) return 'high'
   if (sampleSize > config.lowConfidenceSampleThreshold) return 'medium'
   return 'low'
@@ -187,7 +190,7 @@ function buildLinearProjection(
 }
 
 /** Marca os percentuais recém-cruzados como atingidos e devolve o estado completo dos marcos. */
-function resolveMilestones(goalId: string, progressPercentage: number | undefined): GoalMilestoneProgress[] {
+export function resolveMilestones(goalId: string, progressPercentage: number | undefined): GoalMilestoneProgress[] {
   if (progressPercentage !== undefined) {
     for (const pct of MILESTONE_PERCENTAGES) {
       if (progressPercentage >= pct) recordMilestoneReached(goalId, pct)
@@ -197,7 +200,7 @@ function resolveMilestones(goalId: string, progressPercentage: number | undefine
   return MILESTONE_PERCENTAGES.map((pct) => ({ percentage: pct, reachedAt: reached.get(pct) ?? null }))
 }
 
-function progressStatusFromPercentage(pct: number, config: GoalProgressConfig): GoalProgressStatus {
+export function progressStatusFromPercentage(pct: number, config: GoalProgressConfig): GoalProgressStatus {
   if (pct >= 100) return 'completed'
   if (pct <= 0) return 'not_started'
   if (pct >= 100 - config.onTrackTolerancePercentage) return 'on_track'
@@ -402,9 +405,30 @@ function computeFrequencyProgress(goal: TrainingGoal, now: Date, config: GoalPro
   }
 }
 
+// ─── Meta customizada (progresso manual) ────────────────────────────────────────
+
+function computeCustomProgress(goal: TrainingGoal): GoalProgress {
+  const progressPercentage = goal.manualProgressPercentage ?? 0
+  const status: GoalProgressStatus = progressPercentage >= 100 ? 'completed' : progressPercentage <= 0 ? 'not_started' : 'in_progress'
+
+  return {
+    goalId: goal.id,
+    baselineValue: 0,
+    baselineInferred: false,
+    currentValue: progressPercentage,
+    targetValue: 100,
+    progressPercentage,
+    status,
+    confidence: 'medium',
+    headline: `${progressPercentage}% marcado manualmente`,
+    explanation: 'Meta personalizada — progresso e conclusão são sempre marcados manualmente, sem cálculo automático.',
+    milestones: resolveMilestones(goal.id, progressPercentage),
+  }
+}
+
 // ─── Fallback comum ──────────────────────────────────────────────────────────────
 
-function baseProgress(goal: TrainingGoal, status: GoalProgressStatus, explanation: string): GoalProgress {
+export function baseProgress(goal: TrainingGoal, status: GoalProgressStatus, explanation: string): GoalProgress {
   return {
     goalId: goal.id,
     baselineInferred: true,
@@ -448,6 +472,14 @@ export function calculateGoalProgress(
     case 'weekly_sessions':
     case 'consistency':
       return computeFrequencyProgress(goal, now, config)
+    case 'weekly_volume':
+      return computeWeeklyVolumeProgress(goal, now, config)
+    case 'cycle_completion':
+      return computeCycleCompletionProgress(goal)
+    case 'personal_record':
+      return computePersonalRecordProgress(goal)
+    case 'custom':
+      return computeCustomProgress(goal)
     default:
       return baseProgress(goal, 'insufficient_data', 'Tipo de meta não suportado nesta versão.')
   }

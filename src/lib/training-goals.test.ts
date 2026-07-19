@@ -8,6 +8,7 @@ import {
   reopenGoal,
   archiveGoal,
   restoreGoal,
+  updateGoalManualProgress,
   getGoalById,
   getActiveGoals,
   getPausedGoals,
@@ -17,6 +18,7 @@ import {
   importGoals,
   validateGoalInput,
   type NewTrainingGoalInput,
+  type TrainingGoal,
 } from './training-goals'
 
 beforeEach(() => {
@@ -48,6 +50,37 @@ const frequencyGoalInput: NewTrainingGoalInput = {
   startDate: '2026-08-01',
   targetValue: 4,
   targetWeeks: 6,
+}
+
+const volumeGoalInput: NewTrainingGoalInput = {
+  title: 'Manter volume semanal',
+  type: 'weekly_volume',
+  startDate: '2026-08-01',
+  targetWeeklyVolumeKg: 12000,
+  targetWeeks: 4,
+  consecutiveWeeks: true,
+}
+
+const cycleCompletionGoalInput: NewTrainingGoalInput = {
+  title: 'Concluir o bloco de força',
+  type: 'cycle_completion',
+  startDate: '2026-08-01',
+  cycleId: 'cycle-1',
+}
+
+const personalRecordGoalInput: NewTrainingGoalInput = {
+  title: 'Novo PR no agachamento',
+  type: 'personal_record',
+  startDate: '2026-08-01',
+  exerciseId: 'ex-2',
+  exerciseName: 'Agachamento',
+  recordType: 'weight',
+}
+
+const customGoalInput: NewTrainingGoalInput = {
+  title: 'Melhorar minha técnica no levantamento terra',
+  type: 'custom',
+  startDate: '2026-08-01',
 }
 
 describe('validateGoalInput', () => {
@@ -82,6 +115,42 @@ describe('validateGoalInput', () => {
   it('accepts a valid weight goal', () => {
     expect(validateGoalInput(weightGoalInput)).toBeNull()
   })
+
+  it('accepts a valid weekly_volume goal', () => {
+    expect(validateGoalInput(volumeGoalInput)).toBeNull()
+  })
+
+  it('rejects a weekly_volume goal without targetWeeklyVolumeKg', () => {
+    expect(validateGoalInput({ ...volumeGoalInput, targetWeeklyVolumeKg: undefined })).toContain('volume')
+  })
+
+  it('rejects a weekly_volume goal without targetWeeks', () => {
+    expect(validateGoalInput({ ...volumeGoalInput, targetWeeks: undefined })).toContain('semanas')
+  })
+
+  it('accepts a valid cycle_completion goal', () => {
+    expect(validateGoalInput(cycleCompletionGoalInput)).toBeNull()
+  })
+
+  it('rejects a cycle_completion goal without cycleId', () => {
+    expect(validateGoalInput({ ...cycleCompletionGoalInput, cycleId: undefined })).toContain('ciclo')
+  })
+
+  it('accepts a valid personal_record goal', () => {
+    expect(validateGoalInput(personalRecordGoalInput)).toBeNull()
+  })
+
+  it('rejects a personal_record goal without exerciseId', () => {
+    expect(validateGoalInput({ ...personalRecordGoalInput, exerciseId: undefined })).toContain('exercício')
+  })
+
+  it('rejects a personal_record goal without a valid recordType', () => {
+    expect(validateGoalInput({ ...personalRecordGoalInput, recordType: undefined })).toContain('recorde')
+  })
+
+  it('accepts a valid custom goal with only a title', () => {
+    expect(validateGoalInput(customGoalInput)).toBeNull()
+  })
 })
 
 describe('createGoal', () => {
@@ -114,6 +183,87 @@ describe('createGoal', () => {
   it('discards targetReps for non-reps goal types', () => {
     const result = createGoal({ ...weightGoalInput, targetReps: 10 })
     expect(result.goal?.targetReps).toBeUndefined()
+  })
+
+  it('creates a weekly_volume goal with volume fields, discarding unrelated fields', () => {
+    const result = createGoal(volumeGoalInput)
+    expect(result.ok).toBe(true)
+    expect(result.goal?.targetWeeklyVolumeKg).toBe(12000)
+    expect(result.goal?.consecutiveWeeks).toBe(true)
+    expect(result.goal?.targetWeeks).toBe(4)
+    expect(result.goal?.exerciseId).toBeUndefined()
+  })
+
+  it('creates a cycle_completion goal with cycleId, discarding unrelated fields', () => {
+    const result = createGoal(cycleCompletionGoalInput)
+    expect(result.ok).toBe(true)
+    expect(result.goal?.cycleId).toBe('cycle-1')
+    expect(result.goal?.targetWeeklyVolumeKg).toBeUndefined()
+  })
+
+  it('creates a personal_record goal with exerciseId and recordType', () => {
+    const result = createGoal(personalRecordGoalInput)
+    expect(result.ok).toBe(true)
+    expect(result.goal?.exerciseId).toBe('ex-2')
+    expect(result.goal?.recordType).toBe('weight')
+    expect(result.goal?.cycleId).toBeUndefined()
+  })
+
+  it('creates a custom goal starting at 0% manual progress', () => {
+    const result = createGoal(customGoalInput)
+    expect(result.ok).toBe(true)
+    expect(result.goal?.manualProgressPercentage).toBe(0)
+  })
+})
+
+describe('updateGoalManualProgress', () => {
+  it('updates manual progress for a custom goal', () => {
+    const goal = createGoal(customGoalInput).goal!
+    const updated = updateGoalManualProgress(goal.id, 40)
+    expect(updated?.manualProgressPercentage).toBe(40)
+  })
+
+  it('clamps values outside 0-100', () => {
+    const goal = createGoal(customGoalInput).goal!
+    expect(updateGoalManualProgress(goal.id, 150)?.manualProgressPercentage).toBe(100)
+    expect(updateGoalManualProgress(goal.id, -20)?.manualProgressPercentage).toBe(0)
+  })
+
+  it('refuses to update a non-custom goal', () => {
+    const goal = createGoal(weightGoalInput).goal!
+    expect(updateGoalManualProgress(goal.id, 50)).toBeNull()
+  })
+
+  it('refuses to update an archived custom goal', () => {
+    const goal = createGoal(customGoalInput).goal!
+    archiveGoal(goal.id)
+    expect(updateGoalManualProgress(goal.id, 50)).toBeNull()
+  })
+
+  it('allows updating a paused custom goal', () => {
+    const goal = createGoal(customGoalInput).goal!
+    pauseGoal(goal.id)
+    expect(updateGoalManualProgress(goal.id, 50)?.manualProgressPercentage).toBe(50)
+  })
+})
+
+describe('backward compatibility with Sprint 18 goal shape', () => {
+  it('accepts a Sprint-18-shaped goal (no new optional fields) via importGoals', () => {
+    const legacyGoal: TrainingGoal = {
+      id: 'goal-legacy',
+      title: 'Meta antiga',
+      type: 'exercise_weight',
+      status: 'active',
+      startDate: '2026-08-01',
+      createdAt: '2026-08-01T00:00:00.000Z',
+      updatedAt: '2026-08-01T00:00:00.000Z',
+      targetValue: 60,
+      exerciseId: 'ex-1',
+      exerciseName: 'Supino reto',
+    }
+    const result = importGoals([legacyGoal])
+    expect(result.imported).toBe(1)
+    expect(getGoalById('goal-legacy')?.targetWeeklyVolumeKg).toBeUndefined()
   })
 })
 

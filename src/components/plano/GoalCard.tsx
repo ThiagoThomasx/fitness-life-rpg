@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { TRAINING_GOAL_TYPE_LABELS, type TrainingGoal } from "@/lib/training-goals"
 import type { GoalProgress, GoalConfidence } from "@/lib/training-goal-progress"
 
@@ -18,13 +19,18 @@ interface GoalCardProps {
   onArchive?: () => void
   onRestore?: () => void
   onReopen?: () => void
+  onMarkProgress?: (percentage: number) => void
 }
 
-export function GoalCard({ goal, progress, onPause, onResume, onComplete, onArchive, onRestore, onReopen }: GoalCardProps) {
+export function GoalCard({
+  goal, progress, onPause, onResume, onComplete, onArchive, onRestore, onReopen, onMarkProgress,
+}: GoalCardProps) {
   const pct = Math.max(0, Math.min(100, progress.progressPercentage ?? 0))
   const isDone = goal.status === "completed"
   const isArchived = goal.status === "archived"
   const isPaused = goal.status === "paused"
+  const isCustomEditable = goal.type === "custom" && (goal.status === "active" || isPaused)
+  const [manualDraft, setManualDraft] = useState(pct)
 
   return (
     <section className="card card--sm" aria-label={goal.title}>
@@ -93,6 +99,31 @@ export function GoalCard({ goal, progress, onPause, onResume, onComplete, onArch
               <span style={{ marginLeft: 6, fontStyle: "normal", fontWeight: 600 }}>
                 ({CONFIDENCE_LABELS[progress.projection.confidence]})
               </span>
+            </div>
+          )}
+
+          {isCustomEditable && onMarkProgress && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+              <label htmlFor={`manual-progress-${goal.id}`} style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>
+                Marcar progresso
+              </label>
+              <input
+                id={`manual-progress-${goal.id}`}
+                type="number"
+                min={0}
+                max={100}
+                step={5}
+                value={manualDraft}
+                onChange={(e) => setManualDraft(Number(e.target.value))}
+                style={{
+                  width: 56, padding: "3px 6px", borderRadius: 8, fontSize: "0.7rem",
+                  border: "1px solid var(--color-border-subtle)", background: "var(--color-bg-subtle)",
+                  color: "var(--color-text-primary)",
+                }}
+              />
+              <button className="btn btn--ghost" onClick={() => onMarkProgress(manualDraft)} style={actionBtnStyle}>
+                Salvar
+              </button>
             </div>
           )}
         </>
