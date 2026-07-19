@@ -13,6 +13,16 @@
 
 ### Entregas
 
+#### Sprint 19 (v2) — Wellness × Training Associations in Insights (parte 3C, fatia 1) — 2026-07-19
+
+Relatório completo em `SPRINT-19-PART3C.md`. Primeira fatia de integração de bem-estar em Insights, com escopo reduzido combinado com o usuário após auditoria: Dashboard e Perfil já tinham cards de readiness/corpo próprios, então esta fatia cobre só a lacuna real — o motor `wellness-associations.ts` (Parte 3A) e o resumo de bem-estar por ciclo (Parte 3B) não estavam conectados a nenhuma UI fora de Plano/Ciclo.
+
+- **Auditoria prévia**: confirmou cards existentes em Dashboard (`ReadinessOverviewCard`, `BodyProgressCard`), Insights (`ReadinessInsightsSection`, `BodyWellnessSection`) e Perfil (estatísticas de readiness, `BodyProgressSection`) — nada foi duplicado ou mesclado.
+- **Novo `src/lib/wellness-overview.ts`**: camada de composição pura, sem storage direto e sem fórmulas novas. `buildWellnessAssociationsOverview` reduz as 21 combinações de `computeAllWellnessTrainingAssociations` (7 métricas × 3 dimensões) a no máximo uma associação por métrica de bem-estar, priorizando direção clara e maior confiança, evitando repetir a mesma coincidência sob eixos de treino diferentes. `getActiveCycleWellnessOverview` expõe o resumo do ciclo ativo.
+- **UI**: nova `WellnessAssociationsSection.tsx` em Insights — card de associações com linguagem não causal (texto vem literalmente do engine), confiança sempre como rótulo visível (nunca só cor), amostra explícita; reaproveita o `CycleWellnessSection.tsx` já existente para o contexto do ciclo ativo, em vez de duplicá-lo.
+- 6 testes novos (`wellness-overview.test.ts`) — 609/609 no total, sem regressão nos 603 testes pré-existentes. QA visual com dados sintéticos via Playwright + Edge (Browser pane trava em `screenshot` neste ambiente): desktop, mobile e estado vazio capturados em `docs/screenshots/sprint19-part3c/`. Lint, typecheck e build de produção limpos.
+- **Escopo conscientemente reduzido**: consolidação do Dashboard, sequência de check-ins no Perfil, comparação de períodos de bem-estar e gráficos dedicados por métrica ficam para fatias seguintes; screenshots/acessibilidade pendentes da Parte 3B ainda não foram feitos; auditoria de acessibilidade dedicada desta fatia também adiada.
+
 #### Sprint 19 (v2) — Wellness Associations in Training Cycles (parte 3B) — 2026-07-19
 
 Relatório completo em `SPRINT-19-PART3B.md`. Camada derivada de bem-estar por ciclo de treino: médias, cobertura, tendência interna (primeira vs. segunda metade do ciclo) e associações bem-estar × treino restritas ao intervalo do ciclo, integradas ao resumo de ciclo, à revisão e à comparação entre ciclos.

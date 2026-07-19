@@ -24,6 +24,7 @@ import { ReadinessInsightsSection } from "@/components/insights/ReadinessInsight
 import { WeeklyLoadSection } from "@/components/insights/WeeklyLoadSection"
 import { CycleEvolutionSection } from "@/components/insights/CycleEvolutionSection"
 import { BodyWellnessSection } from "@/components/insights/BodyWellnessSection"
+import { WellnessAssociationsSection } from "@/components/insights/WellnessAssociationsSection"
 import { getCheckIns } from "@/lib/readiness-check-ins"
 import { computeReadinessStats } from "@/lib/workout-readiness"
 import type { ReadinessStats } from "@/lib/workout-readiness"
@@ -112,6 +113,7 @@ export default function InsightsPage() {
       )}
 
       <BodyWellnessSection />
+      <WellnessAssociationsSection />
     </div>
   )
 }

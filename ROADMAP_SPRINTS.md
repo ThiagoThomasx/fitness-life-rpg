@@ -302,6 +302,19 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+## Sprint 19 — Wellness × Training Associations in Insights (parte 3C, fatia 1) ✅
+**Objetivo:** conectar o motor de associações bem-estar × treino (Parte 3A) e o resumo de bem-estar por ciclo (Parte 3B) a uma UI, sem duplicar os cards de readiness/corpo já existentes em Dashboard/Insights/Perfil. Ver `SPRINT-19-PART3C.md` para o relatório completo e a decisão de escopo.
+
+- [x] Auditoria confirmada: Dashboard já tem `ReadinessOverviewCard`/`BodyProgressCard`; Insights já tem `ReadinessInsightsSection`/`BodyWellnessSection`; Perfil já tem estatísticas de readiness e `BodyProgressSection` — nenhum foi tocado
+- [x] `src/lib/wellness-overview.ts` (novo) — `buildWellnessAssociationsOverview` (uma associação por métrica de bem-estar, priorizando direção clara e confiança) e `getActiveCycleWellnessOverview` (wrapper fino sobre `buildCycleWellnessSummary`)
+- [x] UI: `WellnessAssociationsSection.tsx` (novo) em Insights — associações com linguagem não causal, confiança como rótulo visível, amostra explícita; reaproveita `CycleWellnessSection.tsx` para o ciclo ativo em vez de duplicar
+- [x] 6 testes novos (`wellness-overview.test.ts`) — 609/609 no total, sem regressão
+- [x] QA visual com dados sintéticos (Playwright + Edge): desktop, mobile, estado vazio em `docs/screenshots/sprint19-part3c/`
+- [x] Build, lint, typecheck e testes limpos
+- [ ] **Adiado para fatias seguintes**: consolidação no Dashboard, sequência de check-ins e integração no Perfil, comparação de períodos de bem-estar, gráficos dedicados por métrica, acessibilidade dedicada desta fatia, screenshots/acessibilidade pendentes da Parte 3B
+
+---
+
 ## Sprint 19 — Wellness Associations in Training Cycles (parte 3B) ✅
 **Objetivo:** consolidar bem-estar por ciclo de treino (médias, cobertura, tendência interna, associações restritas ao intervalo do ciclo) e integrar ao resumo de ciclo, revisão e comparação — sem tocar Dashboard/Insights/Perfil. Ver `SPRINT-19-PART3B.md` para o relatório completo.
 
