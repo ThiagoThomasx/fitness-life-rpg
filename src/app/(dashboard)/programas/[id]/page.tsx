@@ -13,6 +13,9 @@ import {
   adherenceRateLabel,
 } from "@/lib/program-progress"
 import type { TrainingProgramAdherence } from "@/lib/program-adherence"
+import { buildProgramRecommendations } from "@/lib/recommendation-assembly"
+import type { AdaptivePlanRecommendation } from "@/lib/adaptive-recommendations"
+import { AdaptiveRecommendationsPanel } from "@/components/plano/AdaptiveRecommendationsPanel"
 import { EmptyState } from "@/components/ui/EmptyState"
 
 function todayLocal(): string {
@@ -40,6 +43,7 @@ export default function ProgramProgressPage() {
   const [program, setProgram] = useState<TrainingProgram | null | undefined>(undefined)
   const [planned, setPlanned] = useState<PlannedWorkout[]>([])
   const [completed, setCompleted] = useState<CompletedWorkout[]>([])
+  const [decisionVersion, setDecisionVersion] = useState(0)
 
   useEffect(() => {
     setProgram(getTrainingProgramById(params.id))
@@ -64,6 +68,12 @@ export default function ProgramProgressPage() {
   const onTimeRate = computeOnTimeRate(planned, program.id)
   const remainingSessions = snapshot.plannedSessions - snapshot.completedSessions - snapshot.partialSessions
   const remainingWeeks = currentWeek ? program.weeks.length - currentWeek.weekNumber : undefined
+  // decisionVersion força recálculo após o usuário decidir sobre uma recomendação
+  // (aceitar/dispensar/revisar depois já persistiu — só precisamos reler o filtro).
+  void decisionVersion
+  const recommendations: AdaptivePlanRecommendation[] = program
+    ? buildProgramRecommendations(program, planned, today, currentWeek?.weekNumber ?? 1)
+    : []
 
   return (
     <div className="page-container">
@@ -143,6 +153,12 @@ export default function ProgramProgressPage() {
               ))}
             </div>
           </section>
+
+          {recommendations.length > 0 && (
+            <div style={{ marginTop: "var(--space-3)" }}>
+              <AdaptiveRecommendationsPanel recommendations={recommendations} onDecided={() => setDecisionVersion((v) => v + 1)} />
+            </div>
+          )}
 
           {snapshot.blockSummaries.length > 0 && (
             <section className="card" style={{ marginTop: "var(--space-3)" }}>
