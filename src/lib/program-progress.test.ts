@@ -6,6 +6,7 @@ import {
   computeOnTimeRate,
   findMostDeviatedSession,
   adherenceRateLabel,
+  countAdherenceWeeksAboveThreshold,
 } from './program-progress'
 import type { PlannedWorkout, WorkoutTemplateSnapshot } from './planned-workouts'
 import type { CompletedWorkout } from './workout-history'
@@ -152,6 +153,32 @@ describe('findMostDeviatedSession', () => {
     })
     const result = findMostDeviatedSession([pw], [completedWorkout()], 'prog-1', '2026-07-25')
     expect(result?.id).toBe('a')
+  })
+})
+
+describe('countAdherenceWeeksAboveThreshold', () => {
+  it('counts only complete weeks meeting the threshold, across all programs given', () => {
+    const perfectWeek = plannedWorkout({
+      id: 'a',
+      status: 'done',
+      date: '2026-07-20',
+      execution: { completedWorkoutId: 'cw-1', updatedAt: '' },
+      source: { programId: 'prog-1', programWeekId: 'w1', programWeekNumber: 1 },
+    })
+    const futureWeek = plannedWorkout({
+      id: 'b',
+      status: 'pending',
+      date: '2026-08-10',
+      source: { programId: 'prog-1', programWeekId: 'w2', programWeekNumber: 2 },
+    })
+    const count = countAdherenceWeeksAboveThreshold([program()], [perfectWeek, futureWeek], [completedWorkout()], '2026-07-25', 1)
+    expect(count).toBe(1)
+  })
+
+  it('does not count a complete week below the threshold', () => {
+    const week = plannedWorkout({ id: 'a', status: 'skipped', date: '2026-07-20' })
+    const count = countAdherenceWeeksAboveThreshold([program()], [week], [], '2026-07-25', 0.8)
+    expect(count).toBe(0)
   })
 })
 

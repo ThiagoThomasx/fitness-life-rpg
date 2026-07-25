@@ -25,6 +25,7 @@ import { WeeklyLoadSection } from "@/components/insights/WeeklyLoadSection"
 import { CycleEvolutionSection } from "@/components/insights/CycleEvolutionSection"
 import { BodyWellnessSection } from "@/components/insights/BodyWellnessSection"
 import { WellnessAssociationsSection } from "@/components/insights/WellnessAssociationsSection"
+import { ProgramAdherenceInsightsSection } from "@/components/insights/ProgramAdherenceInsightsSection"
 import { getCheckIns } from "@/lib/readiness-check-ins"
 import { computeReadinessStats } from "@/lib/workout-readiness"
 import type { ReadinessStats } from "@/lib/workout-readiness"
@@ -99,6 +100,8 @@ export default function InsightsPage() {
               <WeeklyLoadSection week={trainingWeek} />
             </section>
           )}
+
+          <ProgramAdherenceInsightsSection />
 
           <div className="insights-chart-grid">
             <CategorySection data={data} />

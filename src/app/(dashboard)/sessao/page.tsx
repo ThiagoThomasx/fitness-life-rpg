@@ -20,7 +20,9 @@ import { generateRecommendation } from "@/lib/workout-intelligence"
 import { detectExercisePrs, getLastExecutionSummary, type ExercisePrDetection } from "@/lib/exercise-records"
 import { categoryColor } from "@/lib/theme-colors"
 import { deriveExerciseExecutionStatus } from "@/lib/active-workout"
-import { revertPlannedWorkoutToPending, completePlannedWorkoutExecution } from "@/lib/planned-workouts"
+import { revertPlannedWorkoutToPending, completePlannedWorkoutExecution, getPlannedWorkouts } from "@/lib/planned-workouts"
+import { getTrainingPrograms } from "@/lib/training-programs"
+import { countAdherenceWeeksAboveThreshold } from "@/lib/program-progress"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import { SessionHeader } from "@/components/session/SessionHeader"
@@ -366,6 +368,14 @@ export default function SessaoPage() {
       ...attrResult.updated,
       level: xpResult.new_level,
     }
+    // Sprint 21 Parte 4B: marcos de adesão ao programa — reusa o mesmo motor
+    // de aderência da Parte 3, nunca recalcula fora dele.
+    const today = new Date().toISOString().slice(0, 10)
+    const allPrograms = getTrainingPrograms()
+    const allPlanned = getPlannedWorkouts()
+    const perfectAdherenceWeeks = countAdherenceWeeksAboveThreshold(allPrograms, allPlanned, history, today, 1)
+    const highAdherenceWeeks = countAdherenceWeeksAboveThreshold(allPrograms, allPlanned, history, today, 0.8)
+
     const newBadges = checkAndEarnBadges({
       workoutCount: history.length + 1,
       totalPrs,
@@ -376,6 +386,8 @@ export default function SessaoPage() {
       dexterity: updatedChar.dexterity,
       constitution: updatedChar.constitution,
       vitality: updatedChar.vitality,
+      perfectAdherenceWeeks,
+      highAdherenceWeeks,
     })
 
     for (const badge of newBadges) {

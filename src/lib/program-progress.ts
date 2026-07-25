@@ -128,6 +128,34 @@ export function findMostDeviatedSession(
   return programItems.find((pw) => pw.id === worst.plannedWorkoutId)
 }
 
+// ─── Contagem para gamificação (Sprint 21 — Parte 4B) ──────────────────────────
+
+/**
+ * Conta semanas concluídas (`dataStatus === 'complete'`, nunca futuras ou em
+ * andamento) com adesão acima ou igual ao limiar, somando todos os
+ * programas informados. Usado por `badges.ts` para os marcos de consistência
+ * — nunca recalcula badges já concedidas, só fornece a contagem atual.
+ */
+export function countAdherenceWeeksAboveThreshold(
+  programs: Array<Pick<TrainingProgram, 'id' | 'version' | 'weeks' | 'blocks'>>,
+  plannedWorkouts: PlannedWorkout[],
+  completedWorkouts: CompletedWorkout[],
+  today: string,
+  threshold: number,
+  config: ProgramAdherenceConfig = DEFAULT_PROGRAM_ADHERENCE_CONFIG
+): number {
+  let count = 0
+  for (const program of programs) {
+    const snapshot = buildProgramAdherenceSnapshot(program, plannedWorkouts, completedWorkouts, today, config)
+    for (const week of snapshot.weekSummaries) {
+      if (week.dataStatus === 'complete' && week.adherenceRate !== undefined && week.adherenceRate >= threshold) {
+        count++
+      }
+    }
+  }
+  return count
+}
+
 // ─── Rótulos de status (uso compartilhado pela UI) ─────────────────────────────
 
 export type ProgramAdherenceLabel = 'Excelente' | 'Boa consistência' | 'Inconsistente' | 'Baixa adesão' | 'Dados insuficientes'

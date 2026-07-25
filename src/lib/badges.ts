@@ -13,6 +13,8 @@ export interface BadgeDef {
     | 'nutrition_streak'
     | 'plan_count'
     | 'campaign_count'
+    | 'perfect_adherence_weeks'
+    | 'high_adherence_weeks'
   requirementValue: number
   requirementAttribute?: 'strength' | 'agility' | 'dexterity' | 'constitution' | 'vitality'
 }
@@ -222,6 +224,23 @@ export const BADGE_DEFINITIONS: BadgeDef[] = [
     requirementType: 'campaign_count',
     requirementValue: 1,
   },
+  // Program adherence (Sprint 21 Parte 4B) — poucos marcos, só os mais significativos.
+  {
+    id: 'badge-first-perfect-week',
+    name: 'Semana Perfeita',
+    description: 'Complete 100% dos treinos planejados em uma semana',
+    icon: '📅',
+    requirementType: 'perfect_adherence_weeks',
+    requirementValue: 1,
+  },
+  {
+    id: 'badge-consistent-adherence',
+    name: 'Consistência de Ferro',
+    description: 'Alcance 4 semanas com 80% ou mais de adesão ao programa',
+    icon: '🛡️',
+    requirementType: 'high_adherence_weeks',
+    requirementValue: 4,
+  },
 ]
 
 export interface EarnedBadge {
@@ -278,6 +297,9 @@ export interface BadgeCheckContext {
   planCount?: number
   campaignCount?: number
   completedCampaignCount?: number
+  /** Sprint 21 Parte 4B — contagens cumulativas, nunca recalculadas retroativamente a cada sessão. */
+  perfectAdherenceWeeks?: number
+  highAdherenceWeeks?: number
 }
 
 export function checkAndEarnBadges(ctx: BadgeCheckContext): BadgeDef[] {
@@ -316,6 +338,12 @@ export function checkAndEarnBadges(ctx: BadgeCheckContext): BadgeDef[] {
         } else {
           qualified = (ctx.campaignCount ?? 0) >= badge.requirementValue
         }
+        break
+      case 'perfect_adherence_weeks':
+        qualified = (ctx.perfectAdherenceWeeks ?? 0) >= badge.requirementValue
+        break
+      case 'high_adherence_weeks':
+        qualified = (ctx.highAdherenceWeeks ?? 0) >= badge.requirementValue
         break
       case 'attribute_value': {
         const attrKey = badge.requirementAttribute
