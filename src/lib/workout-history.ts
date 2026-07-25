@@ -90,6 +90,18 @@ export function getWorkoutHistory(): CompletedWorkout[] {
   return loadHistory()
 }
 
+/**
+ * Reset granular do histórico de treinos (Sprint 23 §21-25). Só limpa
+ * `lrpg-fit:workout-history` — os eventos de recorde derivados dele
+ * (`lrpg-fit:personal-record-events`) ficariam órfãos se não fossem
+ * apagados junto; ver `resetPersonalRecordEvents` em
+ * `personal-record-events.ts`, chamado sempre em conjunto na UI de
+ * configurações.
+ */
+export function resetWorkoutHistory(): void {
+  persistHistory([])
+}
+
 export function getLastWorkout(): CompletedWorkout | null {
   return loadHistory()[0] ?? null
 }

@@ -6,6 +6,7 @@ import {
   getPersonalRecordEvents,
   getPersonalRecordEventsForWorkout,
   getPersonalRecordEventsForExercise,
+  resetPersonalRecordEvents,
 } from './personal-record-events'
 
 const HISTORY_KEY = 'lrpg-fit:workout-history'
@@ -123,5 +124,23 @@ describe('addPersonalRecordEvents', () => {
       { exerciseId: 'ex-2', exerciseName: 'Agachamento', recordType: 'max_load', newValue: 100, unit: 'kg', achievedAt: '2026-01-02T10:00:00.000Z' },
     ])
     expect(getPersonalRecordEvents()).toHaveLength(2)
+  })
+})
+
+describe('resetPersonalRecordEvents', () => {
+  it('clears all stored record events', () => {
+    addPersonalRecordEvents('w-1', [
+      { exerciseId: 'ex-1', exerciseName: 'Supino Reto', recordType: 'max_load', newValue: 65, unit: 'kg', achievedAt: '2026-01-01T10:00:00.000Z' },
+    ])
+    expect(getPersonalRecordEvents()).toHaveLength(1)
+
+    resetPersonalRecordEvents()
+
+    expect(getPersonalRecordEvents()).toEqual([])
+  })
+
+  it('is a no-op when there is nothing stored', () => {
+    resetPersonalRecordEvents()
+    expect(getPersonalRecordEvents()).toEqual([])
   })
 })

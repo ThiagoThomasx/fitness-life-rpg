@@ -72,6 +72,15 @@ export function getPersonalRecordEventsForExercise(exerciseId: string): Personal
 }
 
 /**
+ * Reset granular (Sprint 23 §21-25) — usado junto com `resetWorkoutHistory`
+ * ao apagar o histórico de treinos, para não deixar eventos de recorde
+ * órfãos (apontando para `workoutId`s que deixaram de existir).
+ */
+export function resetPersonalRecordEvents(): void {
+  safeSet([])
+}
+
+/**
  * Persiste eventos de recorde para uma sessão. Idempotente por `workoutId`:
  * se já existem eventos para esta sessão (segundo clique em "confirmar",
  * reload da página de resumo, restore de backup que reimporta o mesmo

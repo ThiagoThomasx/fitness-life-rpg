@@ -18,6 +18,7 @@ import { DataResetSection } from "@/components/settings/DataResetSection"
 import { PhotoResetSection } from "@/components/settings/PhotoResetSection"
 import { BodyProgressResetSection } from "@/components/settings/BodyProgressResetSection"
 import { TemplatesProgramsResetSection } from "@/components/settings/TemplatesProgramsResetSection"
+import { WorkoutHistoryResetSection } from "@/components/settings/WorkoutHistoryResetSection"
 import { BodyWellnessExportSection } from "@/components/settings/BodyWellnessExportSection"
 import { clearAllPhotos } from "@/lib/body-progress-photo-db"
 import { stripAllPhotoLinks, resetAllBodyProgress } from "@/lib/body-progress-photo-link"
@@ -25,6 +26,8 @@ import { getBodyProgressEntries } from "@/lib/body-progress"
 import { getCheckIns } from "@/lib/readiness-check-ins"
 import { resetWorkoutTemplates } from "@/lib/workout-templates"
 import { resetTrainingPrograms } from "@/lib/training-programs"
+import { resetWorkoutHistory } from "@/lib/workout-history"
+import { resetPersonalRecordEvents } from "@/lib/personal-record-events"
 import {
   downloadBodyProgressCsv,
   downloadWellnessCsv,
@@ -34,7 +37,7 @@ import {
   type ExportPeriodOption,
 } from "@/lib/body-wellness-export"
 
-type Panel = "idle" | "import-confirm" | "reset-confirm" | "photo-reset-confirm" | "body-reset-confirm" | "templates-programs-reset-confirm"
+type Panel = "idle" | "import-confirm" | "reset-confirm" | "photo-reset-confirm" | "body-reset-confirm" | "templates-programs-reset-confirm" | "workout-history-reset-confirm"
 
 export default function ConfiguracoesPage() {
   const [panel, setPanel] = useState<Panel>("idle")
@@ -47,6 +50,7 @@ export default function ConfiguracoesPage() {
   const [templatesProgramsResetText, setTemplatesProgramsResetText] = useState("")
   const [resetTemplatesSelected, setResetTemplatesSelected] = useState(true)
   const [resetProgramsSelected, setResetProgramsSelected] = useState(true)
+  const [workoutHistoryResetText, setWorkoutHistoryResetText] = useState("")
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null)
 
   const refreshStatus = useCallback(() => {
@@ -178,6 +182,15 @@ export default function ConfiguracoesPage() {
     showMessage("ok", `Apagado(s): ${parts.join(" e ")}.`)
   }
 
+  function handleWorkoutHistoryResetConfirm() {
+    if (workoutHistoryResetText.trim().toLowerCase() !== "resetar") return
+    resetWorkoutHistory()
+    resetPersonalRecordEvents()
+    setPanel("idle")
+    setWorkoutHistoryResetText("")
+    showMessage("ok", "Histórico de treinos e recordes derivados foram apagados.")
+  }
+
   return (
     <div className="page">
       <SettingsHeader />
@@ -239,6 +252,15 @@ export default function ConfiguracoesPage() {
         onResetProgramsChange={setResetProgramsSelected}
         onConfirm={handleTemplatesProgramsResetConfirm}
         onCancel={() => { setPanel("idle"); setTemplatesProgramsResetText("") }}
+      />
+
+      <WorkoutHistoryResetSection
+        isConfirming={panel === "workout-history-reset-confirm"}
+        resetText={workoutHistoryResetText}
+        onStart={() => setPanel("workout-history-reset-confirm")}
+        onResetTextChange={setWorkoutHistoryResetText}
+        onConfirm={handleWorkoutHistoryResetConfirm}
+        onCancel={() => { setPanel("idle"); setWorkoutHistoryResetText("") }}
       />
 
       <DataResetSection
