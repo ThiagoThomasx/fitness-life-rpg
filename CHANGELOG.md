@@ -13,6 +13,63 @@
 
 ### Entregas
 
+#### Sprint 22 (v2) — Exercise Detail Experience (parte 2) — 2026-07-25
+
+Relatório completo em `SPRINT-22-PART2.md`, referência da rota em
+`EXERCISE-DETAIL-EXPERIENCE.md`. Transforma o Exercise Intelligence Engine
+(Parte 1) em uma experiência visual real: rota `/exercicios/[id]` como
+perfil histórico e analítico do exercício, alimentada 100% pelos motores
+puros já existentes — nenhum recorde/tendência/volume/frequência é
+recalculado em componente React.
+
+- **Novo `src/lib/exercise-detail-engine.ts`**: `resolveExercise` (biblioteca
+  → customizado → histórico → não encontrado; não existe "arquivado" para
+  exercícios no código atual, então a disponibilidade é binária
+  `active`/`removed`), `getExerciseDataQuality` (explica sem tom de alerta
+  por que gráficos/tendências podem faltar), `getExerciseRelatedWorkouts` /
+  `getExercisesForProgram` (hierarquia Programa → treino), séries prontas
+  para gráfico com filtro de período (`30d`/`90d`/`6m`/`1y`/`all`). Arquivo
+  separado de `exercise-intelligence.ts` para manter ambos dentro do limite
+  de tamanho do projeto — nada aqui recalcula o que o motor da Parte 1 já
+  expõe.
+- **Novo `src/lib/exercise-highlights.ts`**: agregação para "Exercícios em
+  destaque" em Insights (recordes recentes, em evolução, mais substituídos,
+  sem execução recente) — integração mínima pedida na spec, sem iniciar
+  Analytics 2.0.
+- **`exercise-intelligence.ts`**: `ExerciseHistorySummary` ganhou
+  `totalWorkouts` (treinos distintos, separado de `totalExecutions` — nunca
+  mistura as duas métricas na mesma célula de resumo).
+- **Rota `/exercicios/[id]`** (client component, mesmo padrão de
+  `programas/[id]/page.tsx`): cabeçalho, resumo executivo + data quality,
+  tendências, recordes pessoais, 5 gráficos (Recharts, reaproveitando o
+  padrão já usado em Insights), timeline expansível/paginada com séries por
+  execução, substituições (com callout ligado ao mesmo limiar de
+  `adaptive-recommendations.ts`), programas/treinos relacionados. Layout
+  responsivo via `grid-template-areas` (reordena mobile↔desktop sem duplicar
+  DOM): mobile — Cabeçalho, Resumo, Tendências, Recordes, Gráficos,
+  Substituições, Timeline, Relacionados; desktop — duas colunas (gráficos +
+  timeline / recordes + tendências + substituições + relacionados).
+- **Navegação de entrada**: biblioteca (`ExerciseLibrary.tsx`, nome agora é
+  link), histórico por exercício (`ExerciseHistoryModal.tsx`, link "ver
+  página completa"), comparação planejado×realizado
+  (`PlannedWorkoutComparisonView.tsx`, nome do exercício vira link quando há
+  ID resolvido), página de programa (`programas/[id]/page.tsx`, nova seção
+  "Exercícios deste programa"), Insights (`ExerciseHighlightsSection.tsx`).
+- **`fix: correct training load test edge case`**: a falha pré-existente em
+  `training-load.test.ts` (documentada desde a Sprint 21) não era um bug de
+  `training-load.ts` — o teste chamava `getWeeklyAggregateStats` sem congelar
+  o relógio do sistema, então só passava por coincidência quando executado
+  dentro da mesma semana ISO do fixture (2026-07-13 a 2026-07-19). Corrigido
+  isolando o teste com `vi.useFakeTimers()`/`vi.setSystemTime()`; nenhum
+  comportamento de produção foi alterado. Suíte fecha em 929/929.
+- **Pendências conscientes**: sem rota para abrir um `CompletedWorkout` livre
+  por ID (só treinos vindos do Planner têm rota própria) — recordes e
+  timeline não linkam para a execução em si, mostram data/treino como texto;
+  sem testes de componente React (o projeto nunca usou React Testing
+  Library — convenção mantida: motor puro testado exaustivamente, UI
+  verificada via QA manual no navegador); gamificação de novos recordes não
+  integrada (mesma decisão de escopo da Parte 1).
+
 #### Sprint 22 (v2) — Exercise Intelligence Engine Foundation (parte 1) — 2026-07-25
 
 Relatório completo em `SPRINT-22-PART1.md`, referência da API em

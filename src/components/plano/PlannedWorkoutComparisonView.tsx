@@ -1,3 +1,4 @@
+import Link from "next/link"
 import type { PlannedPerformedComparison, ExercisePlannedPerformedComparison } from "@/lib/planned-performed-comparison"
 
 const MATCH_LABELS: Record<ExercisePlannedPerformedComparison["matchStatus"], string> = {
@@ -17,11 +18,21 @@ function ExerciseComparisonRow({ comparison }: { comparison: ExercisePlannedPerf
   const { planned, performed, differences, matchStatus } = comparison
   const badgeVariant =
     matchStatus === "matched" ? "badge-pill--accent" : matchStatus === "planned_only" ? "badge-pill--level" : "badge-pill--level"
+  // Exercícios "planned_only" (não realizados) não têm `performedExerciseId` — nesse caso
+  // o link usa `plannedExerciseId`, que só resolve se o exercício planejado tiver vínculo de
+  // catálogo (templates podem referenciar só por nome — ver exercise-intelligence.ts).
+  const linkExerciseId = comparison.performedExerciseId ?? comparison.plannedExerciseId
 
   return (
     <div className="target-card" style={{ textAlign: "left" }}>
       <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold text-primary">{comparison.exerciseName}</span>
+        {linkExerciseId ? (
+          <Link href={`/exercicios/${linkExerciseId}`} className="text-sm font-semibold text-primary" style={{ textDecoration: "none" }}>
+            {comparison.exerciseName}
+          </Link>
+        ) : (
+          <span className="text-sm font-semibold text-primary">{comparison.exerciseName}</span>
+        )}
         <span className={`badge-pill ${badgeVariant}`}>{MATCH_LABELS[matchStatus]}</span>
       </div>
 

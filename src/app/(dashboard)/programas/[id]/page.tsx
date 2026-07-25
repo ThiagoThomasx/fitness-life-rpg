@@ -17,6 +17,7 @@ import { buildProgramRecommendations } from "@/lib/recommendation-assembly"
 import type { AdaptivePlanRecommendation } from "@/lib/adaptive-recommendations"
 import { AdaptiveRecommendationsPanel } from "@/components/plano/AdaptiveRecommendationsPanel"
 import { EmptyState } from "@/components/ui/EmptyState"
+import { getExercisesForProgram } from "@/lib/exercise-detail-engine"
 
 function todayLocal(): string {
   return new Date().toISOString().slice(0, 10)
@@ -74,6 +75,7 @@ export default function ProgramProgressPage() {
   const recommendations: AdaptivePlanRecommendation[] = program
     ? buildProgramRecommendations(program, planned, today, currentWeek?.weekNumber ?? 1)
     : []
+  const programExercises = getExercisesForProgram(program.id, completed)
 
   return (
     <div className="page-container">
@@ -177,6 +179,25 @@ export default function ProgramProgressPage() {
             </section>
           )}
         </>
+      )}
+
+      {programExercises.length > 0 && (
+        <section className="card" style={{ marginTop: "var(--space-3)" }}>
+          <h3 className="section-label">Exercícios deste programa</h3>
+          <div className="flex flex-col gap-2" style={{ marginTop: "var(--space-2)" }}>
+            {programExercises.map((ex) => (
+              <Link
+                key={ex.exerciseId}
+                href={`/exercicios/${ex.exerciseId}`}
+                className="target-card flex items-center justify-between"
+                style={{ textAlign: "left", textDecoration: "none" }}
+              >
+                <span className="text-sm font-semibold text-primary">{ex.exerciseName}</span>
+                <span className="badge-pill badge-pill--level">{ex.occurrences}x</span>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       <section className="card" style={{ marginTop: "var(--space-3)" }}>

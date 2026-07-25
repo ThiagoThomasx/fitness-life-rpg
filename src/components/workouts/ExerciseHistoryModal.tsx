@@ -1,6 +1,7 @@
 "use client"
 
 import { useId } from "react"
+import Link from "next/link"
 import type { Exercise } from "@/types/database"
 import { getExerciseHistory, getExercisePersonalBest } from "@/lib/workout-history"
 import { getExerciseSummary } from "@/lib/exercise-records"
@@ -60,6 +61,10 @@ export function ExerciseHistoryModal({ exercise, onClose }: ExerciseHistoryModal
           ✕
         </button>
       </div>
+
+      <Link href={`/exercicios/${exercise.id}`} className="text-xs" style={{ color: "var(--color-accent)" }}>
+        Ver página completa do exercício →
+      </Link>
 
       {/* Stats row */}
       <div className="mb-4 flex flex-wrap gap-3">

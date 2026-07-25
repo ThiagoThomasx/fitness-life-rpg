@@ -29,6 +29,8 @@ export interface NormalizedExerciseExecution {
   workoutName: string
   programId?: string
   programWeekNumber?: number
+  /** `CompletedWorkoutSource.plannedWorkoutId` — permite linkar de volta ao treino planejado (Sprint 22 §19/§25). */
+  plannedWorkoutId?: string
   plannedExerciseId?: string
   wasSubstitution: boolean
   substitutedFromExerciseName?: string
@@ -60,6 +62,7 @@ export function normalizeExerciseExecutions(
         workoutName: workout.workoutName,
         programId: workout.source?.programId,
         programWeekNumber: workout.source?.programWeekNumber,
+        plannedWorkoutId: workout.source?.plannedWorkoutId,
         plannedExerciseId: record.plannedExerciseId,
         wasSubstitution: !!record.substitution,
         substitutedFromExerciseName: record.substitution?.plannedExerciseName,
@@ -88,6 +91,13 @@ export interface ExerciseHistorySummary {
   exerciseId: string
   exerciseName: string
   totalExecutions: number
+  /**
+   * Número de treinos DISTINTOS em que o exercício apareceu — diferente de
+   * `totalExecutions` só quando o mesmo exercício aparece mais de uma vez no
+   * mesmo treino (ex: A/B duplicado numa sessão). Sprint 22 §10: nunca
+   * misturar "execuções" com "treinos" na mesma métrica sem diferenciar.
+   */
+  totalWorkouts: number
   firstPerformedAt?: string
   lastPerformedAt?: string
   totalSets: number
@@ -125,6 +135,7 @@ export function getExerciseHistorySummary(exerciseId: string): ExerciseHistorySu
     exerciseId,
     exerciseName: executions[0].exerciseName,
     totalExecutions: executions.length,
+    totalWorkouts: new Set(executions.map((e) => e.workoutId)).size,
     firstPerformedAt: chronological[0].performedAt,
     lastPerformedAt: executions[0].performedAt,
     totalSets,

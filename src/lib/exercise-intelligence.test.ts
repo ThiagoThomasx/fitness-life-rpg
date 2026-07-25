@@ -117,6 +117,18 @@ describe('getExerciseHistorySummary', () => {
     expect(summary.averageDaysBetweenExecutions).toBeCloseTo(10, 5)
   })
 
+  it('counts totalWorkouts distinctly from totalExecutions when the exercise repeats within a workout', () => {
+    seedHistory([
+      workout({
+        completedAt: '2026-01-01T10:00:00Z',
+        exercises: [exerciseRecord({ sets: [set(60, 8)] }), exerciseRecord({ sets: [set(65, 6)] })],
+      }),
+    ])
+    const summary = getExerciseHistorySummary('ex-1')!
+    expect(summary.totalExecutions).toBe(2)
+    expect(summary.totalWorkouts).toBe(1)
+  })
+
   it('leaves averageDaysBetweenExecutions undefined with a single execution', () => {
     seedHistory([workout({ completedAt: '2026-01-01T10:00:00Z', exercises: [exerciseRecord()] })])
     expect(getExerciseHistorySummary('ex-1')!.averageDaysBetweenExecutions).toBeUndefined()

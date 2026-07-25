@@ -61,7 +61,8 @@ const HIGH_VOLUME_THRESHOLD = 0.9
 const HIGH_SKIP_RATIO = 0.4
 const ELEVATED_SORENESS_THRESHOLD = 4 // escala 1-5
 const LOW_READINESS_SHARE_THRESHOLD = 0.5
-const RECURRING_SUBSTITUTION_THRESHOLD = 3
+/** Exportado para a página de detalhe do exercício (Sprint 22 Parte 2 §24) reaproveitar o mesmo limiar em vez de duplicar o número mágico. */
+export const RECURRING_SUBSTITUTION_THRESHOLD = 3
 
 function pct(rate: number): string {
   return `${Math.round(rate * 100)}%`

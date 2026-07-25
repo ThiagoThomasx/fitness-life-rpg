@@ -362,6 +362,24 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+> **Nota de documentação**: as Sprints 21 e 22 Parte 1 (persistência de substituição, `exercise-intelligence.ts`) foram entregues mas não tiveram entrada própria registrada aqui — ver `CHANGELOG.md` e `SPRINT-22-PART1.md` para o histórico real dessas partes. Este arquivo retoma o registro a partir da Sprint 22 Parte 2.
+
+## Sprint 22 — Exercise Detail Experience (parte 2) ✅
+**Objetivo:** transformar o Exercise Intelligence Engine (Sprint 22 Parte 1) em uma experiência visual navegável — rota `/exercicios/[id]` como perfil histórico e analítico do exercício. Ver `SPRINT-22-PART2.md` e `EXERCISE-DETAIL-EXPERIENCE.md` para o relatório completo.
+
+- [x] Auditoria confirmada: não existia rota `/exercicios` nem `exercise-library.ts` — catálogo vem de `getAllExercises()` (`custom-workouts.ts`, mescla `MOCK_EXERCISES` + customizados); não existe conceito de "arquivado" para exercícios (só treinos/programas); biblioteca é um estado dentro de `/treinos`, não uma rota própria
+- [x] `src/lib/exercise-detail-engine.ts` (novo) — `resolveExercise` (biblioteca → customizado → histórico → não encontrado), `getExerciseDataQuality`, `getExerciseRelatedWorkouts`/`getExercisesForProgram`, séries de gráfico (`getExerciseLoadSeries`/`getExercise1RMSeries`/`getExerciseVolumeSeries`/`getExerciseRepsSeries`/`getExerciseFrequencySeries`) com filtro de período (`filterExecutionsByPeriod`) — tudo derivado de `exercise-intelligence.ts`, nada recalculado
+- [x] `src/lib/exercise-highlights.ts` (novo) — agregação para "Exercícios em destaque" em Insights (recordes recentes, em evolução, mais substituídos, sem execução recente)
+- [x] Rota `/exercicios/[id]` (client component, padrão de `programas/[id]/page.tsx`) — cabeçalho, resumo, data quality, tendências, recordes, gráficos (Recharts, filtro de período), timeline expansível/paginada, substituições, programas relacionados; grid CSS com `grid-template-areas` reordena mobile↔desktop sem duplicar DOM
+- [x] Navegação de entrada: biblioteca (`ExerciseLibrary.tsx`), histórico por exercício (`ExerciseHistoryModal.tsx`), comparação planejado×realizado (`PlannedWorkoutComparisonView.tsx`), página de programa (`programas/[id]/page.tsx`, nova seção "Exercícios deste programa"), Insights (`ExerciseHighlightsSection.tsx`)
+- [x] `fix: correct training load test edge case` — falha pré-existente em `training-load.test.ts` era um teste sem `vi.setSystemTime`, dependente do relógio real do sistema coincidir com a semana do fixture; corrigido isolando o teste com fake timers, sem alterar `training-load.ts`
+- [x] 33 testes novos (`exercise-detail-engine.test.ts`, `exercise-highlights.test.ts`, +1 em `exercise-intelligence.test.ts`) — 929/929 no total, sem regressão, zero falhas pré-existentes remanescentes
+- [x] QA manual no dev server: histórico completo (recordes, tendências, gráficos, timeline expansível, treino relacionado), exercício nunca executado, exercício removido da biblioteca mas presente no histórico, exercício não encontrado, grid mobile (ordem única) e desktop (2 colunas) confirmados via inspeção de `grid-template-areas` computado
+- [x] Build, lint, typecheck e testes limpos
+- [ ] **Pendências conscientes**: sem rota para abrir um `CompletedWorkout` livre por ID (só treinos vindos do Planner têm rota) — recordes/timeline não linkam para a execução em si, só mostram data/treino como texto; sem testes de componente React (projeto nunca usou React Testing Library, convenção mantida: só motor puro testado, UI verificada via QA manual no browser); gamificação de novos recordes não integrada (adiada, mesma decisão da Sprint 22 Parte 1); Sprint 21 não tem entrada própria neste arquivo (drift de documentação pré-existente, não introduzido por esta parte)
+
+---
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:

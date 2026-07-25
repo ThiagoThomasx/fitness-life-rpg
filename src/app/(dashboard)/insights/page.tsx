@@ -5,6 +5,8 @@ import { useCharacterStore } from "@/stores/useCharacterStore"
 import { MOCK_CHARACTER } from "@/lib/mock/data"
 import { computeInsights, type InsightsData } from "@/lib/insights"
 import { getAllExerciseIntelligence, type ExerciseIntelligence } from "@/lib/workout-intelligence"
+import { getExerciseHighlights, type ExerciseHighlightsGroups } from "@/lib/exercise-highlights"
+import { ExerciseHighlightsSection } from "@/components/insights/ExerciseHighlightsSection"
 import { getPreferences, GOAL_LABELS, GOAL_ICONS } from "@/lib/preferences"
 import { SkeletonPageLoader } from "@/components/ui/Skeleton"
 import { InsightsHeader } from "@/components/insights/InsightsHeader"
@@ -41,10 +43,12 @@ export default function InsightsPage() {
   const [readinessCheckIns, setReadinessCheckIns] = useState<WorkoutReadinessCheckIn[]>([])
   const [readinessStats, setReadinessStats] = useState<ReadinessStats | null>(null)
   const [trainingWeek, setTrainingWeek] = useState<TrainingWeek | null>(null)
+  const [exerciseHighlights, setExerciseHighlights] = useState<ExerciseHighlightsGroups | null>(null)
 
   useEffect(() => {
     setData(computeInsights())
     setExerciseIntelligence(getAllExerciseIntelligence())
+    setExerciseHighlights(getExerciseHighlights())
     const checkIns = getCheckIns()
     setReadinessCheckIns(checkIns)
     setReadinessStats(computeReadinessStats(checkIns))
@@ -89,6 +93,7 @@ export default function InsightsPage() {
 
           <ExerciseLoadSection data={data} />
           <ExerciseGrowthSection data={data} />
+          {exerciseHighlights && <ExerciseHighlightsSection highlights={exerciseHighlights} />}
           <TrainingIntelligenceSection exercises={exerciseIntelligence} />
           {readinessStats && (
             <ReadinessInsightsSection checkIns={readinessCheckIns} stats={readinessStats} />

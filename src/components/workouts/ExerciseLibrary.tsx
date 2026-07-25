@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import type { Exercise } from "@/types/database"
 import { MOCK_WORKOUT_TYPES } from "@/lib/mock/data"
 import {
@@ -111,7 +112,9 @@ export function ExerciseLibrary({ onClose }: ExerciseLibraryProps) {
               <div key={ex.id} className="library-row">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="truncate text-sm font-semibold text-primary">{ex.name}</span>
+                    <Link href={`/exercicios/${ex.id}`} className="truncate text-sm font-semibold text-primary" style={{ textDecoration: "none" }}>
+                      {ex.name}
+                    </Link>
                     {isCustom && (
                       <span className="badge-pill badge-pill--level" style={{ fontSize: "0.6rem" }}>
                         custom
