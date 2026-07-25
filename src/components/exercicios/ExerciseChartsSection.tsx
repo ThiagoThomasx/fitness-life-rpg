@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { ChartHeader, EmptyChart, TOOLTIP_STYLE, GRID_STROKE, AXIS_TICK } from "@/components/insights/ChartCard"
 import { CHART_COLORS } from "@/lib/theme-colors"
@@ -40,13 +40,22 @@ type ExerciseChartsSectionProps = {
 export function ExerciseChartsSection({ exerciseId, dataQuality }: ExerciseChartsSectionProps) {
   const [period, setPeriod] = useState<ExercisePeriodFilter>("all")
 
-  if (dataQuality.status === "no_data") return null
+  // As 5 séries reaproveitam o mesmo timeline internamente (exercise-detail-engine),
+  // então recalcular a cada render — inclusive re-renders disparados por um clique
+  // no filtro de outra seção — repete 5x o parse/normalização do histórico completo.
+  // Memoizado por exerciseId+period, as únicas dependências reais.
+  const { loadSeries, rmSeries, volumeSeries, repsSeries, frequencySeries } = useMemo(
+    () => ({
+      loadSeries: getExerciseLoadSeries(exerciseId, period),
+      rmSeries: getExercise1RMSeries(exerciseId, period),
+      volumeSeries: getExerciseVolumeSeries(exerciseId, period),
+      repsSeries: getExerciseRepsSeries(exerciseId, period),
+      frequencySeries: getExerciseFrequencySeries(exerciseId, period),
+    }),
+    [exerciseId, period]
+  )
 
-  const loadSeries = getExerciseLoadSeries(exerciseId, period)
-  const rmSeries = getExercise1RMSeries(exerciseId, period)
-  const volumeSeries = getExerciseVolumeSeries(exerciseId, period)
-  const repsSeries = getExerciseRepsSeries(exerciseId, period)
-  const frequencySeries = getExerciseFrequencySeries(exerciseId, period)
+  if (dataQuality.status === "no_data") return null
 
   return (
     <section className="card" aria-labelledby="exercise-charts-title">
