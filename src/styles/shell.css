@@ -18,7 +18,7 @@
 @media (max-width: 767px) {
   .app-main {
     margin-left: 0;
-    padding-top: var(--mobile-header-height);
+    padding-top: calc(var(--mobile-header-height) + env(safe-area-inset-top, 0px));
   }
 }
 
@@ -129,7 +129,7 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-3);
-  min-height: 40px;
+  min-height: 44px;
   border-radius: var(--radius-control);
   border-left: 2px solid transparent;
   text-decoration: none;
@@ -177,7 +177,7 @@
 /* ─── Footer ────────────────────────────────────────────────────────────── */
 
 .sidebar__footer {
-  padding: var(--space-3) var(--space-2);
+  padding: var(--space-3) var(--space-2) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--color-border-subtle);
   display: flex;
   align-items: center;
@@ -212,14 +212,14 @@
 
 .hamburger-btn {
   position: fixed;
-  top: var(--space-3);
-  left: var(--space-3);
+  top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
+  left: calc(var(--space-3) + env(safe-area-inset-left, 0px));
   z-index: var(--z-mobile-header);
   display: none;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   background: var(--color-surface-overlay);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-control);
@@ -243,14 +243,14 @@
 
 .sidebar__close-btn {
   position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
+  top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
+  right: calc(var(--space-3) + env(safe-area-inset-right, 0px));
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 44px;
+  min-height: 44px;
   background: none;
   border: none;
   border-radius: var(--radius-control);

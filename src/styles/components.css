@@ -221,8 +221,8 @@
   cursor: pointer;
   padding: var(--space-2);
   border-radius: var(--radius-control);
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 44px;
+  min-height: 44px;
   transition: color var(--duration-fast) var(--ease-out),
               background var(--duration-fast) var(--ease-out);
 }
