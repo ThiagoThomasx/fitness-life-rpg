@@ -529,14 +529,28 @@ describe('getWeeklyAggregateStats', () => {
   })
 
   it('counts free sessions all time', () => {
-    mockGetWorkoutHistory.mockReturnValue([
-      makeWorkout('w1', '2026-07-14T10:00:00Z', 'mock-id'),
-      makeWorkout('w2', '2026-07-14T10:00:00Z', 'cw-1'),
-    ])
-    mockGetCustomWorkouts.mockReturnValue([
-      { id: 'cw-1', name: 'A', workoutTypeId: 'wt-1', exerciseIds: [], targets: [], estimatedMinutes: 60, createdAt: '2026-01-01' },
-    ])
-    const stats = getWeeklyAggregateStats(1)
-    expect(stats.totalFreeSessionsAllTime).toBe(1)
+    // `getWeeklyAggregateStats` → `getWeekSummaries` always anchors on `new
+    // Date()` (no injectable reference date, unlike `buildTrainingWeek`).
+    // Without freezing "now" inside the same ISO week as the seeded workout
+    // (2026-07-14, a Tuesday → week 2026-07-13..2026-07-19), this test only
+    // passed by coincidence when run inside that calendar week and failed
+    // every day after — a test bug, not a behavior bug (Sprint 22 Parte 2
+    // §38: pre-existing failure documented since Sprint 21, root cause is
+    // an unfrozen system clock, not the aggregation logic itself).
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-07-15T12:00:00Z'))
+    try {
+      mockGetWorkoutHistory.mockReturnValue([
+        makeWorkout('w1', '2026-07-14T10:00:00Z', 'mock-id'),
+        makeWorkout('w2', '2026-07-14T10:00:00Z', 'cw-1'),
+      ])
+      mockGetCustomWorkouts.mockReturnValue([
+        { id: 'cw-1', name: 'A', workoutTypeId: 'wt-1', exerciseIds: [], targets: [], estimatedMinutes: 60, createdAt: '2026-01-01' },
+      ])
+      const stats = getWeeklyAggregateStats(1)
+      expect(stats.totalFreeSessionsAllTime).toBe(1)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
