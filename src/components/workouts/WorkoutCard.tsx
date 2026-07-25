@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import type { MockWorkout } from "@/lib/mock/data"
 import type { ExerciseTarget } from "@/lib/custom-workouts"
 import { categoryColor } from "@/lib/theme-colors"
@@ -16,6 +17,8 @@ type WorkoutCardProps = {
   onDuplicate?: () => void
   isRecommended?: boolean
   lastCompletedAt?: string
+  /** Sprint 22 Parte 3 — id do `CompletedWorkout` mais recente, para linkar direto ao histórico. */
+  lastCompletedWorkoutId?: string
   recovery?: WorkoutRecoveryInfo
   isTopRecoveryPick?: boolean
   extraActions?: React.ReactNode
@@ -33,6 +36,7 @@ export function WorkoutCard({
   onDuplicate,
   isRecommended,
   lastCompletedAt,
+  lastCompletedWorkoutId,
   recovery,
   isTopRecoveryPick,
   extraActions,
@@ -68,7 +72,16 @@ export function WorkoutCard({
           ~{workout.estimated_minutes}min&nbsp;·&nbsp;+{workout.workout_type.base_xp} XP&nbsp;·&nbsp;
           {workout.exercises.length} exercício{workout.exercises.length !== 1 ? "s" : ""}
           {lastCompletedAt && (
-            <>&nbsp;·&nbsp;último em {formatLastCompleted(lastCompletedAt)}</>
+            <>
+              &nbsp;·&nbsp;último em{" "}
+              {lastCompletedWorkoutId ? (
+                <Link href={`/historico/${lastCompletedWorkoutId}`} style={{ color: "var(--color-accent)" }}>
+                  {formatLastCompleted(lastCompletedAt)}
+                </Link>
+              ) : (
+                formatLastCompleted(lastCompletedAt)
+              )}
+            </>
           )}
         </div>
         {recovery && (

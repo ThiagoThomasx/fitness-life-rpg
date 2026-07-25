@@ -13,6 +13,71 @@
 
 ### Entregas
 
+#### Sprint 22 (v2) — Completed Workout Detail & Personal Record Events (parte 3) — 2026-07-25
+
+Fecha a pendência consciente deixada na Parte 2: agora existe uma rota
+própria para abrir qualquer `CompletedWorkout` por ID, e a detecção de
+recordes (`detectNewExerciseRecords`, Parte 1) finalmente vira um evento
+estruturado, persistido e conectado à recompensa — não mais só texto livre
+no `RewardEvent`.
+
+- **Novo `src/lib/personal-record-events.ts`**: modelo `PersonalRecordEvent`
+  (exercício, tipo de recorde, valor anterior/novo, `workoutId`), storage
+  local próprio (`lrpg-fit:personal-record-events`), `detectSessionRecordEvents`
+  (wrapper puro sobre `detectNewExerciseRecords`, chamado só em
+  `finishWorkout()` — nunca ao abrir páginas, recalcular histórico ou
+  restaurar backup) e `addPersonalRecordEvents` (idempotente por
+  `workoutId`: reload/segundo clique/restore nunca duplicam).
+- **Novo `src/lib/workout-detail-engine.ts`**: `getWorkoutDetail(workoutId)`
+  agrega `CompletedWorkout` + check-in de prontidão (recalcula
+  `calculateReadiness` a partir do check-in salvo — o `sessionOutcome`
+  original não é persistido em nenhum lugar hoje, então não é recuperável
+  retroativamente; decisão documentada, não é um bug) + comparação
+  planejado×realizado (só quando a sessão veio do Planner) + carga semanal
+  (`buildTrainingWeek`) + info de programa + os `PersonalRecordEvent` da
+  sessão. `getHighlightSessions` seleciona uma sessão por categoria (maior
+  volume/carga/duração/XP/recordes) para "Sessões Destaque" em Insights, sem
+  repetir a mesma sessão em duas categorias.
+- **`RewardEvent`** (`reward-events.ts`) ganhou campos opcionais
+  (`workoutId`, `exerciseId`, `recordType`) — retrocompatível com eventos
+  antigos, que só tinham texto livre.
+- **`finishWorkout()`/`handleConfirmResult()`** (`sessao/page.tsx`):
+  detecção estruturada roda antes de `saveCompletedWorkout` (mesma regra do
+  detector estreito já existente); persistência e disparo de toast
+  acontecem só na confirmação, substituindo o antigo loop de recompensa
+  textual por um estruturado e idempotente. XP e contagem de badges não
+  foram tocados — continuam vindo do detector estreito (`isPr`/`prsCount`),
+  como antes.
+- **Rota `/historico/[id]`** (mesmo padrão de `/exercicios/[id]`):
+  cabeçalho, resumo (tempo/volume/séries/reps/exercícios/XP/recompensas),
+  recordes da sessão, exercícios (com substituição e link para
+  `/exercicios/[id]`), comparação planejado×realizado (reaproveita
+  `PlannedWorkoutComparisonView`, já existente), carga de treino
+  (planejado×realizado + contribuição semanal), prontidão (reaproveita
+  `ReadinessCard`), linha do tempo cronológica real (check-in → início →
+  recordes → conclusão).
+- **Navegação**: `ExerciseTimelineSection` (link "Ver treino concluído"),
+  `plano/treino/[id]` ("Ver no histórico" agora aponta para a sessão real
+  em vez de `/treinos`), `WorkoutCard`/`treinos/page.tsx` ("último em" vira
+  link quando há sessão concluída), Insights (`WorkoutHighlightsSection`,
+  nova seção "Sessões Destaque").
+- **`backup.ts`**: `lrpg-fit:personal-record-events` adicionada a
+  `STORAGE_KEYS`/`ARRAY_KEYS` — eventos de recorde entram no backup/restore.
+- **Testes**: `personal-record-events.test.ts` (detecção, idempotência,
+  empate não gera evento) e `workout-detail-engine.test.ts` (agregação,
+  readiness, programa, comparação, highlights sem repetição). Sem testes de
+  componente React (convenção mantida do projeto — motor puro testado,
+  UI verificada via QA manual). Gates: lint ✅, 948/948 testes ✅, build ✅,
+  `tsc --noEmit` ✅. QA manual: fluxo completo sessão→histórico verificado
+  no navegador (desktop 1280px e mobile 375px, sem overflow horizontal, sem
+  erros de console).
+- **Pendências conscientes**: badges "5 recordes"/"10 recordes" citadas na
+  spec não foram criadas — os marcos existentes (`badge-first-pr`,
+  `badge-5-prs` em 5, `badge-15-prs` em 15) já cobrem o mesmo papel via
+  `pr_count`, e a spec pediu explicitamente "poucos badges, não exagerar";
+  Programa (`programas/[id]`) e Badges ainda não linkam diretamente para
+  `/historico/[id]` — próxima iteração, se necessário.
+
 #### Sprint 22 (v2) — Exercise Detail Experience (parte 2) — 2026-07-25
 
 Relatório completo em `SPRINT-22-PART2.md`, referência da rota em

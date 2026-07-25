@@ -34,6 +34,9 @@ import type { ReadinessStats } from "@/lib/workout-readiness"
 import type { WorkoutReadinessCheckIn } from "@/lib/readiness-check-ins"
 import { buildTrainingWeek } from "@/lib/training-load"
 import type { TrainingWeek } from "@/lib/training-load"
+import { getHighlightSessions } from "@/lib/workout-detail-engine"
+import type { WorkoutHighlight } from "@/lib/workout-detail-engine"
+import { WorkoutHighlightsSection } from "@/components/insights/WorkoutHighlightsSection"
 
 export default function InsightsPage() {
   const storeCharacter = useCharacterStore((s) => s.character)
@@ -44,11 +47,13 @@ export default function InsightsPage() {
   const [readinessStats, setReadinessStats] = useState<ReadinessStats | null>(null)
   const [trainingWeek, setTrainingWeek] = useState<TrainingWeek | null>(null)
   const [exerciseHighlights, setExerciseHighlights] = useState<ExerciseHighlightsGroups | null>(null)
+  const [workoutHighlights, setWorkoutHighlights] = useState<WorkoutHighlight[]>([])
 
   useEffect(() => {
     setData(computeInsights())
     setExerciseIntelligence(getAllExerciseIntelligence())
     setExerciseHighlights(getExerciseHighlights())
+    setWorkoutHighlights(getHighlightSessions())
     const checkIns = getCheckIns()
     setReadinessCheckIns(checkIns)
     setReadinessStats(computeReadinessStats(checkIns))
@@ -94,6 +99,7 @@ export default function InsightsPage() {
           <ExerciseLoadSection data={data} />
           <ExerciseGrowthSection data={data} />
           {exerciseHighlights && <ExerciseHighlightsSection highlights={exerciseHighlights} />}
+          <WorkoutHighlightsSection highlights={workoutHighlights} />
           <TrainingIntelligenceSection exercises={exerciseIntelligence} />
           {readinessStats && (
             <ReadinessInsightsSection checkIns={readinessCheckIns} stats={readinessStats} />

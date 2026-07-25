@@ -18,6 +18,7 @@ import { useBadgeStore } from "@/stores/useBadgeStore"
 import { getCustomWorkouts, type ExerciseTarget } from "@/lib/custom-workouts"
 import { generateRecommendation } from "@/lib/workout-intelligence"
 import { detectExercisePrs, getLastExecutionSummary, type ExercisePrDetection } from "@/lib/exercise-records"
+import { detectSessionRecordEvents, addPersonalRecordEvents, type PersonalRecordEvent } from "@/lib/personal-record-events"
 import { categoryColor } from "@/lib/theme-colors"
 import { deriveExerciseExecutionStatus } from "@/lib/active-workout"
 import { revertPlannedWorkoutToPending, completePlannedWorkoutExecution, getPlannedWorkouts } from "@/lib/planned-workouts"
@@ -51,6 +52,15 @@ import {
   ORIGINAL_ADJUSTMENT,
 } from "@/lib/session-adjustments"
 import type { SessionAdjustment } from "@/lib/session-adjustments"
+
+// Sprint 22 Parte 3B — rótulo de exibição para cada tipo de recorde estruturado.
+const RECORD_TYPE_LABELS: Record<PersonalRecordEvent["recordType"], string> = {
+  max_load: "Novo peso máximo",
+  max_reps: "Mais repetições",
+  best_set_volume: "Novo volume de série",
+  max_session_volume: "Novo volume de sessão",
+  max_sets_in_session: "Mais séries na sessão",
+}
 
 // ─── Timer da sessão ──────────────────────────────────────────────────────────
 
@@ -96,7 +106,7 @@ export default function SessaoPage() {
   const [showPicker, setShowPicker] = useState(false)
   const [xpResult, setXpResult] = useState<XpGainResult | null>(null)
   const [prExerciseIds, setPrExerciseIds] = useState<Set<string>>(new Set())
-  const [recordEvents, setRecordEvents] = useState<Array<{ exerciseName: string; label: string }>>([])
+  const [pendingRecordEvents, setPendingRecordEvents] = useState<Array<Omit<PersonalRecordEvent, "id" | "workoutId">>>([])
   const [workoutTargets, setWorkoutTargets] = useState<ExerciseTarget[]>([])
   const [workoutName, setWorkoutName] = useState("Treino")
   const [showCancelDialog, setShowCancelDialog] = useState(false)
@@ -114,6 +124,7 @@ export default function SessaoPage() {
   // Guardas síncronas contra duplo clique (finalizar / confirmar resultado)
   const finishedRef = useRef(false)
   const confirmedRef = useRef(false)
+  const completedWorkoutIdRef = useRef<string | null>(null)
 
   const hasSession = activeSession !== null
 
@@ -214,17 +225,22 @@ export default function SessaoPage() {
     // Sprint 12 — detecção ampliada de recordes (peso/reps/volume/primeira vez).
     // Aditiva: não altera prsCount nem os argumentos passados a calculateXpGain abaixo.
     const exerciseRecordFlags = new Map<string, ExercisePrDetection>()
-    const newRecordEvents: Array<{ exerciseName: string; label: string }> = []
     for (const activeSet of activeSets) {
       if (activeSet.sets.length === 0) continue
-      const flags = detectExercisePrs(activeSet.exercise.id, activeSet.sets)
-      exerciseRecordFlags.set(activeSet.exercise.id, flags)
-      if (flags.isFirstTime) newRecordEvents.push({ exerciseName: activeSet.exercise.name, label: "Primeira vez!" })
-      else if (flags.isWeightPr) newRecordEvents.push({ exerciseName: activeSet.exercise.name, label: "Novo peso máximo" })
-      else if (flags.isVolumePr) newRecordEvents.push({ exerciseName: activeSet.exercise.name, label: "Novo volume máximo" })
-      else if (flags.isRepsPr) newRecordEvents.push({ exerciseName: activeSet.exercise.name, label: "Mais repetições" })
+      exerciseRecordFlags.set(activeSet.exercise.id, detectExercisePrs(activeSet.exercise.id, activeSet.sets))
     }
-    setRecordEvents(newRecordEvents)
+
+    // Sprint 22 Parte 3B — eventos de recorde estruturados (Exercise Intelligence
+    // Engine), calculados ANTES de saveCompletedWorkout para não comparar a
+    // sessão consigo mesma. Persistidos só na confirmação (handleConfirmResult),
+    // igual ao restante das recompensas.
+    setPendingRecordEvents(
+      detectSessionRecordEvents(
+        activeSets
+          .filter((s) => s.sets.length > 0)
+          .map((s) => ({ exerciseId: s.exercise.id, exerciseName: s.exercise.name, sets: s.sets }))
+      )
+    )
 
     const result = calculateXpGain(workoutType, totalSets, elapsedSeconds, char, prsCount)
 
@@ -306,6 +322,7 @@ export default function SessaoPage() {
             } satisfies CompletedWorkoutSource)
           : undefined,
     }
+    completedWorkoutIdRef.current = completedWorkout.id
     saveCompletedWorkout(completedWorkout)
 
     // Sprint 21 Parte 1 — reconcilia com o Planner: vincula, classifica a
@@ -406,15 +423,23 @@ export default function SessaoPage() {
       pushReward(ev)
     }
 
-    // Recompensa de novo recorde pessoal (Sprint 12) — aditiva, não afeta badges/XP acima.
-    for (const rec of recordEvents) {
-      const ev = addRewardEvent({
-        type: "pr",
-        title: "🏆 Novo Recorde!",
-        subtitle: `${rec.exerciseName} — ${rec.label}`,
-        icon: "🏆",
-      })
-      pushReward(ev)
+    // Recompensa de novo recorde pessoal (Sprint 22 Parte 3B) — persiste os
+    // Personal Record Events estruturados (idempotente por workoutId) e só
+    // dispara toast para os que foram efetivamente salvos.
+    if (completedWorkoutIdRef.current) {
+      const persistedRecords = addPersonalRecordEvents(completedWorkoutIdRef.current, pendingRecordEvents)
+      for (const rec of persistedRecords) {
+        const ev = addRewardEvent({
+          type: "pr",
+          title: "🏆 Novo Recorde!",
+          subtitle: `${rec.exerciseName} — ${RECORD_TYPE_LABELS[rec.recordType]}`,
+          icon: "🏆",
+          workoutId: rec.workoutId,
+          exerciseId: rec.exerciseId,
+          recordType: rec.recordType,
+        })
+        pushReward(ev)
+      }
     }
 
     refreshBadges()

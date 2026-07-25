@@ -241,7 +241,9 @@ export default function PlannedWorkoutDetailPage() {
         <section className="card" style={{ marginTop: "var(--space-3)" }}>
           <div className="section-header">
             <h3 className="section-label" style={{ marginBottom: 0 }}>Planejado × realizado</h3>
-            <Link href="/treinos" className="text-xs text-muted">Ver no histórico</Link>
+            {completed && (
+              <Link href={`/historico/${completed.id}`} className="text-xs text-muted">Ver no histórico</Link>
+            )}
           </div>
           {workout.execution?.completionTiming && (
             <p className="text-xs text-muted" style={{ marginTop: "var(--space-1)" }}>

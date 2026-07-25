@@ -48,6 +48,7 @@ export default function TreinosPage() {
   const [pendingStart, setPendingStart] = useState<AnyWorkout | null>(null)
   const [totalExercises, setTotalExercises] = useState(0)
   const [lastByWorkoutId, setLastByWorkoutId] = useState<Record<string, string>>({})
+  const [lastCompletedIdByWorkoutId, setLastCompletedIdByWorkoutId] = useState<Record<string, string>>({})
   const [templateSavedMessage, setTemplateSavedMessage] = useState(false)
   const startingRef = useRef(false)
 
@@ -63,10 +64,15 @@ export default function TreinosPage() {
     setTotalExercises(allExercises.length)
 
     const lastMap: Record<string, string> = {}
+    const lastCompletedIdMap: Record<string, string> = {}
     for (const completed of getWorkoutHistory()) {
-      if (!(completed.workoutId in lastMap)) lastMap[completed.workoutId] = completed.completedAt
+      if (!(completed.workoutId in lastMap)) {
+        lastMap[completed.workoutId] = completed.completedAt
+        lastCompletedIdMap[completed.workoutId] = completed.id
+      }
     }
     setLastByWorkoutId(lastMap)
+    setLastCompletedIdByWorkoutId(lastCompletedIdMap)
   }, [])
 
   useEffect(() => {
@@ -239,6 +245,7 @@ export default function TreinosPage() {
                 onEdit={() => handleEdit(workout)}
                 onDuplicate={() => handleDuplicate(workout.id)}
                 lastCompletedAt={lastByWorkoutId[workout.id]}
+                lastCompletedWorkoutId={lastCompletedIdByWorkoutId[workout.id]}
                 recovery={recoveryByWorkoutId[workout.id]}
                 isTopRecoveryPick={workout.id === topRecoveryPick?.workoutId}
                 extraActions={<SaveAsTemplateAction workout={workout} onSaved={() => showTemplateSavedMessage()} />}
@@ -272,6 +279,7 @@ export default function TreinosPage() {
                 onStart={() => handleStartRequest(workout)}
                 isRecommended={recommendedIds.has(workout.id)}
                 lastCompletedAt={lastByWorkoutId[workout.id]}
+                lastCompletedWorkoutId={lastCompletedIdByWorkoutId[workout.id]}
                 recovery={recoveryByWorkoutId[workout.id]}
                 isTopRecoveryPick={workout.id === topRecoveryPick?.workoutId}
               />

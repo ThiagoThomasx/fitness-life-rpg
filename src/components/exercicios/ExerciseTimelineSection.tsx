@@ -56,11 +56,16 @@ function TimelineItem({ execution }: { execution: NormalizedExerciseExecution })
         </div>
       )}
 
-      {execution.plannedWorkoutId && (
-        <Link href={`/plano/treino/${execution.plannedWorkoutId}`} className="text-xs" style={{ marginTop: "var(--space-2)", display: "inline-block", color: "var(--color-accent)" }}>
-          Ver treino planejado
+      <div className="flex gap-2" style={{ marginTop: "var(--space-2)" }}>
+        <Link href={`/historico/${execution.workoutId}`} className="text-xs" style={{ display: "inline-block", color: "var(--color-accent)" }}>
+          Ver treino concluído
         </Link>
-      )}
+        {execution.plannedWorkoutId && (
+          <Link href={`/plano/treino/${execution.plannedWorkoutId}`} className="text-xs" style={{ display: "inline-block", color: "var(--color-accent)" }}>
+            Ver treino planejado
+          </Link>
+        )}
+      </div>
     </li>
   )
 }

@@ -1,3 +1,5 @@
+import type { ExerciseRecordType } from './exercise-intelligence'
+
 export type RewardEventType = 'xp' | 'badge' | 'level_up' | 'attribute_up' | 'pr'
 
 export interface RewardEvent {
@@ -8,6 +10,11 @@ export interface RewardEvent {
   value?: string
   icon: string
   createdAt: string
+  // Sprint 22 Parte 3B: vínculo estruturado para eventos de recorde (`type: 'pr'`)
+  // — opcional e compatível com eventos antigos, que só tinham texto livre.
+  workoutId?: string
+  exerciseId?: string
+  recordType?: ExerciseRecordType
 }
 
 const STORAGE_KEY = 'lrpg-fit:reward-events'
