@@ -18,6 +18,8 @@ import {
   linkPlannedWorkoutToCompleted,
   startPlannedWorkoutExecution,
   revertPlannedWorkoutToPending,
+  classifyCompletionTiming,
+  completePlannedWorkoutExecution,
   type WorkoutTemplateSnapshot,
 } from './planned-workouts'
 
@@ -205,6 +207,45 @@ describe('linkPlannedWorkoutToCompleted', () => {
     expect(updated?.status).toBe('done')
     expect(updated?.execution?.completedWorkoutId).toBe('cw-123')
     expect(updated?.execution?.completedAt).toBeTruthy()
+  })
+})
+
+describe('classifyCompletionTiming', () => {
+  it('classifies same-day completion as on_time', () => {
+    expect(classifyCompletionTiming({ date: '2026-07-20', execution: undefined }, '2026-07-20')).toBe('on_time')
+  })
+
+  it('classifies completion before the planned date as early', () => {
+    expect(classifyCompletionTiming({ date: '2026-07-20', execution: undefined }, '2026-07-19')).toBe('early')
+  })
+
+  it('classifies completion after the planned date as late', () => {
+    expect(classifyCompletionTiming({ date: '2026-07-20', execution: undefined }, '2026-07-21')).toBe('late')
+  })
+
+  it('classifies as rescheduled regardless of date match when reschedules exist', () => {
+    const execution = { reschedules: [{ from: '2026-07-18', to: '2026-07-20', changedAt: '2026-07-18T00:00:00.000Z' }], updatedAt: '2026-07-18T00:00:00.000Z' }
+    expect(classifyCompletionTiming({ date: '2026-07-20', execution }, '2026-07-20')).toBe('rescheduled')
+  })
+})
+
+describe('completePlannedWorkoutExecution', () => {
+  it('links, marks done, and stamps completionTiming in a single write', () => {
+    const pw = savePlannedWorkout({ date: '2026-07-20', weekday: 1, name: 'A', templateSnapshot: snapshot(), isOptional: false })
+    const updated = completePlannedWorkoutExecution(pw.id, 'cw-999', '2026-07-20')
+    expect(updated?.status).toBe('done')
+    expect(updated?.execution?.completedWorkoutId).toBe('cw-999')
+    expect(updated?.execution?.completionTiming).toBe('on_time')
+  })
+
+  it('classifies a late completion', () => {
+    const pw = savePlannedWorkout({ date: '2026-07-20', weekday: 1, name: 'A', templateSnapshot: snapshot(), isOptional: false })
+    const updated = completePlannedWorkoutExecution(pw.id, 'cw-999', '2026-07-22')
+    expect(updated?.execution?.completionTiming).toBe('late')
+  })
+
+  it('returns null for an unknown id', () => {
+    expect(completePlannedWorkoutExecution('missing', 'cw-1', '2026-07-20')).toBeNull()
   })
 })
 

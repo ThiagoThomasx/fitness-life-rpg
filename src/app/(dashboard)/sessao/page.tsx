@@ -7,7 +7,7 @@ import { useCharacterStore } from "@/stores/useCharacterStore"
 import { MOCK_CHARACTER, MOCK_WORKOUTS, MOCK_WORKOUT_TYPES } from "@/lib/mock/data"
 import { calculateXpGain } from "@/lib/workout"
 import { getExercisePersonalBest, saveCompletedWorkout, getWorkoutHistory } from "@/lib/workout-history"
-import type { CompletedWorkout } from "@/lib/workout-history"
+import type { CompletedWorkout, CompletedWorkoutSource } from "@/lib/workout-history"
 import type { XpGainResult } from "@/stores/useCharacterStore"
 import { calculateAttributeGains } from "@/lib/attributes"
 import { checkAndEarnBadges } from "@/lib/badges"
@@ -20,7 +20,7 @@ import { generateRecommendation } from "@/lib/workout-intelligence"
 import { detectExercisePrs, getLastExecutionSummary, type ExercisePrDetection } from "@/lib/exercise-records"
 import { categoryColor } from "@/lib/theme-colors"
 import { deriveExerciseExecutionStatus } from "@/lib/active-workout"
-import { revertPlannedWorkoutToPending } from "@/lib/planned-workouts"
+import { revertPlannedWorkoutToPending, completePlannedWorkoutExecution } from "@/lib/planned-workouts"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import { SessionHeader } from "@/components/session/SessionHeader"
@@ -285,8 +285,29 @@ export default function SessaoPage() {
       appliedSessionAdjustment: isOriginalAdjustment(sessionAdjustment)
         ? undefined
         : toSnapshot(sessionAdjustment),
+      source:
+        source.type === "planned"
+          ? ({
+              plannedWorkoutId: source.plannedWorkoutId,
+              programId: source.programId,
+              programVersion: source.programVersion,
+              programWeekId: source.programWeekId,
+              programWeekNumber: source.programWeekNumber,
+              trainingBlockId: source.trainingBlockId,
+              templateId: source.templateId,
+              templateVersion: source.templateVersion,
+            } satisfies CompletedWorkoutSource)
+          : undefined,
     }
     saveCompletedWorkout(completedWorkout)
+
+    // Sprint 21 Parte 1 — reconcilia com o Planner: vincula, classifica a
+    // pontualidade e marca o item como concluído. Sessões livres (não
+    // iniciadas pelo Planner) não têm o que reconciliar aqui.
+    if (source.type === "planned" && source.plannedWorkoutId) {
+      const completedDateLocal = completedWorkout.completedAt.slice(0, 10)
+      completePlannedWorkoutExecution(source.plannedWorkoutId, completedWorkout.id, completedDateLocal)
+    }
 
     setXpResult(result)
   }

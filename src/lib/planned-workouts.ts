@@ -39,9 +39,14 @@ export interface PlannedWorkoutReschedule {
  * Metadados de execução — sempre opcionais, nunca duplicam o `status` (Fase 4).
  * `status` continua a única fonte de verdade sobre o estado atual da sessão.
  */
+/** Sprint 21 Parte 1 — classificação temporal da conclusão. 'unplanned' nunca é atribuído aqui: só se aplica a sessões concluídas sem vínculo a nenhum item do Planner (ver `CompletedWorkoutSource`). */
+export type CompletionTiming = 'on_time' | 'early' | 'late' | 'rescheduled' | 'unplanned'
+
 export interface PlannedWorkoutExecution {
   completedWorkoutId?: string
   completedAt?: string
+  /** Sprint 21 Parte 1 — preenchido apenas por `completePlannedWorkoutExecution`. */
+  completionTiming?: CompletionTiming
   skippedAt?: string
   skippedReason?: SkippedWorkoutReason
   skippedNote?: string
@@ -315,6 +320,51 @@ export function linkPlannedWorkoutToCompleted(id: string, completedWorkoutId: st
     ...items[index],
     status: 'done',
     execution: updateExecution(items[index], { completedWorkoutId, completedAt: now }),
+    updatedAt: now,
+  }
+  const next = [...items]
+  next[index] = updated
+  persistPlannedWorkouts(next)
+  return updated
+}
+
+/**
+ * Classifica quando a sessão foi realizada em relação à data planejada
+ * (Sprint 21 — Parte 1). Uma sessão remarcada é sempre classificada como
+ * `rescheduled`, independente da distância entre a data final e a original —
+ * a remarcação já é o registro explícito de que o usuário mudou o plano, e
+ * comparar contra a data original de novo seria julgar uma decisão consciente.
+ */
+export function classifyCompletionTiming(
+  planned: Pick<PlannedWorkout, 'date' | 'execution'>,
+  completedDateLocal: string
+): CompletionTiming {
+  if ((planned.execution?.reschedules?.length ?? 0) > 0) return 'rescheduled'
+  if (completedDateLocal === planned.date) return 'on_time'
+  return completedDateLocal < planned.date ? 'early' : 'late'
+}
+
+/**
+ * Vincula e classifica a conclusão em uma única escrita (Sprint 21 — Parte 1).
+ * Substitui `linkPlannedWorkoutToCompleted` como ponto de entrada real da UI;
+ * a função antiga permanece para não quebrar quem já depende dela, mas não
+ * calcula `completionTiming`.
+ */
+export function completePlannedWorkoutExecution(
+  id: string,
+  completedWorkoutId: string,
+  completedDateLocal: string
+): PlannedWorkout | null {
+  const items = loadPlannedWorkouts()
+  const index = items.findIndex((p) => p.id === id)
+  if (index === -1) return null
+
+  const now = new Date().toISOString()
+  const completionTiming = classifyCompletionTiming(items[index], completedDateLocal)
+  const updated: PlannedWorkout = {
+    ...items[index],
+    status: 'done',
+    execution: updateExecution(items[index], { completedWorkoutId, completedAt: now, completionTiming }),
     updatedAt: now,
   }
   const next = [...items]
