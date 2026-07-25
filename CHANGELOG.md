@@ -13,6 +13,28 @@
 
 ### Entregas
 
+#### Sprint 24 — Product Reliability Part 2: Visual QA, Accessibility & Interaction Testing — 2026-07-25
+
+Fecha as pendências deixadas pela Sprint 23. Ver `SPRINT-24.md`,
+`VISUAL-QA-REPORT.md`, `ACCESSIBILITY-REPORT.md` e `INTERACTION-TESTS.md`
+para o relatório completo.
+
+- **QA visual real**: resolvido o travamento de screenshot do Browser pane
+  via Playwright+msedge — 5 breakpoints × 12 rotas, zero overflow horizontal
+  encontrado, verificação programática + captura visual.
+- **Bug corrigido**: `WeeklyStatsSection.tsx` (Perfil) tinha hydration
+  mismatch real (mesma classe da Sprint 9) — visível como erro no dev
+  overlay, não só warning de console. Corrigido com `useMounted()`.
+- **Acessibilidade**: `ModalShell` ganhou `aria-describedby` (prop
+  `describedBy`), conectado em `ConfirmDialog` (genérico) + 5 dialogs.
+  Focus trap e devolução de foco (Sprint 23) verificados por interação real
+  de teclado via Playwright pela primeira vez — resolve a limitação do
+  `.click()` do Browser pane.
+- **Data safety**: 2 testes novos cobrindo rollback de `importBackup()`
+  quando uma escrita falha no meio (quota excedida) — caminho de código já
+  existente, nunca antes exercitado por teste.
+- 954/954 testes (2 novos), lint/typecheck/build limpos.
+
 #### Sprint 23 — Mobile Polish, Accessibility & Product Reliability — 2026-07-25
 
 Camada transversal de acabamento sobre tudo que já existia (sem novo domínio

@@ -394,6 +394,18 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+## Sprint 24 — Product Reliability Part 2: Visual QA, Accessibility & Interaction Testing ✅
+**Objetivo:** fechar as pendências da Sprint 23 — QA visual real, `aria-describedby`, verificação de teclado por interação real — sem novo domínio funcional. Ver `SPRINT-24.md`, `VISUAL-QA-REPORT.md`, `ACCESSIBILITY-REPORT.md` e `INTERACTION-TESTS.md` para o relatório completo.
+
+- [x] QA visual real via Playwright+msedge (resolve o travamento de screenshot do Browser pane): 5 breakpoints × 12 rotas, zero overflow horizontal
+- [x] Bug real encontrado e corrigido: hydration mismatch em `WeeklyStatsSection.tsx` (Perfil), mesma classe da Sprint 9
+- [x] `ModalShell` ganhou `aria-describedby` (prop `describedBy`), conectado em `ConfirmDialog` + 5 dialogs; focus trap/devolução de foco verificados por interação real de teclado pela primeira vez
+- [x] 2 testes novos cobrindo rollback de `importBackup()` sob falha de escrita (quota excedida) — 954/954 no total
+- [x] Lint, typecheck, testes e build limpos
+- [ ] **Pendências conscientes**: matriz completa de 9 breakpoints (só 5 testados); leitor de tela real; `aria-describedby` em ~13 dialogs de formulário complexo; Fluxos 2/4/5 (Programa, Body Progress, Goals) não exercitados via QA funcional real; "duas abas"/"reload durante sessão" sem teste dedicado; `plano/page.tsx`/`sessao/page.tsx` seguem grandes; seletores whole-store não estreitados
+
+---
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:
