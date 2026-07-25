@@ -380,6 +380,20 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+## Sprint 23 — Mobile Polish, Accessibility & Product Reliability ✅
+**Objetivo:** camada transversal de acabamento e robustez (navegação, acessibilidade, mobile, confiabilidade de dados, performance) sobre tudo que já existia — sem novo domínio funcional. Ver `SPRINT-23.md`, `ACCESSIBILITY-AUDIT.md`, `MOBILE-QA.md` e `DATA-SAFETY-INVENTORY.md`.
+
+- [x] Auditoria (4 agentes paralelos: rotas/navegação, acessibilidade, mobile/responsivo, dados/performance) antes de qualquer alteração
+- [x] Links de recorde pessoal (`PrsSection`, `RecentRecordsCard`, `RecordsSection`, `ExerciseRecordsSection`) conectados a `/exercicios/[id]`/`/historico/[id]`; `programas/[id]` ganhou seção "Sessões concluídas"
+- [x] `OnboardingModal` reconstruído sobre `ModalShell`; focus trap por teclado adicionado ao `ModalShell`; labels de formulário (`GoalForm`/`BodyProgressForm`) pareados com `htmlFor`/`id`; resumo textual adicionado aos gráficos de `ExerciseChartsSection`
+- [x] `.session-header` sticky (botão Finalizar sempre acessível); `env(safe-area-inset-*)` em hambúrguer/close/rodapé/toast/app-main; alvos de toque 36-40px → 44px
+- [x] Reset granular de histórico de treinos (`resetWorkoutHistory` + `resetPersonalRecordEvents` em conjunto, evitando eventos de recorde órfãos) — único gap real num backup/restore/reset já sólido
+- [x] `ExerciseChartsSection` memoizado (5 séries paravam de recalcular do zero a cada render)
+- [x] 952/952 testes (4 novos), lint/typecheck/build limpos
+- [ ] **Pendências conscientes**: sem QA visual pixel-a-pixel (screenshot do Browser pane indisponível neste ambiente — QA foi estrutural/funcional via DOM); sem leitor de tela real disponível; `aria-describedby` não wired nos dialogs consumidores do `ModalShell`; `plano/page.tsx`/`sessao/page.tsx` seguem grandes (700/691 linhas), candidatos a split futuro; seletores whole-store em páginas de alto tráfego não estreitados por falta de medição concreta
+
+---
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:

@@ -13,6 +13,39 @@
 
 ### Entregas
 
+#### Sprint 23 — Mobile Polish, Accessibility & Product Reliability — 2026-07-25
+
+Camada transversal de acabamento sobre tudo que já existia (sem novo domínio
+funcional) — navegação, acessibilidade, mobile, confiabilidade de dados,
+performance. Ver `SPRINT-23.md`, `ACCESSIBILITY-AUDIT.md`, `MOBILE-QA.md` e
+`DATA-SAFETY-INVENTORY.md` para o relatório completo.
+
+- **Navegação**: recordes pessoais (`PrsSection`, `RecentRecordsCard`,
+  `RecordsSection`, `ExerciseRecordsSection`) agora linkam para
+  `/exercicios/[id]`/`/historico/[id]` em vez de mostrar texto plano — a
+  maioria já tinha o id disponível. `ExerciseRecordsSection` resolvia uma
+  pendência documentada desde a Sprint 22 Parte 2 (a rota `/historico/[id]`
+  já existia desde a Parte 3, só faltava conectar). `programas/[id]` ganhou
+  uma seção "Sessões concluídas" linkando para `/historico/[id]`.
+- **Acessibilidade**: `OnboardingModal` reconstruído sobre `ModalShell`
+  (antes era um dialog não gerenciado); `ModalShell` ganhou focus trap por
+  teclado; `GoalForm`/`BodyProgressForm` com `htmlFor`/`id` pareados em
+  todos os campos; os 4 gráficos de `ExerciseChartsSection` que só
+  expunham dado via tooltip ganharam resumo textual.
+- **Mobile**: `.session-header` (botão "Finalizar" da sessão ativa) virou
+  sticky; `env(safe-area-inset-*)` adicionado a hambúrguer/close/rodapé da
+  sidebar/reward toast/`.app-main`; alvos de toque elevados de 36-40px
+  para 44px.
+- **Data safety**: novo reset granular de histórico de treinos
+  (`resetWorkoutHistory` + `resetPersonalRecordEvents`, sempre disparados
+  juntos para não deixar eventos de recorde órfãos) — único gap real
+  encontrado num backup/restore/reset já sólido.
+- **Performance**: `ExerciseChartsSection` memoizado — as 5 séries de
+  gráfico paravam de recalcular do zero (re-parse do histórico completo)
+  a cada render.
+- 4 testes novos (952/952 no total). Lint, typecheck e build limpos.
+- Não enviado ao remoto (`origin/master` segue parado em Sprint 20 parte 1).
+
 #### Sprint 22 (v2) — Completed Workout Detail & Personal Record Events (parte 3) — 2026-07-25
 
 Fecha a pendência consciente deixada na Parte 2: agora existe uma rota
