@@ -151,6 +151,7 @@ export function ProgramLibrary() {
                   </div>
                 </div>
                 <div className="workout-row__actions">
+                  <Link href={`/programas/${program.id}`} className="workout-row__icon-btn" aria-label={`Ver progresso de ${program.name}`} title="Ver progresso">📊</Link>
                   <button className="workout-row__icon-btn" onClick={() => handleFavorite(program.id)} aria-label={`Favoritar ${program.name}`} title="Favoritar">
                     {program.isFavorite ? "★" : "☆"}
                   </button>
