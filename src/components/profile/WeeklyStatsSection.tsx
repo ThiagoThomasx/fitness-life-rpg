@@ -1,15 +1,22 @@
 "use client"
 
 import { getWeeklyAggregateStats } from "@/lib/training-load"
+import { useMounted } from "@/hooks/useHasHydrated"
 
 interface WeeklyStatsSectionProps {
   weeksBack?: number
 }
 
 export function WeeklyStatsSection({ weeksBack = 12 }: WeeklyStatsSectionProps) {
+  const mounted = useMounted()
+  // Gateado por `mounted`: getWeeklyAggregateStats() lê localStorage, que não
+  // existe no SSR. Sem o gate, o servidor sempre renderiza com weeksWithData=0
+  // (retornando null) e o cliente re-renderiza com dados reais, divergindo do
+  // HTML do servidor e disparando hydration mismatch (mesma classe de bug do
+  // Sprint 9 — DashboardHero/WorkoutsHero).
   const stats = getWeeklyAggregateStats(weeksBack)
 
-  if (stats.weeksWithData === 0) return null
+  if (!mounted || stats.weeksWithData === 0) return null
 
   return (
     <section className="card card--sm">
