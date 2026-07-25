@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
   exportBackup,
   importBackup,
@@ -188,6 +188,82 @@ describe('importBackup schema validation (atomicity)', () => {
 
     expect(result.ok).toBe(false)
     expect(window.localStorage.getItem('lrpg-fit:workout-history')).toEqual(beforeHistory)
+  })
+
+  it('rolls back every key already written when localStorage.setItem throws mid-import (quota exceeded)', async () => {
+    seedSampleData()
+    const before: Record<string, string | null> = {}
+    for (const key of STORAGE_KEYS) before[key] = window.localStorage.getItem(key)
+
+    const payload = await exportBackup()
+    await resetAllData()
+
+    const originalSetItem = Storage.prototype.setItem
+    let writeCount = 0
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key, value) {
+      writeCount++
+      // Falha na 3ª escrita para simular quota estourando no meio da restauração
+      // (algumas chaves já persistidas, outras não) — cobre o `catch` de
+      // `importBackup` que reverte via snapshot.
+      if (writeCount === 3) {
+        throw new DOMException('QuotaExceededError', 'QuotaExceededError')
+      }
+      originalSetItem.call(this, key, value)
+    })
+
+    const result = importBackup(payload)
+    setItemSpy.mockRestore()
+
+    expect(result.ok).toBe(false)
+    expect(result.error).toMatch(/armazenamento cheio ou indisponível/)
+    // Nenhuma chave deve ter ficado com dado parcial: tudo volta ao estado
+    // pré-import (vazio, pois resetAllData() rodou antes desta tentativa).
+    for (const key of STORAGE_KEYS) {
+      expect(window.localStorage.getItem(key)).toBeNull()
+    }
+  })
+
+  it('rolls back to a pre-existing value (not just null) when a write fails mid-import', async () => {
+    // Sem resetAllData(): as chaves já têm dado real no storage antes deste
+    // import, então a reversão precisa restaurar o valor antigo (não null).
+    seedSampleData()
+    const beforeCharacter = window.localStorage.getItem('lrpg-fit:character')
+    const beforeHistory = window.localStorage.getItem('lrpg-fit:workout-history')
+    const beforeBadges = window.localStorage.getItem('lrpg-fit:badges')
+    const beforeCharName = window.localStorage.getItem('lrpg-fit:char-name')
+
+    const originalSetItem = Storage.prototype.setItem
+    let writeCount = 0
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key, value) {
+      writeCount++
+      // STORAGE_KEYS ordena character(1) -> workout-history(2) -> badges(3) ->
+      // ... -> char-name(16); com só essas 4 chaves presentes no payload, a
+      // 4ª escrita (char-name) é a que falha — as 3 anteriores já sobrescreveram
+      // dado real, então o rollback precisa restaurar valor antigo, não null.
+      if (writeCount === 4) {
+        throw new DOMException('QuotaExceededError', 'QuotaExceededError')
+      }
+      originalSetItem.call(this, key, value)
+    })
+
+    const incoming: BackupPayload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: {
+        'lrpg-fit:character': { state: { character: { level: 9, current_xp: 1, total_xp: 999 } }, version: 0 },
+        'lrpg-fit:workout-history': [{ id: 'incoming-history' }],
+        'lrpg-fit:badges': [{ id: 'incoming-badge' }],
+        'lrpg-fit:char-name': 'Nome Novo',
+      },
+    }
+    const result = importBackup(incoming)
+    setItemSpy.mockRestore()
+
+    expect(result.ok).toBe(false)
+    expect(window.localStorage.getItem('lrpg-fit:character')).toEqual(beforeCharacter)
+    expect(window.localStorage.getItem('lrpg-fit:workout-history')).toEqual(beforeHistory)
+    expect(window.localStorage.getItem('lrpg-fit:badges')).toEqual(beforeBadges)
+    expect(window.localStorage.getItem('lrpg-fit:char-name')).toEqual(beforeCharName)
   })
 })
 
