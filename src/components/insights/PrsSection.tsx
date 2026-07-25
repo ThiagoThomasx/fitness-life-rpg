@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import type { InsightsData } from "@/lib/insights"
 import type { RecordType } from "@/lib/exercise-records"
 import { ChartHeader, EmptyChart } from "./ChartCard"
@@ -31,14 +32,19 @@ export function PrsSection({ data }: Props) {
       ) : (
         <div className="pr-list">
           {data.recentRecords.map((rec, i) => (
-            <div key={i} className="pr-item">
+            <Link
+              key={i}
+              href={`/exercicios/${rec.exerciseId}`}
+              className="pr-item"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
               <div className="pr-item__icon" aria-hidden="true">{TYPE_ICON[rec.type]}</div>
               <div className="pr-item__body">
                 <div className="pr-item__name">{rec.exerciseName}</div>
                 <div className="pr-item__date">{rec.date.slice(0, 10)}</div>
               </div>
               <span className="pr-item__value">{TYPE_LABEL[rec.type]}</span>
-            </div>
+            </Link>
           ))}
         </div>
       )}

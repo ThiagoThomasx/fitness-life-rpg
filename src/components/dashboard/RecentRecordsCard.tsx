@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { getRecentRecords, type RecentRecordEntry, type RecordType } from "@/lib/exercise-records"
 
 const TYPE_ICON: Record<RecordType, string> = {
@@ -38,11 +39,16 @@ export function RecentRecordsCard() {
       <div className="section-label">Últimos Recordes</div>
       <div className="flex flex-col gap-2">
         {records.map((r) => (
-          <div key={`${r.exerciseId}-${r.date}`} className="flex items-center gap-2.5">
+          <Link
+            key={`${r.exerciseId}-${r.date}`}
+            href={`/exercicios/${r.exerciseId}`}
+            className="flex items-center gap-2.5"
+            style={{ textDecoration: "none" }}
+          >
             <span aria-hidden="true">{TYPE_ICON[r.type]}</span>
             <span className="min-w-0 flex-1 truncate text-sm text-secondary">{r.exerciseName}</span>
             <span className="text-xs text-muted flex-shrink-0">{formatDate(r.date)}</span>
-          </div>
+          </Link>
         ))}
       </div>
     </section>

@@ -236,6 +236,7 @@ export interface ProfileRecordStats {
   totalRecords: number
   heaviestWeightEverKg: number
   heaviestWeightExerciseName: string | null
+  heaviestWeightExerciseId: string | null
   mostImprovedExercise: ExerciseGrowthEntry | null
   longestImprovementStreak: number
 }
@@ -246,6 +247,7 @@ export function getProfileRecordStats(): ProfileRecordStats {
   let totalRecords = 0
   let heaviestWeightEverKg = 0
   let heaviestWeightExerciseName: string | null = null
+  let heaviestWeightExerciseId: string | null = null
 
   for (const w of history) {
     for (const ex of w.exercises) {
@@ -254,6 +256,7 @@ export function getProfileRecordStats(): ProfileRecordStats {
         if (set.weight_kg > heaviestWeightEverKg) {
           heaviestWeightEverKg = set.weight_kg
           heaviestWeightExerciseName = ex.exerciseName
+          heaviestWeightExerciseId = ex.exerciseId
         }
       }
     }
@@ -274,6 +277,7 @@ export function getProfileRecordStats(): ProfileRecordStats {
     totalRecords,
     heaviestWeightEverKg,
     heaviestWeightExerciseName,
+    heaviestWeightExerciseId,
     mostImprovedExercise,
     longestImprovementStreak,
   }

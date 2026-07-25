@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import type { ExercisePersonalRecords, ExerciseRecordEvidence, ExerciseRecordType } from "@/lib/exercise-intelligence"
 
 const RECORD_LABELS: Record<ExerciseRecordType, string> = {
@@ -16,7 +17,11 @@ function formatDate(iso: string): string {
 
 function RecordCard({ evidence }: { evidence: ExerciseRecordEvidence }) {
   return (
-    <div className="exercise-record-card">
+    <Link
+      href={`/historico/${evidence.workoutId}`}
+      className="exercise-record-card"
+      style={{ textDecoration: "none", color: "inherit" }}
+    >
       <span className="text-xs text-muted">{RECORD_LABELS[evidence.type]}</span>
       <span className="text-base font-bold text-primary">
         {evidence.value}{evidence.unit}
@@ -24,7 +29,7 @@ function RecordCard({ evidence }: { evidence: ExerciseRecordEvidence }) {
       <span className="text-xs text-muted">
         {formatDate(evidence.achievedAt)} · {evidence.workoutName}
       </span>
-    </div>
+    </Link>
   )
 }
 
@@ -36,13 +41,9 @@ type ExerciseRecordsSectionProps = {
  * Recordes pessoais (Sprint 22 §12/§13) — só renderiza os tipos presentes;
  * `getExercisePersonalRecords` já aplica a regra de empate (comparação
  * estrita `>`), então o card mostra sempre o PRIMEIRO valor cronológico a
- * alcançar aquele patamar, nunca uma repetição posterior.
- *
- * §12 pede "acesso à execução relacionada", mas o projeto não tem uma rota
- * para abrir um `CompletedWorkout` livre por ID (só treinos vindos do
- * Planner têm rota, via `plannedWorkoutId`) — linkar aqui produziria uma
- * rota inexistente. Cards mostram data/treino como texto; pendência
- * documentada em `EXERCISE-DETAIL-EXPERIENCE.md`.
+ * alcançar aquele patamar, nunca uma repetição posterior. Cada card linka
+ * para `/historico/[id]` (Sprint 23 part 1) — rota disponível desde a
+ * Sprint 22 part 3, que faltava ser conectada aqui.
  */
 export function ExerciseRecordsSection({ records }: ExerciseRecordsSectionProps) {
   const entries = Object.values(records).filter((r): r is ExerciseRecordEvidence => r !== undefined)

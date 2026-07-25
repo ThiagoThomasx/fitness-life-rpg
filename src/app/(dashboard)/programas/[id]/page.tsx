@@ -76,6 +76,9 @@ export default function ProgramProgressPage() {
     ? buildProgramRecommendations(program, planned, today, currentWeek?.weekNumber ?? 1)
     : []
   const programExercises = getExercisesForProgram(program.id, completed)
+  const programSessions = completed
+    .filter((w) => w.source?.programId === program.id)
+    .sort((a, b) => b.completedAt.localeCompare(a.completedAt))
 
   return (
     <div className="page-container">
@@ -179,6 +182,25 @@ export default function ProgramProgressPage() {
             </section>
           )}
         </>
+      )}
+
+      {programSessions.length > 0 && (
+        <section className="card" style={{ marginTop: "var(--space-3)" }}>
+          <h3 className="section-label">Sessões concluídas</h3>
+          <div className="flex flex-col gap-2" style={{ marginTop: "var(--space-2)" }}>
+            {programSessions.map((session) => (
+              <Link
+                key={session.id}
+                href={`/historico/${session.id}`}
+                className="target-card flex items-center justify-between"
+                style={{ textAlign: "left", textDecoration: "none" }}
+              >
+                <span className="text-sm font-semibold text-primary">{session.workoutName}</span>
+                <span className="text-xs text-muted">{session.completedAt.slice(0, 10)}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       {programExercises.length > 0 && (

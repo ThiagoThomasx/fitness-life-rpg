@@ -100,6 +100,7 @@ export function ExerciseChartsSection({ exerciseId, dataQuality }: ExerciseChart
           {rmSeries.length === 0 ? (
             <EmptyChart icon="📈" title="Sem estimativa disponível" description="Depende de execuções com carga registrada" />
           ) : (
+            <>
             <ResponsiveContainer width="100%" height={140}>
               <LineChart data={rmSeries}>
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
@@ -113,6 +114,10 @@ export function ExerciseChartsSection({ exerciseId, dataQuality }: ExerciseChart
                 <Line type="monotone" dataKey="value" stroke={CHART_COLORS.tertiary} strokeWidth={2.5} dot={{ fill: CHART_COLORS.tertiary, r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
+              <p className="text-xs text-muted">
+                {rmSeries.length} estimativas de 1RM, de {rmSeries[0].value}kg a {rmSeries[rmSeries.length - 1].value}kg no período.
+              </p>
+            </>
           )}
         </div>
 
@@ -121,6 +126,7 @@ export function ExerciseChartsSection({ exerciseId, dataQuality }: ExerciseChart
           {volumeSeries.length === 0 ? (
             <EmptyChart icon="📦" title="Sem volume registrado" description="Depende de execuções com carga registrada" />
           ) : (
+            <>
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={volumeSeries} barSize={16}>
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
@@ -130,6 +136,10 @@ export function ExerciseChartsSection({ exerciseId, dataQuality }: ExerciseChart
                 <Bar dataKey="value" fill={CHART_COLORS.secondary} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+              <p className="text-xs text-muted">
+                {volumeSeries.length} execuções com volume, de {volumeSeries[0].value}kg a {volumeSeries[volumeSeries.length - 1].value}kg no período.
+              </p>
+            </>
           )}
         </div>
 
@@ -138,6 +148,7 @@ export function ExerciseChartsSection({ exerciseId, dataQuality }: ExerciseChart
           {repsSeries.length === 0 ? (
             <EmptyChart icon="🔁" title="Sem repetições registradas" description="Registre séries para ver este gráfico" />
           ) : (
+            <>
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={repsSeries} barSize={16}>
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
@@ -147,6 +158,10 @@ export function ExerciseChartsSection({ exerciseId, dataQuality }: ExerciseChart
                 <Bar dataKey="value" fill={CHART_COLORS.quaternary} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+              <p className="text-xs text-muted">
+                {repsSeries.length} execuções com repetições, de {repsSeries[0].value} a {repsSeries[repsSeries.length - 1].value} reps no período.
+              </p>
+            </>
           )}
         </div>
 
@@ -155,6 +170,7 @@ export function ExerciseChartsSection({ exerciseId, dataQuality }: ExerciseChart
           {frequencySeries.length === 0 ? (
             <EmptyChart icon="🗓️" title="Sem execuções no período" description="Ajuste o filtro de período para ver a frequência" />
           ) : (
+            <>
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={frequencySeries} barSize={16}>
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
@@ -164,6 +180,10 @@ export function ExerciseChartsSection({ exerciseId, dataQuality }: ExerciseChart
                 <Bar dataKey="count" fill={CHART_COLORS.primary} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+              <p className="text-xs text-muted">
+                {frequencySeries.length} semana(s) no período, totalizando {frequencySeries.reduce((sum, w) => sum + w.count, 0)} execuções.
+              </p>
+            </>
           )}
         </div>
       </div>

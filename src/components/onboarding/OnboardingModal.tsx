@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { ModalShell } from "@/components/ui/ModalShell"
 import {
   completeOnboarding,
   GOAL_LABELS,
@@ -61,33 +62,8 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
   const STYLES = Object.entries(STYLE_LABELS) as [WorkoutStyle, string][]
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Configuração inicial"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 1000,
-        background: "rgba(0,0,0,0.85)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1rem",
-      }}
-    >
-      <div
-        style={{
-          background: "var(--color-bg-elevated)",
-          border: "1px solid var(--color-border-subtle)",
-          borderRadius: 20,
-          padding: "1.75rem 1.5rem",
-          width: "100%",
-          maxWidth: 420,
-          maxHeight: "90vh",
-          overflowY: "auto",
-        }}
-      >
+    <ModalShell labelledBy="onboarding-step-title" dismissible={false} variant="center">
+      <div>
         {/* Progress bar */}
         <div style={{ display: "flex", gap: 4, marginBottom: "1.5rem" }}>
           {([1, 2, 3, 4] as Step[]).map((s) => (
@@ -106,7 +82,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
         {step === 1 && (
           <div>
-            <h2 style={{ fontSize: "var(--text-lg)", fontWeight: "var(--font-bold)", marginBottom: 4 }}>
+            <h2 id="onboarding-step-title" style={{ fontSize: "var(--text-lg)", fontWeight: "var(--font-bold)", marginBottom: 4 }}>
               🎯 Qual é seu objetivo principal?
             </h2>
             <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", marginBottom: "1.25rem" }}>
@@ -145,7 +121,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
         {step === 2 && (
           <div>
-            <h2 style={{ fontSize: "var(--text-lg)", fontWeight: "var(--font-bold)", marginBottom: 4 }}>
+            <h2 id="onboarding-step-title" style={{ fontSize: "var(--text-lg)", fontWeight: "var(--font-bold)", marginBottom: 4 }}>
               🏋️ Qual equipamento você tem?
             </h2>
             <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", marginBottom: "1.25rem" }}>
@@ -217,7 +193,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
         {step === 3 && (
           <div>
-            <h2 style={{ fontSize: "var(--text-lg)", fontWeight: "var(--font-bold)", marginBottom: 4 }}>
+            <h2 id="onboarding-step-title" style={{ fontSize: "var(--text-lg)", fontWeight: "var(--font-bold)", marginBottom: 4 }}>
               📅 Quais dias você prefere treinar?
             </h2>
             <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", marginBottom: "1.25rem" }}>
@@ -277,7 +253,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
         {step === 4 && (
           <div>
-            <h2 style={{ fontSize: "var(--text-lg)", fontWeight: "var(--font-bold)", marginBottom: 4 }}>
+            <h2 id="onboarding-step-title" style={{ fontSize: "var(--text-lg)", fontWeight: "var(--font-bold)", marginBottom: 4 }}>
               ⚡ Qual estilo de treino você prefere?
             </h2>
             <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-muted)", marginBottom: "1.25rem" }}>
@@ -359,6 +335,6 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
           )}
         </div>
       </div>
-    </div>
+    </ModalShell>
   )
 }

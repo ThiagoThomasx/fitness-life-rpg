@@ -105,11 +105,12 @@ export function BodyProgressForm({ onSubmit, onCancel, initialEntry }: BodyProgr
     <section className="card">
       <h3 className="section-label">{initialEntry ? "Editar registro" : "Novo registro de progresso corporal"}</h3>
 
-      <label style={labelStyle}>Data</label>
-      <input type="date" value={recordedAt} onChange={(e) => setRecordedAt(e.target.value)} style={inputStyle} />
+      <label style={labelStyle} htmlFor="body-progress-date">Data</label>
+      <input id="body-progress-date" type="date" value={recordedAt} onChange={(e) => setRecordedAt(e.target.value)} style={inputStyle} />
 
-      <label style={{ ...labelStyle, marginTop: "0.875rem" }}>Peso (kg)</label>
+      <label style={{ ...labelStyle, marginTop: "0.875rem" }} htmlFor="body-progress-weight">Peso (kg)</label>
       <input
+        id="body-progress-weight"
         type="number"
         min={0.1}
         step={0.1}
@@ -137,8 +138,9 @@ export function BodyProgressForm({ onSubmit, onCancel, initialEntry }: BodyProgr
         <div style={{ marginTop: "0.5rem" }}>
           {visibleFields.map((field) => (
             <div key={field} style={{ marginTop: "0.625rem" }}>
-              <label style={labelStyle}>{MEASUREMENT_LABELS[field]} (cm)</label>
+              <label style={labelStyle} htmlFor={`body-progress-measurement-${field}`}>{MEASUREMENT_LABELS[field]} (cm)</label>
               <input
+                id={`body-progress-measurement-${field}`}
                 type="number"
                 min={0.1}
                 step={0.1}
@@ -178,8 +180,8 @@ export function BodyProgressForm({ onSubmit, onCancel, initialEntry }: BodyProgr
 
       {cycles.length > 0 && (
         <>
-          <label style={{ ...labelStyle, marginTop: "0.875rem" }}>Ciclo (opcional)</label>
-          <select value={cycleId} onChange={(e) => setCycleId(e.target.value)} style={inputStyle}>
+          <label style={{ ...labelStyle, marginTop: "0.875rem" }} htmlFor="body-progress-cycle">Ciclo (opcional)</label>
+          <select id="body-progress-cycle" value={cycleId} onChange={(e) => setCycleId(e.target.value)} style={inputStyle}>
             <option value="">Sem vínculo</option>
             {cycles.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -212,8 +214,9 @@ export function BodyProgressForm({ onSubmit, onCancel, initialEntry }: BodyProgr
         )
       )}
 
-      <label style={{ ...labelStyle, marginTop: "0.875rem" }}>Observações (opcional)</label>
+      <label style={{ ...labelStyle, marginTop: "0.875rem" }} htmlFor="body-progress-notes">Observações (opcional)</label>
       <textarea
+        id="body-progress-notes"
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         maxLength={280}

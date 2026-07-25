@@ -81,8 +81,9 @@ export function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
     <section className="card">
       <h3 className="section-label">Nova meta</h3>
 
-      <label style={labelStyle}>Título</label>
+      <label style={labelStyle} htmlFor="goal-title">Título</label>
       <input
+        id="goal-title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Ex: Supino reto a 60kg"
@@ -123,8 +124,9 @@ export function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
 
           <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.875rem" }}>
             <div style={{ flex: 1 }}>
-              <label style={labelStyle}>{type === "exercise_reps" ? "Carga-alvo (kg)" : "Meta (kg)"}</label>
+              <label style={labelStyle} htmlFor="goal-target-value">{type === "exercise_reps" ? "Carga-alvo (kg)" : "Meta (kg)"}</label>
               <input
+                id="goal-target-value"
                 type="number"
                 min={0.5}
                 step={0.5}
@@ -135,8 +137,9 @@ export function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
             </div>
             {type === "exercise_reps" && (
               <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Repetições-alvo</label>
+                <label style={labelStyle} htmlFor="goal-target-reps">Repetições-alvo</label>
                 <input
+                  id="goal-target-reps"
                   type="number"
                   min={1}
                   step={1}
@@ -153,8 +156,9 @@ export function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
       {(type === "weekly_sessions" || type === "consistency") && (
         <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.875rem" }}>
           <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Sessões por semana</label>
+            <label style={labelStyle} htmlFor="goal-sessions-per-week">Sessões por semana</label>
             <input
+              id="goal-sessions-per-week"
               type="number"
               min={1}
               step={1}
@@ -164,8 +168,9 @@ export function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
             />
           </div>
           <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Duração (semanas)</label>
+            <label style={labelStyle} htmlFor="goal-target-weeks">Duração (semanas)</label>
             <input
+              id="goal-target-weeks"
               type="number"
               min={1}
               max={52}
@@ -182,8 +187,9 @@ export function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
         <>
           <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.875rem" }}>
             <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Volume semanal-alvo (kg)</label>
+              <label style={labelStyle} htmlFor="goal-weekly-volume">Volume semanal-alvo (kg)</label>
               <input
+                id="goal-weekly-volume"
                 type="number"
                 min={1}
                 step={50}
@@ -193,8 +199,9 @@ export function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Duração (semanas)</label>
+              <label style={labelStyle} htmlFor="goal-target-weeks">Duração (semanas)</label>
               <input
+                id="goal-target-weeks"
                 type="number"
                 min={1}
                 max={52}
@@ -214,8 +221,8 @@ export function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
 
       {type === "cycle_completion" && (
         <>
-          <label style={{ ...labelStyle, marginTop: "0.875rem" }}>Ciclo</label>
-          <select value={cycleId} onChange={(e) => setCycleId(e.target.value)} style={inputStyle}>
+          <label style={{ ...labelStyle, marginTop: "0.875rem" }} htmlFor="goal-cycle">Ciclo</label>
+          <select id="goal-cycle" value={cycleId} onChange={(e) => setCycleId(e.target.value)} style={inputStyle}>
             <option value="">Selecionar ciclo…</option>
             {cycles.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -259,17 +266,18 @@ export function GoalForm({ onSubmit, onCancel }: GoalFormProps) {
 
       <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.875rem" }}>
         <div style={{ flex: 1 }}>
-          <label style={labelStyle}>Início</label>
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={inputStyle} />
+          <label style={labelStyle} htmlFor="goal-start-date">Início</label>
+          <input id="goal-start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={inputStyle} />
         </div>
         <div style={{ flex: 1 }}>
-          <label style={labelStyle}>Data-alvo (opcional)</label>
-          <input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} style={inputStyle} />
+          <label style={labelStyle} htmlFor="goal-target-date">Data-alvo (opcional)</label>
+          <input id="goal-target-date" type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} style={inputStyle} />
         </div>
       </div>
 
-      <label style={{ ...labelStyle, marginTop: "0.875rem" }}>Observações (opcional)</label>
+      <label style={{ ...labelStyle, marginTop: "0.875rem" }} htmlFor="goal-notes">Observações (opcional)</label>
       <textarea
+        id="goal-notes"
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         maxLength={280}
