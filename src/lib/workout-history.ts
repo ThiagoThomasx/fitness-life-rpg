@@ -1,4 +1,5 @@
 import type { TrainingBlockObjective } from './training-blocks'
+import type { ActiveExerciseSource, ActiveExerciseSubstitution } from './active-workout'
 
 const HISTORY_KEY = 'lrpg-fit:workout-history'
 
@@ -36,6 +37,14 @@ export interface ExerciseRecord {
   isVolumePr?: boolean
   isFirstTime?: boolean
   estimated1RMKg?: number | null
+  // Sprint 22 Parte 1: proveniência de sessão (planejado/livre/substituição/extra)
+  // e vínculo/registro de substituição — opcionais, compatíveis com histórico
+  // anterior (sessões salvas antes desta sprint nunca tiveram esses campos).
+  source?: ActiveExerciseSource
+  /** ID interno do bloco planejado (`PlannedExecutionExercise.id`) — presente quando `source` é `planned` ou `substitution`. */
+  plannedExerciseId?: string
+  /** Presente somente quando este exercício foi executado como substituto de outro durante a sessão. */
+  substitution?: ActiveExerciseSubstitution
 }
 
 export interface CompletedWorkout {

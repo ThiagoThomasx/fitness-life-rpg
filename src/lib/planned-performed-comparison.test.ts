@@ -75,6 +75,39 @@ describe('matchPlannedToPerformedExercises', () => {
     expect(result[0].matchStatus).toBe('performed_only')
   })
 
+  it('matches via explicit substitution link even when exerciseId and name both differ (Sprint 22)', () => {
+    const planned = [resolved({ blockId: 'blk-1', exerciseId: 'ex-1', exerciseName: 'Supino Inclinado' })]
+    const performed = [
+      record({
+        exerciseId: 'ex-2',
+        exerciseName: 'Chest Press',
+        plannedExerciseId: 'blk-1',
+        substitution: {
+          plannedExerciseId: 'blk-1',
+          plannedExerciseName: 'Supino Inclinado',
+          replacementExerciseId: 'ex-2',
+          replacementExerciseName: 'Chest Press',
+          reason: 'equipment',
+          substitutedAt: '2026-01-01T10:00:00Z',
+        },
+      }),
+    ]
+    const result = matchPlannedToPerformedExercises(planned, performed)
+    expect(result).toHaveLength(1)
+    expect(result[0].matchStatus).toBe('matched')
+    expect(result[0].wasSubstitution).toBe(true)
+    expect(result[0].exerciseName).toBe('Chest Press')
+    expect(result[0].substitutedFromExerciseName).toBe('Supino Inclinado')
+    expect(result[0].substitutionReason).toBe('equipment')
+  })
+
+  it('does not mark a plain planned/performed match (no substitution field) as a substitution', () => {
+    const planned = [resolved({ blockId: 'blk-1' })]
+    const performed = [record({ plannedExerciseId: 'blk-1' })]
+    const result = matchPlannedToPerformedExercises(planned, performed)
+    expect(result[0].wasSubstitution).toBeUndefined()
+  })
+
   it('falls back to position only when remaining counts match 1:1', () => {
     const planned = [resolved({ exerciseId: 'p1', exerciseName: 'Exercicio Custom' })]
     const performed = [record({ exerciseId: 'different-id', exerciseName: 'Nome Diferente' })]
@@ -171,6 +204,7 @@ describe('buildPlannedPerformedComparison', () => {
       const result = resolvedExercisesFromPlannedWorkout(pw)
       expect(result).toEqual([
         {
+          blockId: 'blk-1',
           exerciseId: 'ex-1',
           exerciseName: 'Supino Reto',
           sets: undefined,

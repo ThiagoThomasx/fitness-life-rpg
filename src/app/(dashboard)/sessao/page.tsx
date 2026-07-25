@@ -280,6 +280,11 @@ export default function SessaoPage() {
           isVolumePr: flags?.isVolumePr ?? false,
           isFirstTime: flags?.isFirstTime ?? false,
           estimated1RMKg: flags?.estimated1RMKg ?? null,
+          // Sprint 22 Parte 1: preserva proveniência e substituição até o
+          // histórico final — antes disso eram descartadas neste mapeamento.
+          source: s.source,
+          plannedExerciseId: s.plannedExerciseId,
+          substitution: s.substitution,
         }
       }),
       prsCount,

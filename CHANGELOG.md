@@ -13,6 +13,32 @@
 
 ### Entregas
 
+#### Sprint 22 (v2) — Exercise Intelligence Engine Foundation (parte 1) — 2026-07-25
+
+Relatório completo em `SPRINT-22-PART1.md`, referência da API em
+`EXERCISE-INTELLIGENCE.md`. Fecha a maior pendência de dados deixada pela
+Sprint 21: substituições de exercício feitas durante a sessão agora
+sobrevivem até `CompletedWorkout`, e um motor puro novo
+(`src/lib/exercise-intelligence.ts`) consolida histórico, recordes pessoais,
+tendências e substituições recorrentes por exercício — reaproveitando
+`calculateVolumeKg`/`calculateEstimated1RM` já existentes, sem duplicar
+motores.
+
+- **`ExerciseRecord`** (`workout-history.ts`) ganhou `source?`,
+  `plannedExerciseId?` e `substitution?` (opcionais, retrocompatíveis).
+  `finishWorkout()` (`sessao/page.tsx`) passa a propagar esses campos em vez
+  de descartá-los.
+- **`planned-performed-comparison.ts`**: `ResolvedProgramExercise.blockId`
+  (novo) permite um Tier 0 de matching pelo vínculo explícito de
+  substituição, antes do `exerciseId` — uma substituição agora vira um
+  `matched` com `wasSubstitution`/`substitutedFromExerciseName`, em vez de
+  "1 removido + 1 adicionado".
+- **`recommendation-assembly.ts`**: `recurringSubstitutions` finalmente
+  populado com dados reais — a regra `review_exercise` (existia desde a
+  Sprint 21 Parte 4A, nunca disparava) agora recebe evidência.
+- **UI mínima**: `PlannedWorkoutComparisonView.tsx` mostra "substituído de
+  X" quando aplicável. Nenhuma página nova (fica para a Parte 2).
+
 #### Sprint 20 (v2) — Workout Templates, Weekly Programs & Program Builder Foundation (parte 1) — 2026-07-19
 
 Relatório completo em `SPRINT-20-PART1.md`, documentação de domínio em `WORKOUT-TEMPLATES.md` e

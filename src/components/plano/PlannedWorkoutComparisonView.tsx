@@ -25,6 +25,12 @@ function ExerciseComparisonRow({ comparison }: { comparison: ExercisePlannedPerf
         <span className={`badge-pill ${badgeVariant}`}>{MATCH_LABELS[matchStatus]}</span>
       </div>
 
+      {comparison.wasSubstitution && (
+        <div className="text-xs text-muted" style={{ marginTop: "var(--space-1)" }}>
+          substituído de <span className="font-semibold">{comparison.substitutedFromExerciseName}</span>
+        </div>
+      )}
+
       {(planned || performed) && (
         <div className="text-xs text-muted" style={{ marginTop: "var(--space-1)" }}>
           {planned && (

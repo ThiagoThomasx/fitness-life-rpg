@@ -60,6 +60,11 @@ export interface ExercisePlannedPerformedComparison {
   planned?: PlannedExerciseMetrics
   performed?: PerformedExerciseMetrics
   differences?: ExerciseMetricDifferences
+  /** Sprint 22 Parte 1: true quando o vínculo explícito de substituição (`ExerciseRecord.substitution`) confirma que `performed` substituiu `planned` nesta sessão — nunca inferido por nome/posição. */
+  wasSubstitution?: boolean
+  /** Nome do exercício originalmente planejado, quando `wasSubstitution` é true e difere de `exerciseName` (que passa a refletir o executado). */
+  substitutedFromExerciseName?: string
+  substitutionReason?: string
 }
 
 export interface SessionPlannedPerformedSummary {
@@ -206,15 +211,19 @@ function buildComparison(
 ): ExercisePlannedPerformedComparison {
   const planned = plannedEx ? toPlannedMetrics(plannedEx) : undefined
   const performed = performedEx ? toPerformedMetrics(performedEx) : undefined
+  const wasSubstitution = matchStatus === 'matched' && !!performedEx?.substitution
 
   return {
     plannedExerciseId: plannedEx?.exerciseId,
     performedExerciseId: performedEx?.exerciseId,
-    exerciseName: plannedEx?.exerciseName ?? performedEx?.exerciseName ?? '',
+    exerciseName: (wasSubstitution ? performedEx?.exerciseName : plannedEx?.exerciseName) ?? performedEx?.exerciseName ?? '',
     matchStatus,
     planned,
     performed,
     differences: matchStatus === 'matched' ? buildDifferences(plannedEx, planned, performed) : undefined,
+    wasSubstitution: wasSubstitution || undefined,
+    substitutedFromExerciseName: wasSubstitution ? plannedEx?.exerciseName : undefined,
+    substitutionReason: wasSubstitution ? performedEx?.substitution?.reason : undefined,
   }
 }
 
@@ -237,6 +246,23 @@ export function matchPlannedToPerformedExercises(
       if (!claimedPerformed.has(idx) && predicate(perf)) result.push(idx)
     })
     return result
+  }
+
+  // Tier 0 (Sprint 22 Parte 1): vínculo explícito de substituição/planejamento
+  // (`ExerciseRecord.plannedExerciseId` ↔ `ResolvedProgramExercise.blockId`).
+  // Roda antes do exerciseId porque é o único vínculo que sobrevive a uma
+  // substituição (o exerciseId muda, o blockId não). Histórico sem esse
+  // vínculo (sessões salvas antes desta sprint) cai nos tiers seguintes.
+  for (let i = 0; i < planned.length; i++) {
+    if (claimedPlanned.has(i)) continue
+    const p = planned[i]
+    if (!p.blockId) continue
+    const candidates = candidatesFor((perf) => perf.plannedExerciseId === p.blockId)
+    if (candidates.length === 1) {
+      claimedPlanned.add(i)
+      claimedPerformed.add(candidates[0])
+      comparisons.push(buildComparison(p, performed[candidates[0]], 'matched'))
+    }
   }
 
   // Tier 1: exerciseId
@@ -339,6 +365,7 @@ export function buildSessionPlannedPerformedSummary(
  */
 export function resolvedExercisesFromPlannedWorkout(planned: PlannedWorkout): ResolvedProgramExercise[] {
   return planned.templateSnapshot.exerciseBlocks.map((block) => ({
+    blockId: block.id,
     exerciseId: block.exercise.exerciseId,
     exerciseName: block.exercise.exerciseName,
     sets: block.exercise.sets,

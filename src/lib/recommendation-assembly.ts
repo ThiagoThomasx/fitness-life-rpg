@@ -11,6 +11,7 @@ import type { PlannedWorkout } from './planned-workouts'
 import type { TrainingProgram } from './training-programs'
 import { generateAdaptiveRecommendations, type AdaptivePlanRecommendation } from './adaptive-recommendations'
 import { filterActiveRecommendations } from './adaptive-recommendation-decisions'
+import { getRecurringSubstitutions } from './exercise-intelligence'
 
 const RECENT_WINDOW_DAYS = 14
 
@@ -23,10 +24,10 @@ function daysAgo(days: number, today: string): string {
 /**
  * Monta o input do motor a partir de dados reais do programa e gera as
  * recomendações ativas (já filtradas por decisões anteriores do usuário).
- * Substituições recorrentes ficam de fora: `CompletedWorkout` não persiste
- * substituições de exercício hoje (ver pendência da Parte 3) — sem esse
- * dado, a regra `review_exercise` nunca é avaliada aqui, o que é o
- * comportamento correto (não inventar evidência que não existe).
+ * Sprint 22 Parte 1: `recurringSubstitutions` agora é preenchido com
+ * evidência real (`exercise-intelligence.ts`), restrita à janela recente —
+ * antes disso `CompletedWorkout` não persistia substituições e a regra
+ * `review_exercise` nunca era avaliada.
  */
 export function buildProgramRecommendations(
   program: Pick<TrainingProgram, 'id' | 'version' | 'weeks' | 'blocks'>,
@@ -66,6 +67,9 @@ export function buildProgramRecommendations(
   const recentCheckIns = getRecentCheckIns(RECENT_WINDOW_DAYS).filter((c) => checkInIds.has(c.id))
   const readinessStats = recentCheckIns.length > 0 ? computeReadinessStats(recentCheckIns) : undefined
 
+  const workoutsInWindow = completed.filter((w) => w.completedAt.slice(0, 10) >= windowStart && w.completedAt.slice(0, 10) <= today)
+  const recurringSubstitutions = getRecurringSubstitutions(workoutsInWindow)
+
   const recommendations = generateAdaptiveRecommendations({
     windowKey: `${program.id}-w${currentWeekNumber}`,
     programAdherenceRate: snapshot.adherenceRate,
@@ -73,6 +77,7 @@ export function buildProgramRecommendations(
     plannedSessionsInWindow,
     skippedSessionsInWindow,
     readinessStats,
+    recurringSubstitutions,
   })
 
   return filterActiveRecommendations(recommendations)

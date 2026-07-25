@@ -172,6 +172,8 @@ export function findProgramSessionOverride(
 // ─── Resolution ───────────────────────────────────────────────────────────────
 
 export interface ResolvedProgramExercise {
+  /** ID do bloco no template snapshot (`WorkoutTemplateExerciseBlock.id`) — vínculo estável usado para casar com `ExerciseRecord.plannedExerciseId` (Sprint 22 Parte 1), independente de troca de exerciseId/nome por substituição. */
+  blockId?: string
   exerciseId?: string
   exerciseName: string
   sets?: number
@@ -219,6 +221,7 @@ export function resolveProgramSessionForWeek(
     if (ov?.action === 'skip') continue
 
     const base: ResolvedProgramExercise = {
+      blockId: block.id,
       exerciseId: block.exercise.exerciseId,
       exerciseName: block.exercise.exerciseName,
       sets: block.exercise.sets,
