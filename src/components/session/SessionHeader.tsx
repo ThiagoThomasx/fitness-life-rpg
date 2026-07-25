@@ -11,6 +11,8 @@ type SessionHeaderProps = {
   canFinish: boolean
   onFinish: () => void
   onCancel: () => void
+  isPaused?: boolean
+  onPause?: () => void
 }
 
 export function SessionHeader({
@@ -22,6 +24,8 @@ export function SessionHeader({
   canFinish,
   onFinish,
   onCancel,
+  isPaused = false,
+  onPause,
 }: SessionHeaderProps) {
   const progressPct = totalExercises > 0 ? (exercisesDone / totalExercises) * 100 : 0
 
@@ -39,7 +43,12 @@ export function SessionHeader({
           <button type="button" className="btn btn--ghost" onClick={onCancel}>
             Cancelar
           </button>
-          <button type="button" className="btn btn--primary" onClick={onFinish} disabled={!canFinish}>
+          {onPause && !isPaused && (
+            <button type="button" className="btn btn--ghost" onClick={onPause}>
+              Pausar
+            </button>
+          )}
+          <button type="button" className="btn btn--primary" onClick={onFinish} disabled={!canFinish || isPaused}>
             Finalizar
           </button>
         </div>

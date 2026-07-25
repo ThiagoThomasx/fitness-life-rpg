@@ -4,7 +4,11 @@ import type { Exercise, ExerciseSet } from "@/types/database"
 import type { ExerciseTarget } from "@/lib/custom-workouts"
 import type { WorkoutRecommendation } from "@/lib/workout-intelligence"
 import type { AdjustedExerciseTarget } from "@/lib/session-adjustments"
+import type { ActiveExerciseSource, ActiveExerciseStatus, PlannedExerciseTargets } from "@/lib/active-workout"
 import { AddSetForm } from "./AddSetForm"
+import { ExerciseSourceBadge } from "./ExerciseSourceBadge"
+import { PlannedTargetsSummary } from "./PlannedTargetsSummary"
+import { ExerciseExecutionActions } from "./ExerciseExecutionActions"
 
 type SetData = Omit<ExerciseSet, "id" | "session_id" | "created_at" | "is_pr">
 
@@ -20,6 +24,18 @@ type SessionExerciseCardProps = {
   onAddSet: (weight: number, reps: number) => void
   onRemoveSet: (setIndex: number) => void
   onRemoveExercise: () => void
+  /** Sprint 20 — Parte 4B: presentes só quando a sessão tem origem no Planner. */
+  source?: ActiveExerciseSource
+  plannedTargets?: PlannedExerciseTargets
+  executionStatus?: ActiveExerciseStatus
+  isFirst?: boolean
+  isLast?: boolean
+  onSubstitute?: () => void
+  onRevertSubstitution?: () => void
+  onSkipExercise?: () => void
+  onRestoreExercise?: () => void
+  onMoveUp?: () => void
+  onMoveDown?: () => void
 }
 
 const CONFIDENCE_ICON: Record<WorkoutRecommendation["confidence"], string> = {
@@ -60,6 +76,17 @@ export function SessionExerciseCard({
   onAddSet,
   onRemoveSet,
   onRemoveExercise,
+  source,
+  plannedTargets,
+  executionStatus = "pending",
+  isFirst = true,
+  isLast = true,
+  onSubstitute,
+  onRevertSubstitution,
+  onSkipExercise,
+  onRestoreExercise,
+  onMoveUp,
+  onMoveDown,
 }: SessionExerciseCardProps) {
   const hasAdjustment =
     adjustedTarget !== null &&
@@ -88,12 +115,19 @@ export function SessionExerciseCard({
   return (
     <article className="exercise-card">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="min-w-0 truncate text-base font-bold text-primary">{exercise.name}</h3>
+        <div className="min-w-0 flex items-center gap-2">
+          <h3 className="min-w-0 truncate text-base font-bold text-primary">{exercise.name}</h3>
+          <ExerciseSourceBadge source={source} />
+        </div>
         <div className="flex flex-shrink-0 items-center gap-2">
-          {isDone && (
-            <span className="exercise-card__done">
-              <span aria-hidden="true">✓</span> Concluído
-            </span>
+          {executionStatus === "skipped" ? (
+            <span className="badge-pill badge-pill--level">Não realizado</span>
+          ) : (
+            isDone && (
+              <span className="exercise-card__done">
+                <span aria-hidden="true">✓</span> Concluído
+              </span>
+            )
           )}
           <button
             type="button"
@@ -106,6 +140,8 @@ export function SessionExerciseCard({
         </div>
       </div>
       <div className="mb-2 text-xs text-muted">{exercise.muscle_groups.join(", ")}</div>
+
+      {plannedTargets && <PlannedTargetsSummary targets={plannedTargets} />}
 
       {lastExecution && sets.length === 0 && (
         <div className="text-xs text-muted mb-1">
@@ -219,6 +255,21 @@ export function SessionExerciseCard({
         defaultReps={suggestedReps}
         onAdd={onAddSet}
       />
+
+      {source && source !== "free" && (
+        <ExerciseExecutionActions
+          source={source}
+          executionStatus={executionStatus}
+          isFirst={isFirst}
+          isLast={isLast}
+          onSubstitute={onSubstitute ?? (() => {})}
+          onRevertSubstitution={onRevertSubstitution ?? (() => {})}
+          onSkip={onSkipExercise ?? (() => {})}
+          onRestore={onRestoreExercise ?? (() => {})}
+          onMoveUp={onMoveUp ?? (() => {})}
+          onMoveDown={onMoveDown ?? (() => {})}
+        />
+      )}
     </article>
   )
 }

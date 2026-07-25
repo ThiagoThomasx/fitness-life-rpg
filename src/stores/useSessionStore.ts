@@ -3,12 +3,29 @@ import { devtools, persist, createJSONStorage } from 'zustand/middleware'
 import type { WorkoutSession, ExerciseSet, Exercise } from '@/types/database'
 import type { SessionAdjustment } from '@/lib/session-adjustments'
 import { ORIGINAL_ADJUSTMENT } from '@/lib/session-adjustments'
-import type { ActiveWorkoutSource, PlannedWorkoutExecutionSnapshot } from '@/lib/active-workout'
-import { FREE_WORKOUT_SOURCE } from '@/lib/active-workout'
+import type {
+  ActiveWorkoutSource,
+  PlannedWorkoutExecutionSnapshot,
+  ActiveExerciseSource,
+  ActiveExerciseStatus,
+  ActiveExerciseSubstitution,
+  ExerciseSubstitutionReason,
+  PlannedExerciseTargets,
+} from '@/lib/active-workout'
+import { FREE_WORKOUT_SOURCE, moveActiveExercise, resolveExecutionExercise } from '@/lib/active-workout'
+import { getAllExercises } from '@/lib/custom-workouts'
 
-interface ActiveSet {
+export interface ActiveSet {
   exercise: Exercise
   sets: Omit<ExerciseSet, 'id' | 'session_id' | 'created_at' | 'is_pr'>[]
+  /** Ausente/`undefined` em treino livre e em sessões persistidas antes da Parte 4B (retrocompatível). */
+  source?: ActiveExerciseSource
+  /** ID interno do exercício no `PlannedWorkoutExecutionSnapshot` — não é o `exerciseId` do catálogo (Fase 5). */
+  plannedExerciseId?: string
+  plannedTargets?: PlannedExerciseTargets
+  substitution?: ActiveExerciseSubstitution
+  /** Só chega a `'skipped'` de fato — ver `deriveExerciseExecutionStatus` em active-workout.ts. */
+  executionStatus?: ActiveExerciseStatus
 }
 
 interface SessionState {
@@ -22,6 +39,9 @@ interface SessionState {
   source: ActiveWorkoutSource
   /** Presente só quando `source.type === 'planned'`. Imutável após o início (Fase 6). */
   plannedSnapshot: PlannedWorkoutExecutionSnapshot | null
+  /** `paused` só interrompe o timer (Fase 28) — nunca bloqueia edição de sets. */
+  status: 'active' | 'paused'
+  pausedAt: string | null
 }
 
 interface StartSessionOptions {
@@ -29,11 +49,17 @@ interface StartSessionOptions {
   plannedSnapshot?: PlannedWorkoutExecutionSnapshot
 }
 
+interface AddExerciseMeta {
+  source?: ActiveExerciseSource
+  plannedExerciseId?: string
+  plannedTargets?: PlannedExerciseTargets
+}
+
 interface SessionActions {
   startSession: (session: WorkoutSession, options?: StartSessionOptions) => void
   endSession: () => void
   setSessionAdjustment: (adjustment: SessionAdjustment) => void
-  addExercise: (exercise: Exercise) => void
+  addExercise: (exercise: Exercise, meta?: AddExerciseMeta) => void
   removeExercise: (exerciseId: string) => void
   addSet: (exerciseId: string, set: ActiveSet['sets'][number]) => void
   removeSet: (exerciseId: string, setIndex: number) => void
@@ -42,6 +68,18 @@ interface SessionActions {
   resetTimer: () => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
+  substituteExercise: (
+    exerciseId: string,
+    replacement: Exercise,
+    reason?: ExerciseSubstitutionReason,
+    note?: string
+  ) => void
+  revertExerciseSubstitution: (exerciseId: string) => void
+  skipExercise: (exerciseId: string, options?: { clearSets?: boolean }) => void
+  restoreExercise: (exerciseId: string) => void
+  moveExercise: (exerciseId: string, direction: 'up' | 'down') => void
+  pauseSession: () => void
+  resumeSession: () => void
 }
 
 const INITIAL_STATE: SessionState = {
@@ -53,6 +91,8 @@ const INITIAL_STATE: SessionState = {
   sessionAdjustment: ORIGINAL_ADJUSTMENT,
   source: FREE_WORKOUT_SOURCE,
   plannedSnapshot: null,
+  status: 'active',
+  pausedAt: null,
 }
 
 const safeStorage = {
@@ -86,6 +126,8 @@ export const useSessionStore = create<SessionState & SessionActions>()(
               sessionAdjustment: ORIGINAL_ADJUSTMENT,
               source: options?.source ?? FREE_WORKOUT_SOURCE,
               plannedSnapshot: options?.plannedSnapshot ?? null,
+              status: 'active',
+              pausedAt: null,
             },
             false,
             'session/start'
@@ -97,7 +139,7 @@ export const useSessionStore = create<SessionState & SessionActions>()(
         endSession: () =>
           set(INITIAL_STATE, false, 'session/end'),
 
-        addExercise: (exercise) =>
+        addExercise: (exercise, meta) =>
           set(
             (state) => {
               const alreadyAdded = state.activeSets.some(
@@ -105,7 +147,16 @@ export const useSessionStore = create<SessionState & SessionActions>()(
               )
               if (alreadyAdded) return state
               return {
-                activeSets: [...state.activeSets, { exercise, sets: [] }],
+                activeSets: [
+                  ...state.activeSets,
+                  {
+                    exercise,
+                    sets: [],
+                    source: meta?.source,
+                    plannedExerciseId: meta?.plannedExerciseId,
+                    plannedTargets: meta?.plannedTargets,
+                  },
+                ],
               }
             },
             false,
@@ -170,6 +221,132 @@ export const useSessionStore = create<SessionState & SessionActions>()(
             'session/updateSet'
           ),
 
+        substituteExercise: (exerciseId, replacement, reason, note) =>
+          set(
+            (state) => {
+              const target = state.activeSets.find((s) => s.exercise.id === exerciseId)
+              // Só substitui exercícios com vínculo planejado (planned ou já substituído) — Fase 13/49.
+              if (!target || !target.plannedExerciseId) return state
+              // Evita duas linhas com o mesmo exercise.id (chave de identidade das demais actions).
+              const collides = state.activeSets.some(
+                (s) => s !== target && s.exercise.id === replacement.id
+              )
+              if (collides) return state
+
+              const plannedExerciseName = target.substitution?.plannedExerciseName ?? target.exercise.name
+              const substitution: ActiveExerciseSubstitution = {
+                plannedExerciseId: target.plannedExerciseId,
+                plannedExerciseName,
+                replacementExerciseId: replacement.id,
+                replacementExerciseName: replacement.name,
+                reason,
+                note,
+                substitutedAt: new Date().toISOString(),
+              }
+              return {
+                activeSets: state.activeSets.map((s) =>
+                  s === target
+                    ? {
+                        ...s,
+                        exercise: replacement,
+                        sets: [], // Fase 16: nunca transporta carga/reps silenciosamente para outro exercício.
+                        source: 'substitution',
+                        substitution,
+                        executionStatus: undefined,
+                      }
+                    : s
+                ),
+              }
+            },
+            false,
+            'session/substituteExercise'
+          ),
+
+        revertExerciseSubstitution: (exerciseId) =>
+          set(
+            (state) => {
+              const target = state.activeSets.find((s) => s.exercise.id === exerciseId)
+              if (!target || !target.substitution) return state
+              const plannedExec = state.plannedSnapshot?.exercises.find(
+                (e) => e.id === target.plannedExerciseId
+              )
+              if (!plannedExec) return state
+              const restored = resolveExecutionExercise(plannedExec, getAllExercises())
+              // Colisão com outra linha que já usa o exercício planejado original.
+              const collides = state.activeSets.some((s) => s !== target && s.exercise.id === restored.id)
+              if (collides) return state
+
+              return {
+                activeSets: state.activeSets.map((s) =>
+                  s === target
+                    ? {
+                        ...s,
+                        exercise: restored,
+                        sets: [],
+                        source: 'planned',
+                        substitution: undefined,
+                        executionStatus: undefined,
+                      }
+                    : s
+                ),
+              }
+            },
+            false,
+            'session/revertExerciseSubstitution'
+          ),
+
+        skipExercise: (exerciseId, options) =>
+          set(
+            (state) => ({
+              activeSets: state.activeSets.map((s) =>
+                s.exercise.id === exerciseId
+                  ? { ...s, executionStatus: 'skipped', sets: options?.clearSets ? [] : s.sets }
+                  : s
+              ),
+            }),
+            false,
+            'session/skipExercise'
+          ),
+
+        restoreExercise: (exerciseId) =>
+          set(
+            (state) => ({
+              activeSets: state.activeSets.map((s) =>
+                s.exercise.id === exerciseId && s.executionStatus === 'skipped'
+                  ? { ...s, executionStatus: undefined }
+                  : s
+              ),
+            }),
+            false,
+            'session/restoreExercise'
+          ),
+
+        moveExercise: (exerciseId, direction) =>
+          set(
+            (state) => {
+              const index = state.activeSets.findIndex((s) => s.exercise.id === exerciseId)
+              if (index === -1) return state
+              return { activeSets: moveActiveExercise(state.activeSets, index, direction) }
+            },
+            false,
+            'session/moveExercise'
+          ),
+
+        pauseSession: () =>
+          set(
+            (state) =>
+              state.status === 'paused' ? state : { status: 'paused', pausedAt: new Date().toISOString() },
+            false,
+            'session/pause'
+          ),
+
+        resumeSession: () =>
+          set(
+            (state) => (state.status === 'active' ? state : { status: 'active', pausedAt: null }),
+            false,
+            'session/resume'
+          ),
+
         tickTimer: () =>
           set(
             (state) => ({ elapsedSeconds: state.elapsedSeconds + 1 }),
@@ -196,6 +373,8 @@ export const useSessionStore = create<SessionState & SessionActions>()(
           sessionAdjustment: state.sessionAdjustment,
           source: state.source,
           plannedSnapshot: state.plannedSnapshot,
+          status: state.status,
+          pausedAt: state.pausedAt,
         }),
       }
     ),

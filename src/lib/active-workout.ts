@@ -40,6 +40,22 @@ export interface PlannedExerciseTargets {
   tempo?: string
 }
 
+/** Formata os targets planejados para exibição (Fase 6) — nunca mostra um campo ausente como zero. */
+export function formatPlannedTargets(targets: PlannedExerciseTargets): string {
+  const parts: string[] = []
+  if (targets.sets && targets.reps) parts.push(`${targets.sets}x${targets.reps}`)
+  else if (targets.sets) parts.push(`${targets.sets} séries`)
+  else if (targets.reps) parts.push(targets.reps)
+  if (targets.loadKg) parts.push(`${targets.loadKg}kg`)
+  if (targets.durationSeconds) parts.push(`${targets.durationSeconds}s`)
+  if (targets.distanceMeters) parts.push(`${targets.distanceMeters}m`)
+  if (targets.restSeconds) parts.push(`descanso ${targets.restSeconds}s`)
+  if (targets.rir !== undefined) parts.push(`RIR ${targets.rir}`)
+  if (targets.rpe !== undefined) parts.push(`RPE ${targets.rpe}`)
+  if (targets.tempo) parts.push(`tempo ${targets.tempo}`)
+  return parts.length > 0 ? parts.join(' · ') : 'Sem alvo definido'
+}
+
 export interface PlannedExecutionExercise {
   id: string
   exerciseId?: string
@@ -147,4 +163,114 @@ export function canStartPlannedWorkout(
   if (hasActiveSession) return { ok: false, reason: 'already_active' }
   if (planned.status !== 'pending') return { ok: false, reason: 'not_pending' }
   return { ok: true }
+}
+
+// ─── Adaptações de execução (Sprint 20 — Parte 4B) ───────────────────────────
+// Substituição explícita, extras e "não realizado" pertencem só à sessão
+// ativa — nunca ao snapshot planejado, ao template ou ao programa.
+
+export type ActiveExerciseSource = 'free' | 'planned' | 'substitution' | 'extra'
+
+/**
+ * `pending`/`in_progress`/`completed` são sempre derivados dos sets
+ * registrados (`deriveExerciseExecutionStatus`) — nunca persistidos, para
+ * não criar uma segunda fonte de verdade que possa divergir dos sets reais.
+ * Só `skipped` é um estado que os sets sozinhos não conseguem expressar, e é
+ * o único valor que a sessão ativa realmente persiste neste campo.
+ */
+export type ActiveExerciseStatus = 'pending' | 'in_progress' | 'completed' | 'skipped'
+
+export type ExerciseSubstitutionReason =
+  | 'equipment'
+  | 'availability'
+  | 'comfort'
+  | 'pain'
+  | 'preference'
+  | 'variation'
+  | 'other'
+
+export interface ActiveExerciseSubstitution {
+  plannedExerciseId: string
+  plannedExerciseName: string
+  replacementExerciseId?: string
+  replacementExerciseName: string
+  reason?: ExerciseSubstitutionReason
+  note?: string
+  substitutedAt: string
+}
+
+/** Deriva o status de exibição a partir dos sets — só `skipped` é lido de `persistedStatus` (explícito, nunca inferido). */
+export function deriveExerciseExecutionStatus(
+  setsCount: number,
+  plannedTargetSets: number | undefined,
+  persistedStatus: ActiveExerciseStatus | undefined
+): ActiveExerciseStatus {
+  if (persistedStatus === 'skipped') return 'skipped'
+  if (setsCount === 0) return 'pending'
+  if (plannedTargetSets && setsCount >= plannedTargetSets) return 'completed'
+  return 'in_progress'
+}
+
+/** Reordenação pura da sessão ativa — nunca toca no snapshot planejado (Fase 25/27). */
+export function moveActiveExercise<T>(items: T[], index: number, direction: 'up' | 'down'): T[] {
+  const targetIndex = direction === 'up' ? index - 1 : index + 1
+  if (index < 0 || index >= items.length || targetIndex < 0 || targetIndex >= items.length) {
+    return items
+  }
+  const next = [...items]
+  const [moved] = next.splice(index, 1)
+  next.splice(targetIndex, 0, moved)
+  return next
+}
+
+// ─── Integridade local (interna, sem UI nesta fatia — Fase 49/50) ───────────
+
+export interface ActiveWorkoutExerciseLike {
+  exercise: { id: string }
+  sets: unknown[]
+  source?: ActiveExerciseSource
+  plannedExerciseId?: string
+  executionStatus?: ActiveExerciseStatus
+}
+
+export interface ActiveWorkoutAdaptationIntegrity {
+  orphanSubstitutions: string[]
+  duplicatePlannedExerciseLinks: string[]
+  invalidExtraExercises: string[]
+  skippedExercisesWithCompletedSets: string[]
+}
+
+/**
+ * Relatório interno de integridade da sessão ativa. Não é exposto em UI
+ * nesta fatia (isso é 4C/4D) — serve para os testes garantirem que as ações
+ * novas (substituir/extra/skip) nunca deixam a sessão num estado incoerente.
+ */
+export function validateActiveWorkoutAdaptations(
+  exercises: ActiveWorkoutExerciseLike[]
+): ActiveWorkoutAdaptationIntegrity {
+  const orphanSubstitutions: string[] = []
+  const invalidExtraExercises: string[] = []
+  const skippedExercisesWithCompletedSets: string[] = []
+  const plannedIdCounts = new Map<string, number>()
+
+  for (const ex of exercises) {
+    if (ex.source === 'substitution' && !ex.plannedExerciseId) {
+      orphanSubstitutions.push(ex.exercise.id)
+    }
+    if (ex.source === 'extra' && ex.plannedExerciseId) {
+      invalidExtraExercises.push(ex.exercise.id)
+    }
+    if (ex.executionStatus === 'skipped' && ex.sets.length > 0) {
+      skippedExercisesWithCompletedSets.push(ex.exercise.id)
+    }
+    if (ex.plannedExerciseId) {
+      plannedIdCounts.set(ex.plannedExerciseId, (plannedIdCounts.get(ex.plannedExerciseId) ?? 0) + 1)
+    }
+  }
+
+  const duplicatePlannedExerciseLinks = Array.from(plannedIdCounts.entries())
+    .filter(([, count]) => count > 1)
+    .map(([id]) => id)
+
+  return { orphanSubstitutions, duplicatePlannedExerciseLinks, invalidExtraExercises, skippedExercisesWithCompletedSets }
 }

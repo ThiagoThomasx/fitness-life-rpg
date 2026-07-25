@@ -19,11 +19,16 @@ import { getCustomWorkouts, type ExerciseTarget } from "@/lib/custom-workouts"
 import { generateRecommendation } from "@/lib/workout-intelligence"
 import { detectExercisePrs, getLastExecutionSummary, type ExercisePrDetection } from "@/lib/exercise-records"
 import { categoryColor } from "@/lib/theme-colors"
+import { deriveExerciseExecutionStatus } from "@/lib/active-workout"
+import { revertPlannedWorkoutToPending } from "@/lib/planned-workouts"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog"
 import { SessionHeader } from "@/components/session/SessionHeader"
 import { SessionExerciseCard } from "@/components/session/SessionExerciseCard"
 import { ExercisePickerModal } from "@/components/session/ExercisePickerModal"
+import { ExerciseSubstitutionDialog } from "@/components/session/ExerciseSubstitutionDialog"
+import { SkipExerciseDialog } from "@/components/session/SkipExerciseDialog"
+import { PausedSessionBanner } from "@/components/session/PausedSessionBanner"
 import { WorkoutSummaryModal } from "@/components/session/WorkoutSummaryModal"
 import { ReadinessCheckIn } from "@/components/session/ReadinessCheckIn"
 import { ReadinessCard } from "@/components/session/ReadinessCard"
@@ -71,6 +76,15 @@ export default function SessaoPage() {
     endSession,
     sessionAdjustment,
     setSessionAdjustment,
+    source,
+    status,
+    pauseSession,
+    resumeSession,
+    substituteExercise,
+    revertExerciseSubstitution,
+    skipExercise,
+    restoreExercise,
+    moveExercise,
   } = useSessionStore()
 
   const { character, applyXpGain, applyAttributeGains } = useCharacterStore()
@@ -86,6 +100,8 @@ export default function SessaoPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [showIncompleteDialog, setShowIncompleteDialog] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [substitutingExerciseId, setSubstitutingExerciseId] = useState<string | null>(null)
+  const [skippingExerciseId, setSkippingExerciseId] = useState<string | null>(null)
 
   // Sprint 14: readiness check-in state
   const [checkInPhase, setCheckInPhase] = useState<"check_in" | "result" | "training">("check_in")
@@ -107,7 +123,7 @@ export default function SessaoPage() {
     setWorkoutName(custom?.name ?? mock?.name ?? "Treino")
   }, [activeSession?.workout_id])
 
-  useTimer(hasSession && xpResult === null)
+  useTimer(hasSession && xpResult === null && status === "active")
 
   if (!hasSession) {
     return (
@@ -370,8 +386,22 @@ export default function SessaoPage() {
 
   function handleCancelConfirmed() {
     setShowCancelDialog(false)
+    // Fase 37/38: reverte o Planner antes de limpar a sessão — preferir essa
+    // ordem evita deixar o item preso em "em andamento" caso algo falhe
+    // depois. A reconciliação definitiva de falhas fica para a Parte 4C.
+    if (source.type === "planned" && source.plannedWorkoutId) {
+      revertPlannedWorkoutToPending(source.plannedWorkoutId)
+    }
     endSession()
     router.push("/treinos")
+  }
+
+  function handleSkipRequest(exerciseId: string, setsCount: number) {
+    if (setsCount > 0) {
+      setSkippingExerciseId(exerciseId)
+      return
+    }
+    skipExercise(exerciseId)
   }
 
   // Compute readiness hints per exercise (only when readiness is available and not high)
@@ -399,6 +429,8 @@ export default function SessaoPage() {
         canFinish={totalSets > 0 && !xpResult}
         onFinish={handleFinishRequest}
         onCancel={() => setShowCancelDialog(true)}
+        isPaused={status === "paused"}
+        onPause={checkInPhase === "training" ? pauseSession : undefined}
       />
 
       {/* Sprint 14: check-in phase */}
@@ -430,6 +462,11 @@ export default function SessaoPage() {
         </div>
       )}
 
+      {/* Sprint 20 — Parte 4B: sessão pausada. Dados continuam visíveis abaixo (Fase 31). */}
+      {checkInPhase === "training" && status === "paused" && (
+        <PausedSessionBanner onResume={resumeSession} onDiscard={() => setShowCancelDialog(true)} />
+      )}
+
       {/* Sprint 15: adjustment panel (shown after check-in result) */}
       {checkInPhase === "training" && !xpResult && (
         <SessionAdjustmentPanel
@@ -442,7 +479,7 @@ export default function SessaoPage() {
       )}
 
       {/* Sprint 14: training phase — exercises */}
-      {checkInPhase === "training" && activeSets.map((activeSet) => {
+      {checkInPhase === "training" && activeSets.map((activeSet, index) => {
         const target = workoutTargets.find((t) => t.exerciseId === activeSet.exercise.id)
         const recommendation = generateRecommendation(activeSet.exercise.id)
         const lastExecution = getLastExecutionSummary(activeSet.exercise.id)
@@ -453,6 +490,11 @@ export default function SessaoPage() {
           target?.targetSets,
           undefined,
           sessionAdjustment
+        )
+        const executionStatus = deriveExerciseExecutionStatus(
+          activeSet.sets.length,
+          activeSet.plannedTargets?.sets,
+          activeSet.executionStatus
         )
 
         return (
@@ -476,6 +518,17 @@ export default function SessaoPage() {
             }
             onRemoveSet={(setIndex) => removeSet(activeSet.exercise.id, setIndex)}
             onRemoveExercise={() => removeExercise(activeSet.exercise.id)}
+            source={activeSet.source}
+            plannedTargets={activeSet.plannedTargets}
+            executionStatus={executionStatus}
+            isFirst={index === 0}
+            isLast={index === activeSets.length - 1}
+            onSubstitute={() => setSubstitutingExerciseId(activeSet.exercise.id)}
+            onRevertSubstitution={() => revertExerciseSubstitution(activeSet.exercise.id)}
+            onSkipExercise={() => handleSkipRequest(activeSet.exercise.id, activeSet.sets.length)}
+            onRestoreExercise={() => restoreExercise(activeSet.exercise.id)}
+            onMoveUp={() => moveExercise(activeSet.exercise.id, "up")}
+            onMoveDown={() => moveExercise(activeSet.exercise.id, "down")}
           />
         )
       })}
@@ -489,10 +542,48 @@ export default function SessaoPage() {
       {showPicker && (
         <ExercisePickerModal
           alreadyAdded={alreadyAdded}
-          onPick={(exercise) => addExercise(exercise)}
+          onPick={(exercise) =>
+            addExercise(exercise, source.type === "planned" ? { source: "extra" } : undefined)
+          }
           onClose={() => setShowPicker(false)}
         />
       )}
+
+      {substitutingExerciseId && (() => {
+        const target = activeSets.find((s) => s.exercise.id === substitutingExerciseId)
+        if (!target) return null
+        const plannedExerciseName = target.substitution?.plannedExerciseName ?? target.exercise.name
+        return (
+          <ExerciseSubstitutionDialog
+            plannedExerciseName={plannedExerciseName}
+            excludeExerciseIds={alreadyAdded}
+            onConfirm={(replacement, reason, note) => {
+              substituteExercise(substitutingExerciseId, replacement, reason, note)
+              setSubstitutingExerciseId(null)
+            }}
+            onClose={() => setSubstitutingExerciseId(null)}
+          />
+        )
+      })()}
+
+      {skippingExerciseId && (() => {
+        const target = activeSets.find((s) => s.exercise.id === skippingExerciseId)
+        if (!target) return null
+        return (
+          <SkipExerciseDialog
+            exerciseName={target.exercise.name}
+            onKeepSets={() => {
+              skipExercise(skippingExerciseId)
+              setSkippingExerciseId(null)
+            }}
+            onClearSets={() => {
+              skipExercise(skippingExerciseId, { clearSets: true })
+              setSkippingExerciseId(null)
+            }}
+            onCancel={() => setSkippingExerciseId(null)}
+          />
+        )
+      })()}
 
       {showCancelDialog && (
         <ConfirmDialog

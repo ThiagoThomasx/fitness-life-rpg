@@ -10,6 +10,10 @@ import {
   buildSourceFromPlannedWorkout,
   canStartPlannedWorkout,
   resolveExecutionExercise,
+  formatPlannedTargets,
+  deriveExerciseExecutionStatus,
+  moveActiveExercise,
+  validateActiveWorkoutAdaptations,
   FREE_WORKOUT_SOURCE,
 } from './active-workout'
 import type { Exercise } from '@/types/database'
@@ -151,5 +155,113 @@ describe('resolveExecutionExercise', () => {
 describe('FREE_WORKOUT_SOURCE', () => {
   it('is the default free-workout source', () => {
     expect(FREE_WORKOUT_SOURCE).toEqual({ type: 'free' })
+  })
+})
+
+describe('formatPlannedTargets', () => {
+  it('joins available fields and never shows an absent field as zero', () => {
+    expect(formatPlannedTargets({ sets: 3, reps: '8-10', loadKg: 60, restSeconds: 90, rir: 2 })).toBe(
+      '3x8-10 · 60kg · descanso 90s · RIR 2'
+    )
+  })
+
+  it('falls back to a placeholder when no targets are set', () => {
+    expect(formatPlannedTargets({})).toBe('Sem alvo definido')
+  })
+
+  it('shows sets alone when reps is absent', () => {
+    expect(formatPlannedTargets({ sets: 4 })).toBe('4 séries')
+  })
+
+  it('shows rpe/tempo even when the value is 0', () => {
+    expect(formatPlannedTargets({ rpe: 0, tempo: '2010' })).toBe('RPE 0 · tempo 2010')
+  })
+})
+
+describe('deriveExerciseExecutionStatus', () => {
+  it('is skipped only when explicitly persisted, regardless of sets', () => {
+    expect(deriveExerciseExecutionStatus(3, 3, 'skipped')).toBe('skipped')
+  })
+
+  it('is pending when there are no sets', () => {
+    expect(deriveExerciseExecutionStatus(0, 3, undefined)).toBe('pending')
+  })
+
+  it('is completed once sets reach the planned target', () => {
+    expect(deriveExerciseExecutionStatus(3, 3, undefined)).toBe('completed')
+  })
+
+  it('is in_progress when below the planned target', () => {
+    expect(deriveExerciseExecutionStatus(1, 3, undefined)).toBe('in_progress')
+  })
+
+  it('is in_progress when there is no planned target to compare against', () => {
+    expect(deriveExerciseExecutionStatus(1, undefined, undefined)).toBe('in_progress')
+  })
+})
+
+describe('moveActiveExercise', () => {
+  it('moves an item up', () => {
+    expect(moveActiveExercise(['a', 'b', 'c'], 1, 'up')).toEqual(['b', 'a', 'c'])
+  })
+
+  it('moves an item down', () => {
+    expect(moveActiveExercise(['a', 'b', 'c'], 1, 'down')).toEqual(['a', 'c', 'b'])
+  })
+
+  it('no-ops when moving the first item up', () => {
+    expect(moveActiveExercise(['a', 'b', 'c'], 0, 'up')).toEqual(['a', 'b', 'c'])
+  })
+
+  it('no-ops when moving the last item down', () => {
+    expect(moveActiveExercise(['a', 'b', 'c'], 2, 'down')).toEqual(['a', 'b', 'c'])
+  })
+
+  it('no-ops on an out-of-range index', () => {
+    expect(moveActiveExercise(['a', 'b'], 5, 'up')).toEqual(['a', 'b'])
+  })
+})
+
+describe('validateActiveWorkoutAdaptations', () => {
+  it('reports no issues for a healthy session', () => {
+    const report = validateActiveWorkoutAdaptations([
+      { exercise: { id: 'ex-1' }, sets: [], source: 'planned', plannedExerciseId: 'blk-1' },
+      { exercise: { id: 'ex-2' }, sets: [], source: 'extra' },
+    ])
+    expect(report).toEqual({
+      orphanSubstitutions: [],
+      duplicatePlannedExerciseLinks: [],
+      invalidExtraExercises: [],
+      skippedExercisesWithCompletedSets: [],
+    })
+  })
+
+  it('flags a substitution with no planned link as orphan', () => {
+    const report = validateActiveWorkoutAdaptations([
+      { exercise: { id: 'ex-1' }, sets: [], source: 'substitution' },
+    ])
+    expect(report.orphanSubstitutions).toEqual(['ex-1'])
+  })
+
+  it('flags an extra exercise that carries a plannedExerciseId', () => {
+    const report = validateActiveWorkoutAdaptations([
+      { exercise: { id: 'ex-1' }, sets: [], source: 'extra', plannedExerciseId: 'blk-1' },
+    ])
+    expect(report.invalidExtraExercises).toEqual(['ex-1'])
+  })
+
+  it('flags two rows linked to the same plannedExerciseId as duplicates', () => {
+    const report = validateActiveWorkoutAdaptations([
+      { exercise: { id: 'ex-1' }, sets: [], source: 'planned', plannedExerciseId: 'blk-1' },
+      { exercise: { id: 'ex-2' }, sets: [], source: 'substitution', plannedExerciseId: 'blk-1' },
+    ])
+    expect(report.duplicatePlannedExerciseLinks).toEqual(['blk-1'])
+  })
+
+  it('flags a skipped exercise that still has completed sets', () => {
+    const report = validateActiveWorkoutAdaptations([
+      { exercise: { id: 'ex-1' }, sets: [{ weight_kg: 10, reps: 5 }], executionStatus: 'skipped' },
+    ])
+    expect(report.skippedExercisesWithCompletedSets).toEqual(['ex-1'])
   })
 })

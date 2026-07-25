@@ -104,7 +104,11 @@ export function PlannedWeekSection() {
     }
     startSession(session, { source, plannedSnapshot: snapshot })
     for (const exec of snapshot.exercises) {
-      addExercise(resolveExecutionExercise(exec, allExercises))
+      addExercise(resolveExecutionExercise(exec, allExercises), {
+        source: "planned",
+        plannedExerciseId: exec.id,
+        plannedTargets: exec.targets,
+      })
     }
 
     setItems((prev) => prev.map((i) => (i.id === started.id ? started : i)))
