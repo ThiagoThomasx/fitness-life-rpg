@@ -23,12 +23,13 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const titleId = useId()
+  const descriptionId = useId()
 
   return (
-    <ModalShell labelledBy={titleId} onClose={onCancel}>
+    <ModalShell labelledBy={titleId} describedBy={description ? descriptionId : undefined} onClose={onCancel}>
       <h3 id={titleId} className="modal-title">{title}</h3>
       {description && (
-        <p className="mt-2 text-sm text-secondary" style={{ lineHeight: "var(--leading-normal)" }}>
+        <p id={descriptionId} className="mt-2 text-sm text-secondary" style={{ lineHeight: "var(--leading-normal)" }}>
           {description}
         </p>
       )}

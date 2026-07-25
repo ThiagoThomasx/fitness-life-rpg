@@ -23,13 +23,14 @@ type SkipPlannedWorkoutDialogProps = {
 /** Sprint 21 Parte 2 — motivo sempre opcional, nunca usado para julgar (ver CLAUDE.md / PROGRAM-ADHERENCE). */
 export function SkipPlannedWorkoutDialog({ workoutName, onConfirm, onCancel }: SkipPlannedWorkoutDialogProps) {
   const titleId = useId()
+  const descriptionId = useId()
   const [reason, setReason] = useState<SkippedWorkoutReason | "">("")
   const [note, setNote] = useState("")
 
   return (
-    <ModalShell labelledBy={titleId} onClose={onCancel}>
+    <ModalShell labelledBy={titleId} describedBy={descriptionId} onClose={onCancel}>
       <h3 id={titleId} className="modal-title">Ignorar &quot;{workoutName}&quot;?</h3>
-      <p className="mt-2 text-sm text-secondary" style={{ lineHeight: "var(--leading-normal)" }}>
+      <p id={descriptionId} className="mt-2 text-sm text-secondary" style={{ lineHeight: "var(--leading-normal)" }}>
         A sessão continua fazendo parte do plano — só registra que não foi realizada. O motivo é opcional.
       </p>
 

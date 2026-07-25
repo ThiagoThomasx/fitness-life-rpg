@@ -38,6 +38,7 @@ export function ExerciseSubstitutionDialog({
   onClose,
 }: ExerciseSubstitutionDialogProps) {
   const titleId = useId()
+  const descriptionId = useId()
   const [selected, setSelected] = useState<Exercise | null>(null)
   const [reason, setReason] = useState<ExerciseSubstitutionReason | undefined>(undefined)
   const [note, setNote] = useState("")
@@ -73,9 +74,9 @@ export function ExerciseSubstitutionDialog({
   }
 
   return (
-    <ModalShell labelledBy={titleId} onClose={onClose}>
+    <ModalShell labelledBy={titleId} describedBy={descriptionId} onClose={onClose}>
       <h3 id={titleId} className="modal-title">Confirmar substituição</h3>
-      <p className="mt-2 text-sm text-secondary">
+      <p id={descriptionId} className="mt-2 text-sm text-secondary">
         {plannedExerciseName} → <strong className="text-primary">{selected.name}</strong>
       </p>
 

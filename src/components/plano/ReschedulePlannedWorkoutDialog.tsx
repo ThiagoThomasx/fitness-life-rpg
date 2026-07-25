@@ -13,15 +13,16 @@ type ReschedulePlannedWorkoutDialogProps = {
 /** Sprint 21 Parte 2 — só relata conflito (Fase 14 do módulo), nunca substitui a sessão do outro dia automaticamente. */
 export function ReschedulePlannedWorkoutDialog({ workout, onConfirm, onCancel }: ReschedulePlannedWorkoutDialogProps) {
   const titleId = useId()
+  const descriptionId = useId()
   const [newDate, setNewDate] = useState(workout.date)
   const [reason, setReason] = useState("")
 
   const conflicts = newDate && newDate !== workout.date ? checkRescheduleConflict(newDate) : []
 
   return (
-    <ModalShell labelledBy={titleId} onClose={onCancel}>
+    <ModalShell labelledBy={titleId} describedBy={descriptionId} onClose={onCancel}>
       <h3 id={titleId} className="modal-title">Reagendar &quot;{workout.name}&quot;</h3>
-      <p className="mt-2 text-xs text-muted">Data original: {workout.date}</p>
+      <p id={descriptionId} className="mt-2 text-xs text-muted">Data original: {workout.date}</p>
 
       <label className="text-xs text-muted" htmlFor={`${titleId}-date`} style={{ marginTop: "var(--space-3)", display: "block" }}>
         Nova data

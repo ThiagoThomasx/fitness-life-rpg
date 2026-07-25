@@ -17,6 +17,8 @@ function unlockScroll() {
 
 type ModalShellProps = {
   labelledBy: string
+  /** id do elemento com a descrição/corpo do dialog, se houver um único parágrafo natural */
+  describedBy?: string
   variant?: "center" | "sheet"
   /** false para modais que exigem ação explícita (ex.: resumo pós-treino) */
   dismissible?: boolean
@@ -26,6 +28,7 @@ type ModalShellProps = {
 
 export function ModalShell({
   labelledBy,
+  describedBy,
   variant = "center",
   dismissible = true,
   onClose,
@@ -90,6 +93,7 @@ export function ModalShell({
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}
+        aria-describedby={describedBy}
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
