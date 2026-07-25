@@ -327,6 +327,34 @@ export function buildSessionPlannedPerformedSummary(
   }
 }
 
+// ─── Planner adapter (Sprint 21 — Parte 2) ─────────────────────────────────────
+
+/**
+ * Constrói `ResolvedProgramExercise[]` direto do snapshot congelado do
+ * `PlannedWorkout`, sem voltar a resolver contra o programa/bloco ao vivo.
+ * `PlannedWorkout.templateSnapshot` já é o resultado final (template +
+ * overrides de semana) capturado na instanciação — reabrir essa resolução
+ * aqui duplicaria lógica de `resolveProgramSessionForWeek` e poderia divergir
+ * se o programa mudou depois que a sessão foi planejada.
+ */
+export function resolvedExercisesFromPlannedWorkout(planned: PlannedWorkout): ResolvedProgramExercise[] {
+  return planned.templateSnapshot.exerciseBlocks.map((block) => ({
+    exerciseId: block.exercise.exerciseId,
+    exerciseName: block.exercise.exerciseName,
+    sets: block.exercise.sets,
+    reps: block.exercise.reps,
+    loadKg: block.exercise.loadKg,
+    durationSeconds: block.exercise.durationSeconds,
+    distanceMeters: block.exercise.distanceMeters,
+    restSeconds: block.exercise.restSeconds,
+    rir: block.exercise.rir,
+    rpe: block.exercise.rpe,
+    tempo: block.exercise.tempo,
+    notes: block.exercise.notes,
+    source: 'template',
+  }))
+}
+
 // ─── Top-level assembler ───────────────────────────────────────────────────────
 
 function toComparisonStatus(

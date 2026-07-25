@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
   getPlannedWorkoutsByDateRange,
-  updatePlannedWorkoutStatus,
   startPlannedWorkoutExecution,
   revertPlannedWorkoutToPending,
   type PlannedWorkout,
@@ -63,12 +62,6 @@ export function PlannedWeekSection() {
     const { start, end } = currentWeekRange()
     setItems(getPlannedWorkoutsByDateRange(start, end))
   }, [])
-
-  function cycleStatus(item: PlannedWorkout) {
-    const next: PlannedWorkout["status"] = item.status === "pending" ? "done" : item.status === "done" ? "skipped" : "pending"
-    const updated = updatePlannedWorkoutStatus(item.id, next)
-    if (updated) setItems((prev) => prev.map((i) => (i.id === item.id ? updated : i)))
-  }
 
   function beginStart(item: PlannedWorkout) {
     setPreviewItem(null)
@@ -148,11 +141,10 @@ export function PlannedWeekSection() {
         <div className="flex flex-col gap-2" style={{ marginTop: "var(--space-2)" }}>
           {items.map((item) => (
             <div key={item.id} className="target-card" style={{ textAlign: "left" }}>
-              <button
-                type="button"
-                style={{ textAlign: "left", cursor: "pointer", width: "100%", background: "none", border: "none", padding: 0 }}
-                onClick={() => cycleStatus(item)}
-                aria-label={`${item.name} em ${item.date}, status ${STATUS_LABELS[item.status]}. Clique para alternar status.`}
+              <Link
+                href={`/plano/treino/${item.id}`}
+                style={{ textAlign: "left", display: "block", width: "100%" }}
+                aria-label={`${item.name} em ${item.date}, status ${STATUS_LABELS[item.status]}. Ver detalhes.`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-primary">{item.name}</span>
@@ -164,7 +156,7 @@ export function PlannedWeekSection() {
                   {WEEKDAY_LABELS[item.weekday as Weekday]} · {item.date}
                   {item.isOptional && " · opcional"}
                 </div>
-              </button>
+              </Link>
 
               {item.status === "pending" && (
                 <button

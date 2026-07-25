@@ -3,6 +3,7 @@ import {
   normalizeExerciseName,
   matchPlannedToPerformedExercises,
   buildPlannedPerformedComparison,
+  resolvedExercisesFromPlannedWorkout,
 } from './planned-performed-comparison'
 import type { ResolvedProgramExercise } from './training-blocks'
 import type { ExerciseRecord, CompletedWorkout } from './workout-history'
@@ -162,5 +163,35 @@ describe('buildPlannedPerformedComparison', () => {
   it('maps pending sessions to not_due', () => {
     const result = buildPlannedPerformedComparison(plannedWorkout({ date: '2026-08-01' }), [resolved()], undefined, '2026-07-25')
     expect(result.status).toBe('not_due')
+  })
+
+  describe('resolvedExercisesFromPlannedWorkout', () => {
+    it('builds resolved exercises straight from the frozen snapshot, without omitting undefined targets', () => {
+      const pw = plannedWorkout()
+      const result = resolvedExercisesFromPlannedWorkout(pw)
+      expect(result).toEqual([
+        {
+          exerciseId: 'ex-1',
+          exerciseName: 'Supino Reto',
+          sets: undefined,
+          reps: undefined,
+          loadKg: undefined,
+          durationSeconds: undefined,
+          distanceMeters: undefined,
+          restSeconds: undefined,
+          rir: undefined,
+          rpe: undefined,
+          tempo: undefined,
+          notes: undefined,
+          source: 'template',
+        },
+      ])
+    })
+
+    it('feeds directly into buildPlannedPerformedComparison end-to-end', () => {
+      const pw = plannedWorkout({ status: 'done', execution: { completedWorkoutId: 'cw-1', updatedAt: '2026-07-20T11:00:00.000Z' } })
+      const result = buildPlannedPerformedComparison(pw, resolvedExercisesFromPlannedWorkout(pw), completedWorkout(), '2026-07-25')
+      expect(result.exerciseComparisons[0].matchStatus).toBe('matched')
+    })
   })
 })
