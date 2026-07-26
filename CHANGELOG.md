@@ -13,6 +13,26 @@
 
 ### Entregas
 
+#### Sprint 29 Parte 2 — Health Recovery Dashboard Foundation — 2026-07-26
+
+Transforma os dados locais de saúde (Sprint 28) numa experiência consolidada
+de recuperação. Ver `HEALTH-RECOVERY-EXPERIENCE.md`.
+
+- **Novo**: `health-data/recovery-dashboard.ts` (`buildHealthRecoveryDashboard`)
+  — agregador puro de página, uma chamada por troca de período, sem
+  duplicar cálculo dos motores já existentes (baseline/tendência/conflito/
+  qualidade).
+- **Nova rota**: `/saude`, não adicionada à navegação principal — acessível
+  via card em Configurações → "Dados de saúde" (`HealthRecoveryLinkCard`),
+  mesmo padrão de `/preferencias`.
+- **UI**: resumo, sono, FC de repouso, passos, atividade (gráfico +
+  baseline + tendência, componente único reutilizado), peso (leitura de
+  Body Progress, sem duplicar gráfico), qualidade (sem score único),
+  conflitos (sem resolução automática). Disclaimers exigidos presentes.
+- 6 testes novos (`recovery-dashboard.test.ts`), 1414/1414 no total.
+  Lint/typecheck/build limpos. QA manual real sem erro de console, sem
+  overflow em 375px.
+
 #### Sprint 29 Parte 1 — Health Platform Feasibility & ADR — 2026-07-26
 
 Responde, com evidências técnicas, se o produto deve virar app nativo antes

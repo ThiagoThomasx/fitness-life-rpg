@@ -21,6 +21,7 @@ import { TemplatesProgramsResetSection } from "@/components/settings/TemplatesPr
 import { WorkoutHistoryResetSection } from "@/components/settings/WorkoutHistoryResetSection"
 import { CoachAdaptiveResetSection } from "@/components/settings/CoachAdaptiveResetSection"
 import { HealthDataResetSection } from "@/components/settings/HealthDataResetSection"
+import { HealthRecoveryLinkCard } from "@/components/settings/HealthRecoveryLinkCard"
 import { BodyWellnessExportSection } from "@/components/settings/BodyWellnessExportSection"
 import { HealthDataSection } from "@/components/settings/HealthDataSection"
 import { resetHealthData } from "@/lib/health-data"
@@ -240,6 +241,8 @@ export default function ConfiguracoesPage() {
         onConfirm={handleImportConfirm}
         onCancel={() => { setPanel("idle"); setImportFile(null) }}
       />
+
+      <HealthRecoveryLinkCard />
 
       <HealthDataSection />
 

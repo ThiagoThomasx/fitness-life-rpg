@@ -24,9 +24,19 @@
 
 ---
 
-## Parte 2 — Health Recovery Dashboard Foundation
+## Parte 2 — Health Recovery Dashboard Foundation ✅
 
-Pendente — ver seção correspondente após conclusão.
+**Agregador**: `buildHealthRecoveryDashboard(period, now)` (`src/lib/health-data/recovery-dashboard.ts`) — ponto de entrada único de página, compõe `getSummaryRange`/`getMetricBaseline`/`getMetricTrend`/`getConflicts`/`getWeightRecordsFromBodyProgress` sem duplicar nenhum cálculo. Nunca lança para "sem dados": `hasAnyData: false` + campos `null`/vazios.
+
+**Rota `/saude`**: nova rota, não adicionada à navegação principal (decisão travada, `CLAUDE.md` regra 6) — acessível via `HealthRecoveryLinkCard` em Configurações, mesmo padrão de `/preferencias`. Filtro de período reutiliza `PERIOD_OPTIONS` do Dashboard Analytics.
+
+**Seções**: resumo (`HealthRecoverySummary`), sono/FC de repouso/passos/atividade (`HealthRecoveryMetricSection` — componente único reutilizado, DRY), peso (`HealthRecoveryWeightSection`, só leitura, linka para `/perfil`/Body Progress), qualidade (`HealthRecoveryQualitySection`, sem score único), conflitos (`HealthRecoveryConflictsSection`, sem resolução automática). Disclaimers exigidos pelo brief presentes (FC de repouso, baseline insuficiente).
+
+**QA manual real**: dev server, dados reais de FC de repouso/passos/peso, estado "dados insuficientes" honesto para sono/atividade (1 dia de amostra), qualidade (2 dias, alta/média), conflitos (estado vazio) — sem erro de console. 375px sem overflow horizontal.
+
+**Testes**: 6 novos (`recovery-dashboard.test.ts`) cobrindo estado vazio, baseline com 7+ dias, amostra insuficiente, adapter de peso, conflitos, distribuição de qualidade. 1414/1414 no total. Lint/typecheck/build limpos.
+
+Ver `HEALTH-RECOVERY-EXPERIENCE.md`.
 
 ## Parte 3 — Health × Training Relationships & Explainability
 
