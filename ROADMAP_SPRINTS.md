@@ -450,13 +450,20 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
-## Sprint 28 — Health Data Foundation: Unified Local Health Signals (em andamento)
+## Sprint 28 — Health Data Foundation: Unified Local Health Signals ✅
 **Objetivo:** camada local, neutra e agnóstica de fonte para dados de saúde (passos, sono, peso, FC de repouso, calorias, atividade, bem-estar), pronta para alimentar Readiness/Recovery/Fatigue/Coach sem duplicar cálculo — sem integração real de Health Connect/Samsung Health/Apple Health/Google Fit nesta sprint. Ver `SPRINT-28.md`, `HEALTH-DATA-FOUNDATION.md`, `HEALTH-DATA-SCHEMA.md` e `HEALTH-DATA-QUALITY.md` para o relatório completo.
 
 - [x] Parte 1 — Fundação: auditoria (nenhum dado objetivo de saúde existia; peso já tem fonte de verdade em Body Progress; bem-estar subjetivo já é input do Coach via Readiness); `src/lib/health-data/` (`types`, `validation`, `normalization`, `quality`, `deduplication`, `storage`, `body-progress-adapter`, `queries`); 61 testes novos; 1256/1256 no total; lint/typecheck/build limpos
 - [x] Parte 2 — Entrada manual (seção "Dados de saúde" em Configurações, formulário dinâmico por métrica) e importação JSON/CSV com prévia obrigatória e persistência atômica; peso continua redirecionado para Body Progress (nunca duplicado); 55 testes novos, 1311/1311 no total; lint/typecheck/build limpos
 - [x] Parte 3 — Agregação diária (`DailyHealthSummary`, nunca persistida, estratégia explícita por métrica), conflito entre fontes (limiar por métrica, severidade proporcional, nunca resolvido automaticamente), qualidade agregada por dia, baseline (média/mediana/desvio, amostra mínima por métrica) e tendências (reaproveita `classifyTrend` de `trend-math.ts`); camada de consulta única (`analytics-queries.ts`) pronta para a Parte 4; UI mínima dentro de "Dados de saúde"; 48 testes novos, 1359/1359 no total; lint/typecheck/build limpos
 - [x] Parte 4 — Health Context Adapter (`consumer-context.ts`, gating por qualidade/conflito/amostra/obsolescência); Readiness (`healthContext?` opcional, nunca altera score); Recovery (`getRecoveryHealthContext`, contexto sistêmico de "hoje"); Fatigue (4 detectores novos: sono baixo recorrente, FC de repouso elevada, atividade externa alta, combinação); Coach (4 regras `Coach.Health.*`); backup/restore/reset (`resetHealthData()`, nova seção em Configurações); 34 testes novos, 1393/1393 no total; lint/typecheck/build limpos; QA manual real (check-in + reset) sem regressão. Ver `SPRINT-28-PART4.md`
+
+---
+
+## Sprint 29 — Health Platform Feasibility & Recovery Experience (em andamento)
+**Objetivo:** decidir com evidências técnicas o caminho para integrações nativas futuras (Health Connect/Samsung Health/Apple Health) e transformar os dados locais de saúde já existentes numa experiência consolidada de recuperação. Ver `SPRINT-29.md`, `HEALTH-PLATFORM-FEASIBILITY.md`, `docs/adr/ADR-HEALTH-PLATFORM.md`, `HEALTH-PROVIDER-INTERFACE.md`.
+
+- [x] Parte 1 — Auditoria de plataforma (Next.js puro, PWA já em produção, Supabase desativado, local-first confirmado); pesquisa técnica (Health Connect, Samsung Health, Apple HealthKit, PWA, Capacitor) com fontes oficiais; matriz de feasibility (5 opções); ADR formal (`docs/adr/ADR-HEALTH-PLATFORM.md`): manter web app + importação de arquivos, não adotar Capacitor nesta fase; `HealthDataProvider` (interface), `MockHealthProvider`, `importFromProvider` (ponte única com a pipeline real de importação, sem atalho para storage); 15 testes novos, 1408/1408 no total; lint/typecheck/build limpos
 
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 

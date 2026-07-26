@@ -13,6 +13,34 @@
 
 ### Entregas
 
+#### Sprint 29 Parte 1 — Health Platform Feasibility & ADR — 2026-07-26
+
+Responde, com evidências técnicas, se o produto deve virar app nativo antes
+de qualquer integração real com Health Connect/Samsung Health/Apple Health.
+Ver `SPRINT-29.md`, `HEALTH-PLATFORM-FEASIBILITY.md`,
+`docs/adr/ADR-HEALTH-PLATFORM.md` e `HEALTH-PROVIDER-INTERFACE.md`.
+
+- **Auditoria de plataforma**: confirmado Next.js puro (sem Capacitor/
+  Android/iOS), PWA já em produção (`manifest.webmanifest`, `sw.js` manual),
+  Supabase presente no código mas desativado no fluxo ativo, 100%
+  local-first via `localStorage`.
+- **Pesquisa técnica**: Health Connect (requisitos de versão Android,
+  permissões, background sync), Samsung Health (converge para Health
+  Connect), Apple HealthKit (exige app nativo, sem acesso via navegador em
+  nenhuma hipótese), PWA (sem API Web de saúde), Capacitor (plugins de
+  terceiros disponíveis, exige toolchain nativa completa).
+- **Decisão (ADR)**: manter o produto como web app, com importação de
+  arquivos como estratégia principal (Opção B da matriz de feasibility).
+  Não adotar Capacitor nem integração nativa produtiva nesta fase.
+- **Novo**: `health-data/provider.ts` (interface `HealthDataProvider`),
+  `health-data/mock-provider.ts` (`MockHealthProvider`, dados sintéticos),
+  `health-data/provider-import.ts` (`importFromProvider` — ponte única entre
+  um provider e a pipeline real de importação, sem atalho para storage).
+  Nenhum provider real implementado; nenhum provider alimenta
+  Readiness/Recovery/Fatigue/Coach diretamente.
+- 15 testes novos (`mock-provider.test.ts`, `provider-import.test.ts`),
+  1408/1408 no total. Lint/typecheck/build limpos.
+
 #### Sprint 28 Parte 4 — Health Data Integration: Readiness, Recovery, Fatigue, Coach, Backup & QA — 2026-07-26
 
 Conecta a camada de Health Data (Partes 1-3) aos motores existentes de
