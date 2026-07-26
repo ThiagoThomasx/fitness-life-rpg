@@ -33,8 +33,16 @@ export interface ProgramInstantiationSessionDate {
   weekday: number
 }
 
+// Usa os componentes LOCAIS da data, não `toISOString()` (UTC) — este módulo
+// inteiro raciocina em termos de dia da semana local (`getDay()`/`setDate()`),
+// então renderizar em UTC pode empurrar a data para o dia seguinte/anterior
+// dependendo do fuso da máquina, quebrando a consistência entre a data
+// calculada e o weekday que ela deveria representar.
 function toDateOnly(date: Date): string {
-  return date.toISOString().slice(0, 10)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 function addDays(dateStr: string, days: number): string {
