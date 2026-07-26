@@ -117,19 +117,67 @@ export interface NewHealthDataRecordInput {
   metadata?: Record<string, string | number | boolean>
 }
 
+export type HealthConflictSeverity = 'low' | 'medium' | 'high'
+
 export interface HealthDataConflict {
   metric: HealthMetricType
   date: string
   recordIds: string[]
   sources: HealthDataSource[]
+  reason: string
+  severity: HealthConflictSeverity
 }
 
 export interface HealthMetricBaseline {
   metric: HealthMetricType
   periodDays: number
   value: number
+  median: number
+  standardDeviation: number
   sampleSize: number
   quality: HealthDataQuality
+}
+
+// ─── Agregação diária, conflitos, baseline e tendências (Sprint 28 Parte 3) ───
+
+/**
+ * Resumo de um único dia, derivado sob demanda de `HealthDataRecord[]` — nunca
+ * persistido (ver `aggregation.ts`). Um campo de métrica é `undefined` quando
+ * nenhum registro válido daquela métrica existe naquele dia.
+ */
+export interface DailyHealthSummary {
+  /** `YYYY-MM-DD`, sempre em UTC (mesmo recorte usado pela deduplicação de peso). */
+  date: string
+
+  steps?: number
+  sleepMinutes?: number
+  sleepQuality?: number
+  restingHeartRate?: number
+  weightKg?: number
+  activeCalories?: number
+  activityMinutes?: number
+  distanceKm?: number
+  wellnessEnergy?: number
+  wellnessSoreness?: number
+  wellnessMotivation?: number
+
+  /** Fontes que contribuíram para qualquer métrica do dia. */
+  sources: HealthDataSource[]
+  quality: HealthDataQuality
+  conflicts: HealthDataConflict[]
+}
+
+export type HealthTrendDirection = 'increasing' | 'stable' | 'decreasing' | 'irregular' | 'insufficient_data'
+
+export interface HealthMetricTrend {
+  metric: HealthMetricType
+  periodDays: number
+  direction: HealthTrendDirection
+  sampleSize: number
+  windowedAverage: number | null
+  /** Variação absoluta estimada ao longo da janela recente (unidade canônica da métrica). */
+  changeAbsolute: number | null
+  evidence: string
 }
 
 // ─── Importação (Sprint 28 Parte 2) ────────────────────────────────────────────

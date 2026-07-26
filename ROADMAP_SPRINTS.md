@@ -455,7 +455,7 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 - [x] Parte 1 — Fundação: auditoria (nenhum dado objetivo de saúde existia; peso já tem fonte de verdade em Body Progress; bem-estar subjetivo já é input do Coach via Readiness); `src/lib/health-data/` (`types`, `validation`, `normalization`, `quality`, `deduplication`, `storage`, `body-progress-adapter`, `queries`); 61 testes novos; 1256/1256 no total; lint/typecheck/build limpos
 - [x] Parte 2 — Entrada manual (seção "Dados de saúde" em Configurações, formulário dinâmico por métrica) e importação JSON/CSV com prévia obrigatória e persistência atômica; peso continua redirecionado para Body Progress (nunca duplicado); 55 testes novos, 1311/1311 no total; lint/typecheck/build limpos
-- [ ] Parte 3 — Agregação diária, conflito entre fontes, baseline/tendências
+- [x] Parte 3 — Agregação diária (`DailyHealthSummary`, nunca persistida, estratégia explícita por métrica), conflito entre fontes (limiar por métrica, severidade proporcional, nunca resolvido automaticamente), qualidade agregada por dia, baseline (média/mediana/desvio, amostra mínima por métrica) e tendências (reaproveita `classifyTrend` de `trend-math.ts`); camada de consulta única (`analytics-queries.ts`) pronta para a Parte 4; UI mínima dentro de "Dados de saúde"; 48 testes novos, 1359/1359 no total; lint/typecheck/build limpos
 - [ ] Parte 4 — Integração Readiness/Recovery/Fatigue/Coach, backup/restore/reset, QA completo
 
 ## Feature Freeze (vigente até a Sprint 6 aceita)

@@ -5,6 +5,7 @@ import { getAllHealthRecords, type HealthDataRecord } from "@/lib/health-data"
 import { HealthDataManualEntryForm } from "./HealthDataManualEntryForm"
 import { HealthDataImportPanel } from "./HealthDataImportPanel"
 import { HealthDataRecordList } from "./HealthDataRecordList"
+import { HealthDataInsightsPanel } from "./HealthDataInsightsPanel"
 
 export function HealthDataSection() {
   const [records, setRecords] = useState<HealthDataRecord[]>([])
@@ -57,6 +58,8 @@ export function HealthDataSection() {
       )}
 
       <HealthDataImportPanel onImported={load} />
+
+      <HealthDataInsightsPanel records={records} />
     </>
   )
 }

@@ -102,3 +102,22 @@ Typecheck: ✅
 Tests:     ✅ 1311/1311 (1256 + 55 novos)
 Build:     ✅
 ```
+
+## 7. Parte 3 — Daily Aggregation, Conflicts, Quality, Baselines & Trends
+
+Ver `SPRINT-28-PART3.md` para o relatório completo desta parte.
+
+Resumo: camada analítica pura sobre os registros da Parte 1/2 — agregação
+diária (`DailyHealthSummary`, nunca persistida), detecção de conflito entre
+fontes, qualidade agregada por dia, baseline (média/mediana/desvio com
+amostra mínima por métrica) e tendências (reaproveitando `classifyTrend` de
+`trend-math.ts`, o mesmo motor de Body Progress/Wellness). Camada de
+consulta única (`analytics-queries.ts`) pronta para a Parte 4 consumir, sem
+nenhuma integração com Readiness/Recovery/Fatigue/Coach ainda.
+
+```text
+Lint:      ✅
+Typecheck: ✅
+Tests:     ✅ 1359/1359 (1311 + 48 novos)
+Build:     ✅
+```

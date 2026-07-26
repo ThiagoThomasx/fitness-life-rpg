@@ -13,6 +13,36 @@
 
 ### Entregas
 
+#### Sprint 28 Parte 3 — Daily Aggregation, Conflicts, Quality, Baselines & Trends — 2026-07-26
+
+Adiciona a camada analítica sobre a fundação das Partes 1-2: agregação
+diária, detecção de conflito entre fontes, qualidade agregada por dia,
+baseline e tendências — tudo derivado sob demanda, nada persistido. Ver
+`SPRINT-28-PART3.md`, `HEALTH-DATA-AGGREGATION.md`, `HEALTH-CONFLICTS.md`,
+`HEALTH-BASELINES.md` e `HEALTH-TRENDS.md` para o relatório completo.
+
+- **Novo em `src/lib/health-data/`**: `stats.ts` (mean/median/desvio padrão
+  — não existia utilitário de estatística compartilhado no projeto),
+  `aggregation-shared.ts` (prioridade de fonte, mapeamento métrica→campo do
+  resumo), `aggregation.ts` (`DailyHealthSummary`, estratégia explícita por
+  métrica), `conflicts.ts` (limiar percentual/absoluto por métrica,
+  severidade proporcional), `quality-aggregation.ts` (qualidade do dia,
+  combina qualidade por registro + conflitos), `baseline.ts`
+  (média/mediana/desvio, amostra mínima por métrica: 7 dias para
+  sono/FC/passos, 5 para as demais), `trends.ts` (reaproveita `classifyTrend`
+  de `trend-math.ts`, o mesmo motor de Body Progress/Wellness — nenhum
+  classificador novo), `analytics-queries.ts` (camada de consulta única:
+  `getSummaryRange`, `getDailySummary`, `getLatestSummary`, `getConflicts`,
+  `getQuality`, `getMetricBaseline`, `getMetricTrend`).
+- **UI**: `HealthDataInsightsPanel` — dentro da seção "Dados de saúde" já
+  existente em Configurações, não um dashboard novo. Seletor de período
+  (reaproveita `PERIOD_OPTIONS` do Analytics de treino), resumo do dia mais
+  recente, conflitos expansíveis, seletor de métrica com baseline e
+  tendência.
+- Nenhuma integração com Readiness/Recovery/Fatigue/Coach ainda — fica para
+  a Parte 4, conforme escopo da sprint.
+- 48 testes novos, 1359/1359 no total, lint/typecheck/build limpos.
+
 #### Sprint 28 Parte 2 — Manual Health Entry & Import Pipeline — 2026-07-26
 
 Adiciona a camada de entrada e importação sobre a fundação da Parte 1: uma
