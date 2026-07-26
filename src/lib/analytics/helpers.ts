@@ -7,8 +7,14 @@
 
 import type { AnalyticsPeriod, DateRange, TrendDirection } from './types'
 
-/** Tolerância de estabilidade (±5%) — mesma convenção de `exercise-intelligence.ts` (`STABILITY_TOLERANCE_PERCENT`). */
-const STABILITY_TOLERANCE_PERCENT = 5
+/**
+ * Tolerância de estabilidade (±5%) — mesma convenção de
+ * `exercise-intelligence.ts` (`STABILITY_TOLERANCE_PERCENT`). Exportada a
+ * partir da Sprint 25 Parte 4A para que `insights.ts` reaproveite a MESMA
+ * barra de "variação que não é ruído" ao invés de definir um segundo limiar
+ * paralelo para "evolução notável de exercício".
+ */
+export const STABILITY_TOLERANCE_PERCENT = 5
 
 /**
  * Limiares de confiança de amostra alinhados à convenção de
