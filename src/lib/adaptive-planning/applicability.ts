@@ -13,6 +13,8 @@ export interface ApplicabilityContext {
   /** `undefined` = não se aplica a este tipo de alvo. `null` = entidade não encontrada. */
   plannedWorkout?: PlannedWorkout | null
   program?: TrainingProgram | null
+  /** Treinos já existentes na data de destino de um `reschedule_workout` (ver `checkRescheduleConflict`). Nunca bloqueia sozinho — só vira warning, a resolução de estratégia acontece na aplicação. */
+  rescheduleConflicts?: PlannedWorkout[]
 }
 
 const TERMINAL_STATUSES: ReadonlySet<AdaptivePlanProposal['status']> = new Set<AdaptivePlanProposal['status']>([
@@ -66,6 +68,11 @@ export function checkProposalApplicability(
         reasons.push('O programa foi alterado desde que a proposta foi criada — snapshot obsoleto.')
       }
     }
+  }
+
+  if (context.rescheduleConflicts && context.rescheduleConflicts.length > 0) {
+    const names = context.rescheduleConflicts.map((w) => w.templateSnapshot.name).join(', ')
+    warnings.push(`Já existe(m) treino(s) na data de destino: ${names}.`)
   }
 
   return { applicable: reasons.length === 0, reasons, warnings }

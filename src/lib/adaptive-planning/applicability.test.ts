@@ -127,4 +127,14 @@ describe('checkProposalApplicability', () => {
     expect(result.applicable).toBe(false)
     expect(result.reasons[0]).toMatch(/obsoleto/)
   })
+
+  it('warns but stays applicable when the reschedule target date has a conflict', () => {
+    const result = checkProposalApplicability(baseProposal(), {
+      now: NOW,
+      plannedWorkout: basePlannedWorkout(),
+      rescheduleConflicts: [basePlannedWorkout({ id: 'pw-2', templateSnapshot: { name: 'Peito', exerciseBlocks: [], capturedAt: NOW.toISOString() } })],
+    })
+    expect(result.applicable).toBe(true)
+    expect(result.warnings[0]).toMatch(/Peito/)
+  })
 })
