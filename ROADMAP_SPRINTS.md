@@ -450,6 +450,14 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+## Sprint 28 — Health Data Foundation: Unified Local Health Signals (em andamento)
+**Objetivo:** camada local, neutra e agnóstica de fonte para dados de saúde (passos, sono, peso, FC de repouso, calorias, atividade, bem-estar), pronta para alimentar Readiness/Recovery/Fatigue/Coach sem duplicar cálculo — sem integração real de Health Connect/Samsung Health/Apple Health/Google Fit nesta sprint. Ver `SPRINT-28.md`, `HEALTH-DATA-FOUNDATION.md`, `HEALTH-DATA-SCHEMA.md` e `HEALTH-DATA-QUALITY.md` para o relatório completo.
+
+- [x] Parte 1 — Fundação: auditoria (nenhum dado objetivo de saúde existia; peso já tem fonte de verdade em Body Progress; bem-estar subjetivo já é input do Coach via Readiness); `src/lib/health-data/` (`types`, `validation`, `normalization`, `quality`, `deduplication`, `storage`, `body-progress-adapter`, `queries`); 61 testes novos; 1256/1256 no total; lint/typecheck/build limpos
+- [ ] Parte 2 — Entrada manual (UI) e importação JSON/CSV com preview e atomicidade
+- [ ] Parte 3 — Agregação diária, conflito entre fontes, baseline/tendências
+- [ ] Parte 4 — Integração Readiness/Recovery/Fatigue/Coach, backup/restore/reset, QA completo
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:

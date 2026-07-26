@@ -13,6 +13,31 @@
 
 ### Entregas
 
+#### Sprint 28 Parte 1 — Health Data Foundation: schema, validação e storage — 2026-07-26
+
+Primeira parte de uma nova camada local e agnóstica de fonte para dados de
+saúde (passos, sono, peso, FC de repouso, calorias, atividade, bem-estar),
+preparada — só no tipo — para futuras integrações de plataforma
+(Health Connect/Samsung Health/Apple Health/Google Fit), sem integrá-las de
+verdade nesta parte. Ver `SPRINT-28.md`, `HEALTH-DATA-FOUNDATION.md`,
+`HEALTH-DATA-SCHEMA.md` e `HEALTH-DATA-QUALITY.md` para o relatório
+completo.
+
+- **Novo domínio** `src/lib/health-data/`: `types.ts` (`HealthDataSource`,
+  `HealthMetricType`, `HealthDataRecord`), `validation.ts` (faixas
+  plausíveis por métrica, validação de intervalo de sono),
+  `normalization.ts` (conversão de unidade → unidade canônica),
+  `quality.ts` (nível + razões, nunca score único), `deduplication.ts`
+  (chave determinística `source+externalId` → `metric+source+recordedAt`
+  → hash), `storage.ts` (CRUD + importação atômica sobre
+  `lrpg-fit:health-data-records`), `body-progress-adapter.ts` e
+  `queries.ts`.
+- **Decisão**: peso continua com fonte de verdade única em Body Progress —
+  Health Data deriva registros sob demanda via adapter, nunca duplica.
+- **Decisão**: `localStorage` (não IndexedDB), consistente com o resto do
+  projeto. Ainda não integrado a `backup.ts` — planejado para a Parte 4.
+- 61 testes novos, 1256/1256 no total, lint/typecheck/build limpos.
+
 #### Sprint 27 — Adaptive Planning 2.0: From Coach Recommendation to Reviewable Plan Change — 2026-07-26
 
 Fecha o loop que a Sprint 26 deixou aberto: o Coach detecta e sugere, mas
