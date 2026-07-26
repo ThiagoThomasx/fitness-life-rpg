@@ -238,7 +238,13 @@ export const ALL_MUSCLE_GROUPS: MuscleGroup[] = [
   'peito', 'costas', 'pernas', 'ombros', 'biceps', 'triceps', 'core',
 ]
 
-function buildMuscleGroupLoads(
+// Exportada para reuso pelo motor de Balanceamento Muscular do Analytics
+// (`analytics/muscle-balance.ts`, Sprint 25 Parte 3) — evita recalcular
+// séries/volume por grupo muscular numa segunda implementação. Mesma
+// assinatura e mesma lógica interna usadas por `buildTrainingWeek` (escopo
+// semanal); o motor de Analytics passa sessões/treinos já filtrados por um
+// `DateRange` de período em vez de uma semana.
+export function buildMuscleGroupLoads(
   sessions: CompletedSessionSummary[],
   allExercises: ReturnType<typeof getAllExercises>,
   weekWorkouts: CompletedWorkout[],
