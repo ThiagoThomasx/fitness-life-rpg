@@ -13,6 +13,41 @@
 
 ### Entregas
 
+#### Sprint 26 — Coach Mode Foundation: Deterministic Training Coach — 2026-07-26
+
+Motor de interpretação determinístico (sem IA/LLM) que combina sinais já
+produzidos pelos motores existentes (Analytics 2.0, Exercise Intelligence,
+Readiness, Recovery, Program Adherence) em recomendações explicáveis, mais a
+UI que expõe tudo dentro da rota `/dashboard` já existente. Ver
+`SPRINT-26.md`, `COACH-ENGINE.md`, `COACH-RULES.md`, `COACH-SIGNALS.md` e
+`COACH-EXPLAINABILITY.md` para o relatório completo.
+
+- **9 motores puros** em `src/lib/coach/` (`types`, `helpers`, `signals`,
+  `rules`, `priority`, `explanations`, `recommendations`, `decisions`,
+  `engine`) — nenhum cálculo de negócio duplicado; `signals.ts` só adapta o
+  que `analytics/dashboard.buildDashboardAnalytics` e mais dois motores
+  (`exercise-intelligence`, `exercise-records`) já produzem.
+- **9 regras determinísticas** cobrindo recuperação, carga, consistência,
+  aderência ao programa, frequência, balanceamento muscular, volume,
+  progressão/estagnação e recordes — cada achado cita evidência numérica
+  real, nunca texto inventado.
+- **Nova seção "Coach"** dentro do Dashboard (não rota nova, não item de
+  navegação novo — decisão de navegação permanece travada): cards por
+  recomendação agrupados por prioridade, explicações expansíveis
+  (título/resumo/evidências/período/regra/sugestão), ações só de navegação,
+  decisões Aceitar/Ignorar persistidas em `lrpg-fit:coach-decisions`
+  (adicionada a `STORAGE_KEYS`/backup/reset).
+- **Bug real encontrado e corrigido**: o motor de balanceamento muscular
+  (Sprint 25) pode classificar o MESMO grupo como negligenciado e excessivo
+  simultaneamente com amostra pequena (bases de cálculo diferentes) — o
+  Coach agora suprime a recomendação "negligenciado" quando o grupo já está
+  marcado como excessivo, evitando uma contradição visível ao usuário.
+- QA manual real (dev server, dados reais, fluxo completo de decisão
+  testado por interação, persistência confirmada após reload, mobile/
+  tablet/desktop sem overflow) — zero erros de console.
+- 1091/1092 testes (1 falha pré-existente não relacionada), lint/typecheck/
+  build limpos.
+
 #### Sprint 25 — Analytics 2.0: Engines + Dashboard Analytics UI — 2026-07-25
 
 Motor de analytics agregado (Performance, Consistência, Balanceamento

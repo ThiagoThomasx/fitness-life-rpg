@@ -41,6 +41,22 @@ A fase atual de redesign toca **apenas** na camada de componentes de UI — stor
 
 Chaves auxiliares: `lrpg-fit:avatar`, `lrpg-fit:char-name`, `rpg_last_seen_level` (detecção de level-up no Dashboard).
 
+## `lib/analytics/*` e `lib/coach/*` — motores derivados (sem persistência própria de dados)
+
+`lib/analytics/*` (Sprint 25) e `lib/coach/*` (Sprint 26) não introduzem
+nenhuma chave de `localStorage` de dados novos — são funções puras que
+compõem os módulos da tabela acima (principalmente `workout-history.ts`,
+`readiness-check-ins.ts`, `workout-recovery.ts`, `workout-readiness.ts`,
+`exercise-intelligence.ts`, `exercise-records.ts`, `program-adherence.ts`) em
+sinais/relatórios agregados. Ponto de entrada de cada camada:
+`analytics/dashboard.buildDashboardAnalytics(period)` e
+`coach/engine.runCoachEngine(period)` — o Coach chama o primeiro
+internamente (ver `COACH-SIGNALS.md`), nunca recalcula o que o Analytics já
+produz. A única exceção com persistência própria é `coach/decisions.ts`
+(`lrpg-fit:coach-decisions`) — mesmo padrão de
+`adaptive-recommendation-decisions.ts` (Sprint 21): só o ESTADO da decisão
+do usuário é persistido, nunca o resultado de um cálculo.
+
 ## IndexedDB (Sprint 19 Parte 2 — único uso no app)
 
 Fotos privadas de progresso (`src/lib/body-progress-photo-db.ts`) usam IndexedDB (`lrpg-fit-photos`, versão 1, store `photos`) em vez de `localStorage` — blobs de imagem não cabem bem nesse mecanismo (limite de armazenamento menor, custo de serialização, e o requisito explícito de nunca incluir imagens no backup JSON). É o único domínio do app que não segue o padrão `localStorage` acima. `BodyProgressEntry.photoIds` (em `lrpg-fit:body-progress`) guarda apenas os IDs — a resolução para metadados/blob acontece em runtime via `body-progress-photo-link.ts`, nunca persistida cruzada. Ver `DATA_MODEL.md` e `SPRINT-19-PART2.md`.

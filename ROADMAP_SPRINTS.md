@@ -421,6 +421,19 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+## Sprint 26 — Coach Mode Foundation: Deterministic Training Coach ✅
+**Objetivo:** motor de interpretação determinístico (sem IA/LLM) que combina sinais já produzidos pelos motores existentes (Analytics 2.0, Exercise Intelligence, Readiness, Recovery, Program Adherence) em recomendações explicáveis, mais a UI que expõe tudo dentro da rota `/dashboard` já existente — sem nova rota, sem lógica de negócio nova. Ver `SPRINT-26.md`, `COACH-ENGINE.md`, `COACH-RULES.md`, `COACH-SIGNALS.md` e `COACH-EXPLAINABILITY.md` para o relatório completo.
+
+- [x] Auditoria confirmada: nenhum motor de Analytics/domínio lê zustand — todos leem `localStorage` via `lib/*.ts`; `buildDashboardAnalytics(period)` já é a composição raiz ideal para o Coach reaproveitar; só `getExerciseTrends` e `getRecentRecords` precisaram de chamada adicional
+- [x] Partes 1-2 — Fundação + sinais + regras: `types.ts`, `helpers.ts`, `signals.ts` (adaptação pura de motores existentes), `rules.ts` (9 regras determinísticas), `priority.ts` (prioridade/confiança por peso e amostra, nunca IA), `explanations.ts`, `recommendations.ts`, `decisions.ts` (persistência, mesmo padrão de `adaptive-recommendation-decisions.ts`), `engine.ts` (`runCoachEngine`, ponto de entrada único)
+- [x] Parte 3 — Seção "Coach" dentro do Dashboard (`CoachSection.tsx` + `CoachRecommendationCard.tsx` em `src/components/dashboard/coach/`), cards por recomendação agrupados por prioridade, explicações expansíveis, ações de navegação, decisões Aceitar/Ignorar persistidas em `lrpg-fit:coach-decisions` (adicionada a `STORAGE_KEYS`)
+- [x] QA manual real: dev server, dados reais, fluxo completo de decisão testado por interação (expandir → Visualizada → Aceitar → Aceita), persistência confirmada após reload direto no `localStorage`, mobile (375px)/tablet (768px)/desktop sem overflow horizontal, zero erros de console
+- [x] Bug real encontrado e corrigido: `muscle-balance.ts` (Sprint 25) pode classificar o mesmo grupo muscular como negligenciado E excessivo simultaneamente com amostra pequena (bases de cálculo diferentes) — `Coach.Muscle.Neglected` agora suprime o achado quando o grupo já está em `excessiveGroups`, sem alterar o motor existente
+- [x] 1091/1092 testes (45 novos cobrindo signals/rules/priority/explanations/decisions/recommendations/engine), lint/typecheck/build limpos
+- [ ] **Pendências conscientes**: `Coach.Frequency.LongGap`/`Coach.Muscle.Neglected` usam `sampleSize: 1` (leitura direta de fato, não amostra estatística) e por isso nunca atingem confiança alta mesmo com dado sólido; sem testes de componente React (convenção do projeto mantida); `Coach.Progress.Stagnation` cobre "progressão" e "estagnação" com a mesma regra (decisão documentada em `COACH-RULES.md`)
+
+---
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:
