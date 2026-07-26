@@ -6,10 +6,12 @@ import { HealthDataManualEntryForm } from "./HealthDataManualEntryForm"
 import { HealthDataImportPanel } from "./HealthDataImportPanel"
 import { HealthDataRecordList } from "./HealthDataRecordList"
 import { HealthDataInsightsPanel } from "./HealthDataInsightsPanel"
+import { HealthImportPresetsSection } from "./health-import/HealthImportPresetsSection"
 
 export function HealthDataSection() {
   const [records, setRecords] = useState<HealthDataRecord[]>([])
   const [showForm, setShowForm] = useState(false)
+  const [presetsVersion, setPresetsVersion] = useState(0)
 
   const load = useCallback(() => {
     setRecords(getAllHealthRecords())
@@ -57,7 +59,9 @@ export function HealthDataSection() {
         </section>
       )}
 
-      <HealthDataImportPanel onImported={load} />
+      <HealthDataImportPanel onImported={load} onPresetSaved={() => setPresetsVersion((v) => v + 1)} />
+
+      <HealthImportPresetsSection key={presetsVersion} />
 
       <HealthDataInsightsPanel records={records} />
     </>

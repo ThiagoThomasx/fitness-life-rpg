@@ -94,7 +94,7 @@ function resolveRecordedAt(mapping: HealthImportMapping, header: string[], cells
   if (hasDateTransformation) return { value: recordedAtField.value }
 
   if (mapping.dateFormat && mapping.dateFormat !== 'ISO') {
-    const parsed = parseDateWithFormat(recordedAtField.value, mapping.dateFormat)
+    const parsed = parseDateWithFormat(recordedAtField.value, mapping.dateFormat, mapping.timezoneOffsetMinutes ?? 0)
     if (!parsed) return { error: `Não foi possível interpretar "${recordedAtField.value}" como data no formato ${mapping.dateFormat}.` }
     return { value: parsed }
   }
@@ -117,7 +117,7 @@ export function applyMappingToRow(
 ): ParsedImportItem {
   const metricField = extractField(mapping, header, cells, 'metric')
   if (metricField.error) return { index: lineNumber, error: metricField.error }
-  const metric = mapping.static.metric ?? metricField.value
+  const metric = metricField.value || mapping.static.metric
   if (!isValidHealthMetricType(metric)) {
     return { index: lineNumber, error: `Métrica "${metric}" ausente ou desconhecida.` }
   }
@@ -154,7 +154,7 @@ export function applyMappingToRow(
 
   const sourceField = extractField(mapping, header, cells, 'source')
   if (sourceField.error) return { index: lineNumber, error: sourceField.error }
-  const source: HealthDataSource = mapping.static.source ?? (sourceField.value || 'csv_import') as HealthDataSource
+  const source: HealthDataSource = (sourceField.value || mapping.static.source || 'csv_import') as HealthDataSource
   if (!isValidHealthDataSource(source)) return { index: lineNumber, error: `Fonte "${source}" desconhecida.` }
 
   const unitField = extractField(mapping, header, cells, 'unit')
@@ -176,6 +176,45 @@ export function applyMappingToRow(
   }
 
   return { index: lineNumber, input }
+}
+
+export interface MappingRowTraceEntry {
+  field: HealthImportTargetField
+  column: string
+  original: string
+  transformed: string
+  error?: string
+}
+
+const TRACE_FIELDS: readonly HealthImportTargetField[] = ['metric', 'value', 'unit', 'recordedAt', 'startAt', 'endAt', 'source', 'externalId']
+
+/**
+ * Explica, coluna a coluna, o que a linha vira depois do mapeamento e das
+ * transformações — usado pela UI para mostrar "original → transformado"
+ * antes da confirmação (seção 19), sem reimplementar nenhuma regra: chama
+ * exatamente as mesmas funções que `applyMappingToRow` usa.
+ */
+export function buildMappingRowTrace(mapping: HealthImportMapping, header: string[], cells: string[]): MappingRowTraceEntry[] {
+  const entries: MappingRowTraceEntry[] = []
+
+  for (const field of TRACE_FIELDS) {
+    const columnName = mapping.columns[field]
+    if (!columnName) continue
+
+    const columnIndex = header.indexOf(columnName)
+    const original = columnIndex === -1 ? '' : (cells[columnIndex] ?? '').trim()
+
+    if (field === 'recordedAt') {
+      const resolved = resolveRecordedAt(mapping, header, cells)
+      entries.push({ field, column: columnName, original, transformed: resolved.value ?? '', error: resolved.error })
+      continue
+    }
+
+    const result = extractField(mapping, header, cells, field)
+    entries.push({ field, column: columnName, original, transformed: result.value, error: result.error })
+  }
+
+  return entries
 }
 
 export interface MappedCsvImportResult {

@@ -8,7 +8,7 @@ import { isValidHealthDataSource, isValidHealthMetricType } from './validation'
 import type { HealthDataSource, NewHealthDataRecordInput } from './types'
 import type { ParsedImportItem } from './import-json'
 
-const CANONICAL_COLUMNS = [
+export const CANONICAL_COLUMNS = [
   'metric',
   'value',
   'unit',
@@ -19,7 +19,7 @@ const CANONICAL_COLUMNS = [
   'endAt',
 ] as const
 
-type CanonicalColumn = typeof CANONICAL_COLUMNS[number]
+export type CanonicalColumn = typeof CANONICAL_COLUMNS[number]
 
 /** Aliases aceitos (cabeçalho em português) → nome canônico. Mapeamento avançado está fora do escopo. */
 const HEADER_ALIASES: Record<string, CanonicalColumn> = {
@@ -38,7 +38,7 @@ function normalizeHeaderName(raw: string): string {
     .toLowerCase()
 }
 
-function resolveCanonicalColumn(rawHeader: string): CanonicalColumn | null {
+export function resolveCanonicalColumn(rawHeader: string): CanonicalColumn | null {
   const normalized = normalizeHeaderName(rawHeader)
   const canonicalMatch = CANONICAL_COLUMNS.find((c) => c.toLowerCase() === normalized)
   if (canonicalMatch) return canonicalMatch

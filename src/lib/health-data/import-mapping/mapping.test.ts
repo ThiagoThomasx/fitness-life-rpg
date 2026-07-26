@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { applyMappingToCsv, applyMappingToRow, validateMapping } from './mapping'
+import { applyMappingToCsv, applyMappingToRow, buildMappingRowTrace, validateMapping } from './mapping'
 import { parseCsvText } from '../csv-parser'
 import type { HealthImportMapping } from './types'
 
@@ -155,10 +155,73 @@ describe('applyMappingToRow', () => {
     expect(item.error).toBeDefined()
   })
 
-  it('applies a fixed source override', () => {
+  it('applies a fixed source when no source column is mapped', () => {
     const mapping = makeMapping({ static: { metric: 'steps', source: 'manual' } })
     const item = applyMappingToRow(mapping, ['date', 'steps'], ['2026-07-12', '8250'], 2)
     expect(item.input?.source).toBe('manual')
+  })
+
+  it('prefers a mapped metric column over a static metric fallback', () => {
+    const mapping = makeMapping({
+      static: { metric: 'weight' },
+      columns: { recordedAt: 'date', value: 'value', metric: 'kind' },
+    })
+    const item = applyMappingToRow(mapping, ['date', 'value', 'kind'], ['2026-07-12', '8000', 'steps'], 2)
+    expect(item.input?.metric).toBe('steps')
+  })
+
+  it('prefers a mapped source column over a static source fallback', () => {
+    const mapping = makeMapping({
+      static: { metric: 'steps', source: 'manual' },
+      columns: { recordedAt: 'date', value: 'steps', source: 'src' },
+    })
+    const item = applyMappingToRow(mapping, ['date', 'steps', 'src'], ['2026-07-12', '8000', 'wellness'], 2)
+    expect(item.input?.source).toBe('wellness')
+  })
+})
+
+describe('applyMappingToRow timezone', () => {
+  it('applies a fixed timezone offset when resolving recordedAt', () => {
+    const mapping = makeMapping({ dateFormat: 'DD/MM/YYYY HH:mm', timezoneOffsetMinutes: -180 })
+    const item = applyMappingToRow(mapping, ['date', 'steps'], ['12/07/2026 14:30', '8250'], 2)
+    expect(item.error).toBeUndefined()
+    expect(item.input?.recordedAt).toBe('2026-07-12T17:30:00.000Z')
+  })
+})
+
+describe('buildMappingRowTrace', () => {
+  it('reports original and transformed values for every mapped field', () => {
+    const mapping = makeMapping({
+      static: { metric: 'weight' },
+      columns: { recordedAt: 'date', value: 'weight', unit: 'unit' },
+      transformations: [{ field: 'value', transformation: { kind: 'parse_number', decimalSeparator: ',' } }],
+    })
+    const trace = buildMappingRowTrace(mapping, ['date', 'weight', 'unit'], ['2026-07-12', '72,5', 'lb'])
+
+    const valueEntry = trace.find((e) => e.field === 'value')
+    expect(valueEntry?.original).toBe('72,5')
+    expect(valueEntry?.transformed).toBe('72.5')
+
+    const recordedAtEntry = trace.find((e) => e.field === 'recordedAt')
+    expect(recordedAtEntry?.original).toBe('2026-07-12')
+    expect(recordedAtEntry?.transformed).toBe('2026-07-12T00:00:00.000Z')
+
+    const unitEntry = trace.find((e) => e.field === 'unit')
+    expect(unitEntry?.original).toBe('lb')
+    expect(unitEntry?.transformed).toBe('lb')
+  })
+
+  it('only reports fields that are actually mapped to a column', () => {
+    const mapping = makeMapping({ columns: { recordedAt: 'date', value: 'steps' } })
+    const trace = buildMappingRowTrace(mapping, ['date', 'steps'], ['2026-07-12', '8000'])
+    expect(trace.map((e) => e.field).sort()).toEqual(['recordedAt', 'value'])
+  })
+
+  it('surfaces a per-field error without throwing', () => {
+    const mapping = makeMapping()
+    const trace = buildMappingRowTrace(mapping, ['date', 'steps'], ['not-a-date', '8000'])
+    const recordedAtEntry = trace.find((e) => e.field === 'recordedAt')
+    expect(recordedAtEntry?.error).toBeDefined()
   })
 })
 

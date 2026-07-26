@@ -148,6 +148,8 @@ export interface HealthImportMapping {
   static: HealthImportStaticValues
 
   dateFormat?: HealthImportDateFormat
+  /** Offset em minutos a subtrair do horário local interpretado para chegar em UTC (seção 18). `0`/ausente = UTC. */
+  timezoneOffsetMinutes?: number
   decimalSeparator: HealthImportDecimalSeparator
   delimiter: HealthImportDelimiter
 

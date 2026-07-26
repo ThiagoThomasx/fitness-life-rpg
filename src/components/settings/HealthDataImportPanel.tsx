@@ -5,13 +5,16 @@ import { ModalShell } from "@/components/ui/ModalShell"
 import {
   parseHealthDataJsonImport,
   parseHealthDataCsvImport,
+  parseCsvText,
   buildHealthImportPreview,
   applyHealthImportRecords,
+  inspectCsvHeader,
   MAX_HEALTH_IMPORT_FILE_BYTES,
   type HealthDataRecord,
   type HealthImportPreview,
   type HealthImportFileKind,
 } from "@/lib/health-data"
+import { HealthImportMappingWizard } from "./health-import/HealthImportMappingWizard"
 
 const MAX_EXAMPLES = 20
 
@@ -29,9 +32,10 @@ function formatRecord(record: HealthDataRecord): string {
 
 type Props = {
   onImported: () => void
+  onPresetSaved?: () => void
 }
 
-export function HealthDataImportPanel({ onImported }: Props) {
+export function HealthDataImportPanel({ onImported, onPresetSaved }: Props) {
   const jsonInputRef = useRef<HTMLInputElement>(null)
   const csvInputRef = useRef<HTMLInputElement>(null)
 
@@ -42,6 +46,8 @@ export function HealthDataImportPanel({ onImported }: Props) {
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null)
   const [showAllInvalid, setShowAllInvalid] = useState(false)
   const [showAllDuplicates, setShowAllDuplicates] = useState(false)
+  const [mappingSession, setMappingSession] = useState<{ fileName: string; header: string[]; rows: string[][] } | null>(null)
+  const [skippedMappingNote, setSkippedMappingNote] = useState<string | null>(null)
 
   async function handleFile(kind: HealthImportFileKind, file: File) {
     setMessage(null)
@@ -49,6 +55,7 @@ export function HealthDataImportPanel({ onImported }: Props) {
     setPreview(null)
     setShowAllInvalid(false)
     setShowAllDuplicates(false)
+    setSkippedMappingNote(null)
     setFileName(file.name)
 
     if (file.size > MAX_HEALTH_IMPORT_FILE_BYTES) {
@@ -65,13 +72,40 @@ export function HealthDataImportPanel({ onImported }: Props) {
       return
     }
 
-    const parsed = kind === "json" ? parseHealthDataJsonImport(text) : parseHealthDataCsvImport(text)
-    if (!parsed.ok) {
-      setGlobalError(parsed.globalError ?? "Falha ao interpretar o arquivo.")
+    // JSON canônico sempre pula mapeamento (seção 22) — não há mapeamento
+    // avançado para JSON nesta sprint.
+    if (kind === "json") {
+      const parsed = parseHealthDataJsonImport(text)
+      if (!parsed.ok) {
+        setGlobalError(parsed.globalError ?? "Falha ao interpretar o arquivo.")
+        return
+      }
+      setPreview(buildHealthImportPreview("json", parsed.items))
       return
     }
 
-    setPreview(buildHealthImportPreview(kind, parsed.items))
+    const { header, rows } = parseCsvText(text)
+    const inspection = inspectCsvHeader(header)
+
+    if (inspection.isCanonical) {
+      // CSV canônico (ou 100% compatível via aliases) também pula mapeamento (seção 23).
+      const parsed = parseHealthDataCsvImport(text)
+      if (!parsed.ok) {
+        setGlobalError(parsed.globalError ?? "Falha ao interpretar o arquivo.")
+        return
+      }
+      setSkippedMappingNote("Nenhum mapeamento necessário — este CSV já usa o formato canônico.")
+      setPreview(buildHealthImportPreview("csv", parsed.items))
+      return
+    }
+
+    // CSV não canônico obrigatoriamente passa por mapeamento (seção 24).
+    setMappingSession({ fileName: file.name, header, rows })
+  }
+
+  function handleMapped(items: Parameters<typeof buildHealthImportPreview>[1]) {
+    setMappingSession(null)
+    setPreview(buildHealthImportPreview("csv", items))
   }
 
   function handleInputChange(kind: HealthImportFileKind) {
@@ -86,6 +120,7 @@ export function HealthDataImportPanel({ onImported }: Props) {
     setPreview(null)
     setFileName(null)
     setGlobalError(null)
+    setSkippedMappingNote(null)
   }
 
   async function handleConfirm() {
@@ -149,6 +184,17 @@ export function HealthDataImportPanel({ onImported }: Props) {
         </div>
       )}
 
+      {mappingSession && (
+        <HealthImportMappingWizard
+          fileName={mappingSession.fileName}
+          header={mappingSession.header}
+          rows={mappingSession.rows}
+          onCancel={() => setMappingSession(null)}
+          onMapped={handleMapped}
+          onPresetSaved={onPresetSaved}
+        />
+      )}
+
       {preview && (
         <ModalShell
           labelledBy="health-import-preview-title"
@@ -161,6 +207,11 @@ export function HealthDataImportPanel({ onImported }: Props) {
           <p id="health-import-preview-summary" className="settings-section__body" style={{ marginTop: 8 }}>
             {preview.total} registro(s) encontrado(s) no arquivo.
           </p>
+          {skippedMappingNote && (
+            <p role="status" className="settings-section__body" style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
+              ℹ️ {skippedMappingNote}
+            </p>
+          )}
 
           <div className="health-import-counts" role="group" aria-label="Resumo da prévia">
             <div className="health-import-count">
