@@ -210,7 +210,7 @@ describe('Coach.Muscle.Neglected / Coach.Volume.Imbalance', () => {
     expect(findings[0].evidence.join(' ')).toContain('49')
   })
 
-  it('never double-counts a group as both neglected and excessive (mirrors upstream engine invariant)', () => {
+  it('never double-counts a group as both neglected and excessive when they are genuinely distinct', () => {
     const signals = buildBaseSignals({
       muscleBalance: {
         neglectedGroups: ['costas'],
@@ -228,6 +228,26 @@ describe('Coach.Muscle.Neglected / Coach.Volume.Imbalance', () => {
     const excessive = rule('Coach.Volume.Imbalance').evaluate(signals)
     expect(neglected.map((f) => f.scopeKey)).toEqual(['costas'])
     expect(excessive.map((f) => f.scopeKey)).toEqual(['pernas'])
+  })
+
+  it('resolves a real upstream conflict (same group classified as both neglected and excessive, small-sample artifact) by suppressing the neglected finding', () => {
+    // Reproduz um caso real observado em QA: com poucas sessões no período, `muscle-balance.ts`
+    // pode classificar o MESMO grupo como neglected (limiar semanal) e excessive (fatia do
+    // período) ao mesmo tempo — bases de cálculo diferentes (ver `muscle-balance.ts`).
+    const signals = buildBaseSignals({
+      muscleBalance: {
+        neglectedGroups: ['peito'],
+        excessiveGroups: ['peito'],
+        pushPullRatio: { push: 5, pull: 1, ratio: 5 },
+        upperLowerRatio: { upper: 4, lower: 1, ratio: 4 },
+        period: '30d',
+        distribution: [{ muscleGroup: 'peito', label: 'Peito', sets: 20, volumeKg: 1500, frequency: 3, participationPercent: 83.3 }],
+      },
+    })
+    const neglected = rule('Coach.Muscle.Neglected').evaluate(signals)
+    const excessive = rule('Coach.Volume.Imbalance').evaluate(signals)
+    expect(neglected).toEqual([])
+    expect(excessive.map((f) => f.scopeKey)).toEqual(['peito'])
   })
 })
 

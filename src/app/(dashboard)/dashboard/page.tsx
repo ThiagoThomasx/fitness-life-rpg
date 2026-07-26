@@ -36,6 +36,7 @@ import { CurrentCycleCard } from "@/components/dashboard/CurrentCycleCard"
 import { ActiveGoalsCard } from "@/components/dashboard/ActiveGoalsCard"
 import { BodyProgressCard } from "@/components/dashboard/BodyProgressCard"
 import { AnalyticsSection } from "@/components/dashboard/analytics/AnalyticsSection"
+import { CoachSection } from "@/components/dashboard/coach/CoachSection"
 import { getCheckIns } from "@/lib/readiness-check-ins"
 import type { WorkoutReadinessCheckIn } from "@/lib/readiness-check-ins"
 import { computeReadinessStats } from "@/lib/workout-readiness"
@@ -196,6 +197,8 @@ export default function DashboardPage() {
             <NextMilestone totalWorkouts={totalWorkouts} />
           </div>
         </div>
+
+        <CoachSection />
 
         <AnalyticsSection />
 

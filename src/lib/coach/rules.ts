@@ -166,9 +166,19 @@ function evaluateNeglectedMuscleGroup(signals: CoachSignals): CoachRuleFinding[]
   const totalSets = signals.muscleBalance.distribution.reduce((sum, d) => sum + d.sets, 0)
   if (totalSets === 0) return []
 
+  // `neglectedGroups` (limiar de séries/semana) e `excessiveGroups` (fatia do
+  // período) vêm de bases de cálculo diferentes em `muscle-balance.ts` e,
+  // com amostra pequena, podem classificar o MESMO grupo nos dois — um
+  // grupo pode dominar a fatia de um período com pouquíssimas sessões e
+  // ainda estar abaixo do mínimo semanal esperado. Mostrar as duas
+  // recomendações juntas seria contraditório para o usuário; o Coach
+  // resolve o conflito priorizando "volume desproporcional" (`Coach.Volume.Imbalance`),
+  // que já cobre esse grupo com a mesma evidência.
+  const excessiveSet = new Set(signals.muscleBalance.excessiveGroups)
   const findings: CoachRuleFinding[] = []
 
   for (const mg of signals.muscleBalance.neglectedGroups) {
+    if (excessiveSet.has(mg)) continue
     const entry = signals.muscleBalance.distribution.find((d) => d.muscleGroup === mg)
     if (!entry) continue
 
