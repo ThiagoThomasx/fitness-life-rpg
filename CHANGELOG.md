@@ -13,6 +13,37 @@
 
 ### Entregas
 
+#### Sprint 25 — Analytics 2.0: Engines + Dashboard Analytics UI — 2026-07-25
+
+Motor de analytics agregado (Performance, Consistência, Balanceamento
+Muscular, Fadiga, Progresso, Insights) sobre dados já existentes, mais a UI
+que expõe tudo dentro da rota `/dashboard` já existente. Sem nova rota, sem
+lógica de negócio nova. Ver `SPRINT-25.md`, `ANALYTICS-ENGINE.md`,
+`PERFORMANCE-ANALYTICS.md`, `CONSISTENCY-ENGINE.md`, `MUSCLE-BALANCE.md` e
+`INSIGHTS-ENGINE.md` para o relatório completo.
+
+- **9 motores puros** em `src/lib/analytics/` (`types`, `helpers`,
+  `performance`, `consistency`, `muscle-balance`, `fatigue`, `progress`,
+  `insights`, `dashboard`) — cada um compõe módulos `lib/*` já existentes,
+  nenhuma matemática de negócio recalculada. Ponto de entrada único:
+  `buildDashboardAnalytics(period)`.
+- **Nova seção "Analytics"** dentro do Dashboard (não rota nova, não item de
+  navegação novo — decisão de navegação permanece travada): filtro de
+  período (6 opções) + 6 sub-painéis (Destaques, Performance, Consistência,
+  Músculos, Recuperação, Insights), gráficos recharts só onde agregam valor
+  real (variação percentual por métrica, distribuição por grupo muscular).
+- **Sem score único** — cada indicador é um `.stat-cell` independente,
+  seguindo a proibição explícita da brief de não fabricar um número
+  combinado arbitrário.
+- **Bug real encontrado e corrigido**: `FatiguePanel` mostrava "Recuperado"
+  para grupos musculares nunca treinados — corrigido para "Sem histórico"
+  (mudança de apresentação, `workout-recovery.ts` intocado).
+- QA manual real (dev server, dados reais, estado vazio, 6 abas × 6
+  períodos, screenshots desktop/mobile via Playwright+msedge) — zero erros
+  de console, zero overflow horizontal.
+- 1046/1047 testes (1 falha pré-existente não relacionada), lint/typecheck/
+  build limpos.
+
 #### Sprint 24 — Product Reliability Part 2: Visual QA, Accessibility & Interaction Testing — 2026-07-25
 
 Fecha as pendências deixadas pela Sprint 23. Ver `SPRINT-24.md`,

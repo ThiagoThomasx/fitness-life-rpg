@@ -35,6 +35,7 @@ import { WeeklyTrainingCard } from "@/components/dashboard/WeeklyTrainingCard"
 import { CurrentCycleCard } from "@/components/dashboard/CurrentCycleCard"
 import { ActiveGoalsCard } from "@/components/dashboard/ActiveGoalsCard"
 import { BodyProgressCard } from "@/components/dashboard/BodyProgressCard"
+import { AnalyticsSection } from "@/components/dashboard/analytics/AnalyticsSection"
 import { getCheckIns } from "@/lib/readiness-check-ins"
 import type { WorkoutReadinessCheckIn } from "@/lib/readiness-check-ins"
 import { computeReadinessStats } from "@/lib/workout-readiness"
@@ -195,6 +196,8 @@ export default function DashboardPage() {
             <NextMilestone totalWorkouts={totalWorkouts} />
           </div>
         </div>
+
+        <AnalyticsSection />
 
         <div className="grid grid-cols-2 gap-2">
           <button onClick={() => router.push("/treinos")} className="btn btn--primary btn--lg">

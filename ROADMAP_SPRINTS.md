@@ -406,6 +406,21 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+## Sprint 25 — Analytics 2.0: Engines + Dashboard Analytics UI ✅
+**Objetivo:** motor de analytics agregado (Performance, Consistência, Balanceamento Muscular, Fadiga, Progresso, Insights) sobre dados já existentes, mais a UI que expõe tudo dentro da rota `/dashboard` já existente — sem nova rota, sem lógica de negócio nova. Ver `SPRINT-25.md`, `ANALYTICS-ENGINE.md`, `PERFORMANCE-ANALYTICS.md`, `CONSISTENCY-ENGINE.md`, `MUSCLE-BALANCE.md` e `INSIGHTS-ENGINE.md` para o relatório completo.
+
+- [x] Parte 1 — Fundação (`types.ts`, `helpers.ts`): `AnalyticsPeriod`, `DateRange`, `TrendDirection`, `resolvePeriodRange`, `filterByDateRange`, `comparePeriods`, `sampleConfidence`
+- [x] Parte 2 — `performance.ts` (5 métricas agregadas vs. período anterior) e `consistency.ts` (aderência, streaks, semanas perfeitas, melhor/pior mês)
+- [x] Parte 3 — `muscle-balance.ts` (distribuição por grupo, negligenciados/excessivos, push/pull e superior/inferior) e `fatigue.ts` (prontidão + recuperação + tendência de carga, 3 detectores de padrão)
+- [x] Parte 4A — `progress.ts` (resumo de período) e `insights.ts` (5 detectores observacionais), mais `dashboard.ts` (`buildDashboardAnalytics`, ponto de entrada único)
+- [x] Parte 4B — Seção "Analytics" dentro do Dashboard (`AnalyticsSection.tsx` + 6 painéis em `src/components/dashboard/analytics/`), filtro de período (6 opções) + sub-navegação de 6 painéis, gráficos recharts só onde agregam valor real, sem score único
+- [x] QA manual real: dev server, dados reais, estado vazio (backup/restore de `localStorage`), 6 abas × 6 períodos, screenshots desktop/mobile via Playwright+msedge, zero erros de console, zero overflow horizontal
+- [x] Bug real encontrado e corrigido: badge "Recuperado" enganoso para grupos nunca treinados em `FatiguePanel` (mudança de apresentação, não de dado)
+- [x] 1046/1047 testes (9 arquivos de teste novos cobrindo os 9 motores), lint/typecheck/build limpos
+- [ ] **Pendências conscientes**: `getTopEvolvingExercises`/`getStagnantExercisesInPeriod` ignoram `period` (limitação pré-existente de `exercise-records.ts`, não resolvida); sem "maior queda"/"melhores semanas" como métricas próprias (motores não as produzem, UI usa aproximação honesta); sem testes de componente React (convenção do projeto mantida, cobertura via QA manual); screenshot automatizado cobre só 2 dos 6 painéis por breakpoint
+
+---
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:
