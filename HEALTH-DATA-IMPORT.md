@@ -1,5 +1,10 @@
 # Health Data — Import Pipeline (Sprint 28 Parte 2)
 
+> Ver `HEALTH-DATA-EXPORT.md` (Sprint 30 Parte 3) para o lado inverso —
+> exportar registros de volta para JSON/CSV de um jeito reimportável por
+> este mesmo pipeline, e para os format adapters que consolidam JSON
+> canônico / CSV canônico / CSV mapeado atrás de uma interface única.
+
 ## Fluxo
 
 ```

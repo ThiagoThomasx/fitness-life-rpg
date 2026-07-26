@@ -13,6 +13,39 @@
 
 ### Entregas
 
+#### Sprint 30 Parte 3 — Health Data Export, Round-Trip Portability & Format Adapters — 2026-07-26
+
+Adiciona o lado inverso da importação (Parte 1/2): exportar Health Data
+de volta para JSON/CSV de um jeito que o próprio app reimporte sem
+regressão. Ver `HEALTH-DATA-EXPORT.md` para o detalhamento completo.
+
+- **Novo**: `src/lib/health-data/export/` — `filters.ts`
+  (`getHealthRecordsForExport`, ordenação determinística por
+  `recordedAt → metric → source → externalId`), `canonical-json.ts`/
+  `canonical-csv.ts` (formato versionado, reimportável pelos parsers já
+  existentes sem nenhuma mudança neles), `csv-safety.ts` (escaping RFC-4180
+  + neutralização de formula injection, reaproveitando
+  `sanitizeCsvTextField` já existente), `filenames.ts`, `preview.ts`,
+  `download.ts`, `round-trip.ts` (`compareHealthRecordSets` — equivalência
+  semântica, nunca byte a byte; caso especial para peso via Body Progress),
+  `adapters.ts` (`HealthImportFormatAdapter`: canonical-json/canonical-csv/
+  mapped-csv atrás de uma interface única, nenhum parser reimplementado).
+- **Novo**: `HealthDataExportPanel.tsx` em Configurações — formato, métrica,
+  período, incluir peso, prévia (contagem/tamanho estimado/nome do
+  arquivo), download local (sem envio a servidores).
+- **Round-trip validado ponta a ponta** pelo pipeline real de importação
+  (`parseHealthDataJsonImport`/`parseHealthDataCsvImport` →
+  `buildHealthImportPreview` → `applyHealthImportRecords`) — nenhuma rota
+  paralela de restore. Peso exportado/reimportado não duplica
+  `BodyProgressEntry`.
+- **Decisão deliberada**: `HealthDataImportPanel.tsx` não foi migrado para
+  os format adapters — sua lógica inline já é funcionalmente idêntica e
+  não tinha teste próprio; o risco de regressão numa tela em produção não
+  se justificava só por simetria arquitetural.
+- 79 testes novos, 1607/1607 no total; lint/typecheck/build limpos; QA
+  manual real (exportar JSON/CSV, alternar filtros, baixar arquivo) sem
+  erro de console.
+
 #### Sprint 29 Parte 4 — Visual QA, Mobile, Accessibility & Final Hardening — 2026-07-26
 
 Encerra a Sprint 29. Ver `SPRINT-29.md` para o relatório completo.

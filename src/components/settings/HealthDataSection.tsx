@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { getAllHealthRecords, type HealthDataRecord } from "@/lib/health-data"
 import { HealthDataManualEntryForm } from "./HealthDataManualEntryForm"
 import { HealthDataImportPanel } from "./HealthDataImportPanel"
+import { HealthDataExportPanel } from "./HealthDataExportPanel"
 import { HealthDataRecordList } from "./HealthDataRecordList"
 import { HealthDataInsightsPanel } from "./HealthDataInsightsPanel"
 import { HealthImportPresetsSection } from "./health-import/HealthImportPresetsSection"
@@ -60,6 +61,8 @@ export function HealthDataSection() {
       )}
 
       <HealthDataImportPanel onImported={load} onPresetSaved={() => setPresetsVersion((v) => v + 1)} />
+
+      <HealthDataExportPanel />
 
       <HealthImportPresetsSection key={presetsVersion} />
 

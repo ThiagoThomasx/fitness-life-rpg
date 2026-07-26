@@ -468,6 +468,15 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 - [x] Parte 3 — `buildHealthTrainingRelationships` (4 relações sono/FC de repouso/atividade × volume/prontidão relatada, amostra mínima de 5 dias por grupo, texto sem causalidade); `buildHealthDataUsageExplainability` (traduz o `HealthContext` real consumido por Readiness/Recovery/Fatigue/Coach); UI em `/saude`; 9 testes novos, 1423/1423 no total; lint/typecheck/build limpos; pendência consciente: relação "saúde × conclusão de treino" não implementada (sem log de sessões puladas hoje)
 - [x] Parte 4 — QA real em `/saude` nos breakpoints 320/390/768/1440px (sem overflow); acessibilidade verificada (1 `h1`, seções com `aria-label`/`aria-labelledby`); `ARCHITECTURE.md` atualizado com a seção `lib/health-data/*`; gates finais limpos (lint/typecheck/1423 testes/build); recomendação: Sprint 30 — Health Import Expansion
 
+---
+
+## Sprint 30 — Health Import Expansion (em andamento)
+**Objetivo:** expandir a importação de dados de saúde além do formato canônico rígido — mapeamento assistido de CSV arbitrário, presets reaproveitáveis e portabilidade completa (export + round-trip). Ver `HEALTH-DATA-IMPORT.md`, `HEALTH-DATA-EXPORT.md`.
+
+- [x] Parte 1 — Fundação de mapeamento (`import-mapping/types|helpers|detection|transformations|mapping|presets`): mapeamento explícito coluna → campo interno, detecção assistida (nunca aplicada automaticamente), transformações seguras e determinísticas (trim, replace, parse_number, parse_date, unit_conversion, map_value, combine_date_time, derive_sleep_duration), ambiguidade de data (`DD/MM` vs `MM/DD`) sempre exige escolha explícita
+- [x] Parte 2 — Wizard de mapeamento (`HealthImportMappingWizard` + subcomponentes), presets salvos com CRUD (`HealthImportPresetsSection`), inspeção de CSV (`inspectCsvHeader`) para pular o wizard quando o arquivo já é canônico, trace original → transformado por linha antes da confirmação
+- [x] Parte 3 — Export foundation (`export/filters|canonical-json|canonical-csv|csv-safety|filenames|preview|download`), format adapters (`export/adapters.ts`: canonical-json/canonical-csv/mapped-csv atrás de uma interface única, nenhum parser reimplementado), motor de equivalência semântica (`export/round-trip.ts`, com o caso especial de peso via Body Progress), painel de exportação em Configurações (`HealthDataExportPanel`); round-trip real testado ponta a ponta pelo pipeline de importação já existente (nenhuma rota paralela); 79 testes novos, 1607/1607 no total; lint/typecheck/build limpos. Ver `HEALTH-DATA-EXPORT.md`
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:
