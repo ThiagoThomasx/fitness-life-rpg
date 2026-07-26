@@ -6,6 +6,8 @@ import {
   getHealthDataRecords,
   getHealthDataRecordsByMetric,
   importHealthDataRecords,
+  resetHealthData,
+  HEALTH_DATA_RECORDS_KEY,
 } from './storage'
 import type { HealthDataRecord, NewHealthDataRecordInput } from './types'
 
@@ -136,5 +138,22 @@ describe('importHealthDataRecords', () => {
       duplicates: 0,
       invalid: 0,
     })
+  })
+})
+
+describe('resetHealthData', () => {
+  it('removes all health data records and leaves an empty, valid state', () => {
+    createHealthDataRecord(stepsInput)
+    expect(getHealthDataRecords()).toHaveLength(1)
+
+    resetHealthData()
+
+    expect(getHealthDataRecords()).toEqual([])
+    expect(window.localStorage.getItem(HEALTH_DATA_RECORDS_KEY)).toBeNull()
+  })
+
+  it('is safe to call when there is nothing to reset', () => {
+    expect(() => resetHealthData()).not.toThrow()
+    expect(getHealthDataRecords()).toEqual([])
   })
 })

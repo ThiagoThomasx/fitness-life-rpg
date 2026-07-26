@@ -72,6 +72,87 @@ function evaluateHighLoadMajorityFatigued(signals: CoachSignals): CoachRuleFindi
   ]
 }
 
+// ─── Coach.Health.* (Sprint 28 Parte 4) ──────────────────────────────────────
+// Reaproveita os padrões objetivos de Health Data já detectados por
+// `analytics/fatigue.ts` (mesma convenção de `Coach.Recovery.HighLoadLowReadiness`
+// acima) — nenhuma regra aqui acessa `health-data/` diretamente, nem recalcula
+// baseline/qualidade/conflito. Um dia com qualidade baixa ou conflito grave já
+// foi excluído da janela recorrente na origem, então o achado que chega aqui
+// só existe quando os dados por trás dele já são confiáveis o suficiente para
+// uma sugestão (nunca "diagnóstico" — apenas descreve o que os dados mostram).
+
+function evaluateHealthSleepDeficit(signals: CoachSignals): CoachRuleFinding[] {
+  const pattern = signals.recovery.patterns.find((p) => p.id.startsWith('fatigue:health_sleep_deficit'))
+  if (!pattern) return []
+
+  return [
+    {
+      category: 'recovery',
+      title: pattern.title,
+      summary: pattern.explanation,
+      evidence: pattern.evidence,
+      sampleSize: 3,
+      weight: 0.6,
+      suggestion: 'Considere uma sessão mais leve hoje e priorizar o sono nos próximos dias — o sono é um dos fatores objetivos que mais afetam recuperação.',
+      actions: [{ kind: 'planner', label: 'Ver plano da semana' }],
+    },
+  ]
+}
+
+function evaluateHealthRestingHrElevated(signals: CoachSignals): CoachRuleFinding[] {
+  const pattern = signals.recovery.patterns.find((p) => p.id.startsWith('fatigue:health_resting_hr_elevated'))
+  if (!pattern) return []
+
+  return [
+    {
+      category: 'recovery',
+      title: pattern.title,
+      summary: pattern.explanation,
+      evidence: pattern.evidence,
+      sampleSize: 3,
+      weight: 0.6,
+      suggestion: 'Frequência cardíaca de repouso elevada por vários dias pode indicar recuperação incompleta — considere reduzir a intensidade e reavaliar em alguns dias.',
+      actions: [{ kind: 'planner', label: 'Ver plano da semana' }],
+    },
+  ]
+}
+
+function evaluateHealthHighExternalActivity(signals: CoachSignals): CoachRuleFinding[] {
+  const pattern = signals.recovery.patterns.find((p) => p.id.startsWith('fatigue:health_high_external_activity'))
+  if (!pattern) return []
+
+  return [
+    {
+      category: 'recovery',
+      title: pattern.title,
+      summary: pattern.explanation,
+      evidence: pattern.evidence,
+      sampleSize: 3,
+      weight: 0.35,
+      suggestion: 'Atividade fora do treino tem ficado acima do habitual — vale considerar esse desgaste extra ao planejar a intensidade dos próximos treinos.',
+      actions: [{ kind: 'history', label: 'Ver histórico de treinos' }],
+    },
+  ]
+}
+
+function evaluateHealthRecoveryMismatch(signals: CoachSignals): CoachRuleFinding[] {
+  const pattern = signals.recovery.patterns.find((p) => p.id.startsWith('fatigue:health_recovery_mismatch'))
+  if (!pattern) return []
+
+  return [
+    {
+      category: 'recovery',
+      title: pattern.title,
+      summary: pattern.explanation,
+      evidence: pattern.evidence,
+      sampleSize: 3,
+      weight: 0.8,
+      suggestion: 'Carga em alta combinada com sinais objetivos de recuperação insuficiente sugere que este é um bom momento para uma semana mais leve.',
+      actions: [{ kind: 'planner', label: 'Ver plano da semana' }],
+    },
+  ]
+}
+
 // ─── Coach.Consistency.LowAdherence ─────────────────────────────────────────
 
 function evaluateLowAdherence(signals: CoachSignals): CoachRuleFinding[] {
@@ -297,4 +378,8 @@ export const COACH_RULES: CoachRule[] = [
   { id: 'Coach.Volume.Imbalance', category: 'volume', evaluate: evaluateExcessiveVolumeGroup },
   { id: 'Coach.Progress.Stagnation', category: 'stagnation', evaluate: evaluateProgressStagnation },
   { id: 'Coach.Records.RecentAchievement', category: 'records', evaluate: evaluateRecentRecords },
+  { id: 'Coach.Health.SleepDeficit', category: 'recovery', evaluate: evaluateHealthSleepDeficit },
+  { id: 'Coach.Health.RestingHrElevated', category: 'recovery', evaluate: evaluateHealthRestingHrElevated },
+  { id: 'Coach.Health.HighExternalActivity', category: 'recovery', evaluate: evaluateHealthHighExternalActivity },
+  { id: 'Coach.Health.RecoveryMismatch', category: 'recovery', evaluate: evaluateHealthRecoveryMismatch },
 ]

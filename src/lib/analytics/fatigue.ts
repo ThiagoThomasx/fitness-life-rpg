@@ -19,6 +19,8 @@ import type { MuscleGroup } from '../muscle-groups'
 import { resolvePeriodRange, filterByDateRange } from './helpers'
 import { computePerformanceEvolution, type PerformanceMetricKey } from './performance'
 import type { AnalyticsPeriod, AnalyticsInsight, TrendDirection, MetricEvolution } from './types'
+import { getMetricBaseline, getSummaryRange, summaryMetricValue } from '../health-data'
+import type { HealthDataQuality } from '../health-data'
 
 export interface FatigueReport {
   readiness: ReadinessStats
@@ -39,6 +41,187 @@ const MIN_SESSIONS_FOR_PATTERN = 2
 const MIN_CHECK_INS_FOR_PATTERN = 2
 const LOW_READINESS_SHARE_THRESHOLD = 0.5
 const MAJORITY_FATIGUED_SHARE_THRESHOLD = 0.5
+
+// ─── Sinais objetivos de Health Data (Sprint 28 Parte 4) ────────────────────
+//
+// Independentes dos eixos acima — nunca substituem prontidão subjetiva ou
+// recuperação muscular, só adicionam padrões observacionais quando há dados
+// de saúde confiáveis o suficiente. Sempre gated por: qualidade não-baixa,
+// ausência de conflito grave naquele dia, e uma linha de base com amostra
+// mínima (ver `health-data/baseline.ts`). Janela de baseline fixa em 30
+// dias (independente do `period` do relatório) porque comparar contra uma
+// baseline calculada no mesmo período curto do "recente" não faz sentido —
+// ver regra 15 do brief da Parte 4 ("não misturar períodos sem documentar").
+const HEALTH_BASELINE_PERIOD: AnalyticsPeriod = '30d'
+const HEALTH_RECENT_WINDOW_DAYS = 3
+const SLEEP_DEFICIT_MINUTES = 60
+const RESTING_HR_ELEVATED_BPM = 5
+const STEPS_ABOVE_BASELINE_PERCENT = 30
+const ACTIVITY_ABOVE_BASELINE_PERCENT = 25
+
+interface RecentHealthDay {
+  date: string
+  value: number
+}
+
+function isUsableQuality(quality: HealthDataQuality): boolean {
+  return quality.level !== 'low'
+}
+
+/**
+ * A baseline precisa ser calculada com dados ANTERIORES à janela recente que
+ * está sendo avaliada — caso contrário, os próprios dias "recorrentes"
+ * inflacionariam a média e diluiriam o próprio desvio que o padrão tenta
+ * detectar. Desloca `now` para trás pelo tamanho da janela recente antes de
+ * pedir a baseline.
+ */
+function baselineReferenceDate(now: Date): Date {
+  return new Date(now.getTime() - HEALTH_RECENT_WINDOW_DAYS * 86_400_000)
+}
+
+/**
+ * Últimos `HEALTH_RECENT_WINDOW_DAYS` dias com valor confiável para a
+ * métrica — exclui dias com qualidade baixa ou conflito grave naquele dia
+ * (nunca soma/mistura dias não confiáveis num padrão "recorrente").
+ */
+function recentReliableDays(
+  metric: 'sleep_duration' | 'resting_heart_rate' | 'steps' | 'activity_duration',
+  now: Date
+): RecentHealthDay[] {
+  const summaries = getSummaryRange('7d', now).slice(0, HEALTH_RECENT_WINDOW_DAYS)
+  const days: RecentHealthDay[] = []
+  for (const summary of summaries) {
+    const value = summaryMetricValue(summary, metric)
+    if (value === undefined) continue
+    if (!isUsableQuality(summary.quality)) continue
+    const hasBlockingConflict = summary.conflicts.some(
+      (c) => c.metric === metric && (c.severity === 'medium' || c.severity === 'high')
+    )
+    if (hasBlockingConflict) continue
+    days.push({ date: summary.date, value })
+  }
+  return days
+}
+
+function detectSleepDeficitRecurring(period: AnalyticsPeriod, now: Date): AnalyticsInsight | null {
+  const baseline = getMetricBaseline('sleep_duration', HEALTH_BASELINE_PERIOD, baselineReferenceDate(now))
+  if (!baseline) return null
+
+  const recentDays = recentReliableDays('sleep_duration', now)
+  if (recentDays.length < HEALTH_RECENT_WINDOW_DAYS) return null
+  if (!recentDays.every((d) => baseline.value - d.value >= SLEEP_DEFICIT_MINUTES)) return null
+
+  const avgDeficit = Math.round(
+    recentDays.reduce((sum, d) => sum + (baseline.value - d.value), 0) / recentDays.length
+  )
+
+  return {
+    id: `fatigue:health_sleep_deficit:${period}`,
+    category: 'fatigue',
+    severity: 'attention',
+    title: 'Sono abaixo da linha de base por dias seguidos',
+    explanation:
+      'Nas últimas noites registradas em Dados de saúde, o sono ficou consistentemente abaixo da sua média recente.',
+    evidence: [
+      `Linha de base de sono: ${Math.round(baseline.value)} min (amostra de ${baseline.sampleSize} dias)`,
+      `Últimos ${recentDays.length} dias com dado confiável, em média ${avgDeficit} min abaixo da linha de base`,
+    ],
+    period,
+  }
+}
+
+function detectRestingHrElevatedRecurring(period: AnalyticsPeriod, now: Date): AnalyticsInsight | null {
+  const baseline = getMetricBaseline('resting_heart_rate', HEALTH_BASELINE_PERIOD, baselineReferenceDate(now))
+  if (!baseline) return null
+
+  const recentDays = recentReliableDays('resting_heart_rate', now)
+  if (recentDays.length < HEALTH_RECENT_WINDOW_DAYS) return null
+  if (!recentDays.every((d) => d.value - baseline.value >= RESTING_HR_ELEVATED_BPM)) return null
+
+  const avgDelta = Math.round(
+    recentDays.reduce((sum, d) => sum + (d.value - baseline.value), 0) / recentDays.length
+  )
+
+  return {
+    id: `fatigue:health_resting_hr_elevated:${period}`,
+    category: 'fatigue',
+    severity: 'attention',
+    title: 'Frequência cardíaca de repouso acima da linha de base por dias seguidos',
+    explanation:
+      'Nos últimos dias registrados em Dados de saúde, a frequência cardíaca de repouso ficou consistentemente acima da sua média recente.',
+    evidence: [
+      `Linha de base de FC de repouso: ${Math.round(baseline.value)} bpm (amostra de ${baseline.sampleSize} dias)`,
+      `Últimos ${recentDays.length} dias com dado confiável, em média +${avgDelta} bpm acima da linha de base`,
+    ],
+    period,
+  }
+}
+
+function detectHighExternalActivityRecurring(period: AnalyticsPeriod, now: Date): AnalyticsInsight | null {
+  const reference = baselineReferenceDate(now)
+  const stepsBaseline = getMetricBaseline('steps', HEALTH_BASELINE_PERIOD, reference)
+  const activityBaseline = getMetricBaseline('activity_duration', HEALTH_BASELINE_PERIOD, reference)
+
+  const stepsDays = stepsBaseline ? recentReliableDays('steps', now) : []
+  const activityDays = activityBaseline ? recentReliableDays('activity_duration', now) : []
+
+  const stepsElevated =
+    stepsBaseline !== null &&
+    stepsBaseline.value > 0 &&
+    stepsDays.length >= HEALTH_RECENT_WINDOW_DAYS &&
+    stepsDays.every((d) => ((d.value - stepsBaseline.value) / stepsBaseline.value) * 100 >= STEPS_ABOVE_BASELINE_PERCENT)
+
+  const activityElevated =
+    activityBaseline !== null &&
+    activityBaseline.value > 0 &&
+    activityDays.length >= HEALTH_RECENT_WINDOW_DAYS &&
+    activityDays.every(
+      (d) => ((d.value - activityBaseline.value) / activityBaseline.value) * 100 >= ACTIVITY_ABOVE_BASELINE_PERCENT
+    )
+
+  if (!stepsElevated && !activityElevated) return null
+
+  const evidence: string[] = []
+  if (stepsElevated && stepsBaseline) {
+    evidence.push(`Passos: linha de base de ${Math.round(stepsBaseline.value)}, ${HEALTH_RECENT_WINDOW_DAYS} dias seguidos ${STEPS_ABOVE_BASELINE_PERCENT}%+ acima`)
+  }
+  if (activityElevated && activityBaseline) {
+    evidence.push(`Atividade: linha de base de ${Math.round(activityBaseline.value)} min, ${HEALTH_RECENT_WINDOW_DAYS} dias seguidos ${ACTIVITY_ABOVE_BASELINE_PERCENT}%+ acima`)
+  }
+
+  return {
+    id: `fatigue:health_high_external_activity:${period}`,
+    category: 'fatigue',
+    severity: 'info',
+    title: 'Atividade externa acima da linha de base por dias seguidos',
+    explanation:
+      'Passos e/ou minutos de atividade registrados em Dados de saúde ficaram consistentemente acima da sua média recente, fora do treino planejado.',
+    evidence,
+    period,
+  }
+}
+
+function detectRecoveryMismatch(
+  period: AnalyticsPeriod,
+  now: Date,
+  loadTrend: TrendDirection,
+  sleepDeficit: AnalyticsInsight | null,
+  restingHrElevated: AnalyticsInsight | null
+): AnalyticsInsight | null {
+  if (loadTrend !== 'increasing') return null
+  if (!sleepDeficit || !restingHrElevated) return null
+
+  return {
+    id: `fatigue:health_recovery_mismatch:${period}`,
+    category: 'fatigue',
+    severity: 'attention',
+    title: 'Carga em alta coincidiu com sinais objetivos de recuperação insuficiente',
+    explanation:
+      'O volume de treino cresceu ao mesmo tempo em que sono e frequência cardíaca de repouso indicaram recuperação sistêmica abaixo do habitual.',
+    evidence: [...sleepDeficit.evidence, ...restingHrElevated.evidence],
+    period,
+  }
+}
 
 /** Métrica de carga usada para o eixo de tendência e para os detectores de padrão: volume total (kg) do período — grandeza cumulativa, mais representativa de "carga acumulada" do que a média de topo de série ('load'). */
 const LOAD_METRIC: PerformanceMetricKey = 'volume'
@@ -195,6 +378,18 @@ export function computeFatigueSignals(period: AnalyticsPeriod, now: Date = new D
     period
   )
   if (lowReadinessDecliningPerformance) patterns.push(lowReadinessDecliningPerformance)
+
+  const sleepDeficit = detectSleepDeficitRecurring(period, now)
+  if (sleepDeficit) patterns.push(sleepDeficit)
+
+  const restingHrElevated = detectRestingHrElevatedRecurring(period, now)
+  if (restingHrElevated) patterns.push(restingHrElevated)
+
+  const highExternalActivity = detectHighExternalActivityRecurring(period, now)
+  if (highExternalActivity) patterns.push(highExternalActivity)
+
+  const recoveryMismatch = detectRecoveryMismatch(period, now, loadTrend, sleepDeficit, restingHrElevated)
+  if (recoveryMismatch) patterns.push(recoveryMismatch)
 
   return {
     readiness,

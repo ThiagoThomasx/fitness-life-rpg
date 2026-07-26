@@ -89,6 +89,21 @@ export function deleteHealthDataRecord(id: string): boolean {
   return true
 }
 
+/**
+ * Reset granular (Sprint 28 Parte 4) — remove só os registros de saúde
+ * (`HEALTH_DATA_RECORDS_KEY`). Nunca apaga treinos, Readiness subjetivo nem
+ * Body Progress: peso é sempre lido de `lrpg-fit:body-progress` sob demanda
+ * (ver `body-progress-adapter.ts`), nunca duplicado aqui — por isso não há
+ * nada de Body Progress para preservar ou apagar neste reset. Daily
+ * summaries/baselines/tendências/conflitos nunca são persistidos (sempre
+ * derivados sob demanda — ver `analytics-queries.ts`), então também não há
+ * cache derivado para invalidar.
+ */
+export function resetHealthData(): void {
+  if (typeof window === 'undefined') return
+  window.localStorage.removeItem(HEALTH_DATA_RECORDS_KEY)
+}
+
 export interface ImportHealthDataRecordsResult {
   imported: number
   duplicates: number

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import type { CompletedWorkout } from './workout-history'
 import type { Exercise } from '@/types/database'
 import {
@@ -7,8 +7,10 @@ import {
   rankWorkoutsByRecovery,
   getRecommendedWorkout,
   formatTimeSinceCompleted,
+  getRecoveryHealthContext,
   type RecoveryEligibleWorkout,
 } from './workout-recovery'
+import { createHealthDataRecord } from './health-data'
 
 const NOW = new Date('2026-07-12T12:00:00.000Z')
 
@@ -214,5 +216,44 @@ describe('formatTimeSinceCompleted', () => {
 
   it('uses singular day when exactly one day has passed', () => {
     expect(formatTimeSinceCompleted('2026-07-11T12:00:00.000Z', NOW)).toBe('há 1 dia')
+  })
+})
+
+// ─── Health Data context (Sprint 28 Parte 4) ───────────────────────────────────
+
+describe('getRecoveryHealthContext', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+  })
+
+  it('returns undefined with zero health records', () => {
+    expect(getRecoveryHealthContext(NOW)).toBeUndefined()
+  })
+
+  it('returns a systemic context without touching muscle recovery calculation', () => {
+    for (let day = 27; day <= 30; day++) {
+      createHealthDataRecord({
+        metric: 'resting_heart_rate',
+        value: 58,
+        recordedAt: `2026-06-${day}T08:00:00.000Z`,
+        source: 'manual',
+      })
+    }
+    for (let day = 1; day <= 12; day++) {
+      createHealthDataRecord({
+        metric: 'resting_heart_rate',
+        value: 58,
+        recordedAt: `2026-07-${String(day).padStart(2, '0')}T08:00:00.000Z`,
+        source: 'manual',
+      })
+    }
+
+    const context = getRecoveryHealthContext(NOW)
+    expect(context?.restingHeartRate?.reliable).toBe(true)
+
+    // Muscle recovery states are unaffected by health context presence.
+    const history: CompletedWorkout[] = []
+    const states = getMuscleRecoveryStates(history, [], NOW)
+    expect(states.peito.recoveryPercent).toBe(100)
   })
 })

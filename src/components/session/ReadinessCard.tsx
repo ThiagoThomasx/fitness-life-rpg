@@ -36,6 +36,22 @@ function confidenceLabel(confidence: "low" | "medium" | "high"): string {
   }
 }
 
+function formatHoursMinutes(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const remainder = Math.round(minutes % 60)
+  return `${hours}h${remainder.toString().padStart(2, "0")}`
+}
+
+function formatSignedMinutesAsHours(delta: number): string {
+  const sign = delta >= 0 ? "+" : "−"
+  return `${sign}${formatHoursMinutes(Math.abs(delta))}`
+}
+
+function formatSignedBpm(delta: number): string {
+  const sign = delta >= 0 ? "+" : "−"
+  return `${sign}${Math.round(Math.abs(delta))} bpm`
+}
+
 interface Props {
   result: WorkoutReadinessResult
   onEditCheckIn?: () => void
@@ -72,6 +88,30 @@ export function ReadinessCard({ result, onEditCheckIn }: Props) {
             </li>
           ))}
         </ul>
+      )}
+
+      {result.healthContext && (result.healthContext.sleepMinutes?.reliable || result.healthContext.restingHeartRate?.reliable) && (
+        <div className="readiness-card__health-context" aria-label="Dados objetivos de saúde">
+          <p className="readiness-card__health-context-title">Dados objetivos</p>
+          <ul className="readiness-card__health-context-list">
+            {result.healthContext.sleepMinutes?.reliable && (
+              <li>
+                Sono: {formatHoursMinutes(result.healthContext.sleepMinutes.value)}
+                {result.healthContext.sleepMinutes.delta !== undefined && (
+                  <> ({formatSignedMinutesAsHours(result.healthContext.sleepMinutes.delta)} vs. sua média)</>
+                )}
+              </li>
+            )}
+            {result.healthContext.restingHeartRate?.reliable && (
+              <li>
+                FC de repouso: {Math.round(result.healthContext.restingHeartRate.value)} bpm
+                {result.healthContext.restingHeartRate.delta !== undefined && (
+                  <> ({formatSignedBpm(result.healthContext.restingHeartRate.delta)} vs. sua média)</>
+                )}
+              </li>
+            )}
+          </ul>
+        </div>
       )}
 
       {result.suggestedAdjustments.length > 0 && (

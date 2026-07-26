@@ -121,3 +121,26 @@ Typecheck: ✅
 Tests:     ✅ 1359/1359 (1311 + 48 novos)
 Build:     ✅
 ```
+
+## 8. Parte 4 — Health Data Integration: Readiness, Recovery, Fatigue, Coach, Backup & QA
+
+Ver `SPRINT-28-PART4.md` para o relatório completo desta parte (encerra a
+Sprint 28).
+
+Resumo: contexto de saúde opcional (`health-data/consumer-context.ts`)
+conectado a Readiness (campo `healthContext?`, nunca altera o score),
+Recovery (`getRecoveryHealthContext`, contexto sistêmico de "hoje"), Fatigue
+(4 novos detectores de padrão: sono baixo recorrente, FC de repouso
+elevada, atividade externa alta, combinação com carga em alta) e Coach (4
+novas regras `Coach.Health.*`, reaproveitando os padrões de Fatigue).
+Health Data entra em backup/restore/reset (`resetHealthData()`, nova seção
+"Apagar Dados de saúde" em Configurações). Zero registros de saúde continua
+produzindo comportamento idêntico ao pré-Sprint-28 em todos os consumidores
+— verificado por teste em cada integração.
+
+```text
+Lint:      ✅
+Typecheck: ✅
+Tests:     ✅ 1393/1393 (1359 + 34 novos)
+Build:     ✅
+```

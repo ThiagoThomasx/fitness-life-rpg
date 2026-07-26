@@ -187,6 +187,32 @@
 .readiness-card__factor--negative .readiness-card__factor-icon { color: var(--color-warning, #fb923c); }
 .readiness-card__factor--neutral .readiness-card__factor-icon { color: var(--color-text-muted); }
 
+.readiness-card__health-context {
+  background: var(--color-surface-raised);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.readiness-card__health-context-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-2);
+}
+
+.readiness-card__health-context-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+}
+
 .readiness-card__adjustments {
   background: var(--color-surface-raised);
   border-radius: var(--radius-md);

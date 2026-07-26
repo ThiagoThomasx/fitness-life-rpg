@@ -50,4 +50,12 @@ export const COACH_RULE_DESCRIPTIONS: Record<string, string> = {
     'Dispara por exercício quando a tendência de carga (`getExerciseTrends`) está estável nas últimas execuções, com amostra mínima de 6 execuções.',
   'Coach.Records.RecentAchievement':
     'Dispara quando há pelo menos um recorde pessoal recente registrado — reforço positivo, nunca uma ação a tomar.',
+  'Coach.Health.SleepDeficit':
+    'Dispara quando Dados de Saúde mostram sono consistentemente abaixo da linha de base por dias seguidos (ver `analytics/fatigue.ts`) — informativo, nunca diagnóstico.',
+  'Coach.Health.RestingHrElevated':
+    'Dispara quando Dados de Saúde mostram frequência cardíaca de repouso consistentemente acima da linha de base por dias seguidos — informativo, nunca diagnóstico.',
+  'Coach.Health.HighExternalActivity':
+    'Dispara quando Dados de Saúde mostram passos ou minutos de atividade consistentemente acima da linha de base por dias seguidos, fora do treino planejado.',
+  'Coach.Health.RecoveryMismatch':
+    'Dispara quando carga de treino em alta coincide com sono baixo e frequência cardíaca de repouso elevada ao mesmo tempo — combinação de sinais objetivos de recuperação insuficiente.',
 }

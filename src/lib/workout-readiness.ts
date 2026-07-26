@@ -5,6 +5,8 @@ import { calculateVolumeKg } from './exercise-records'
 import type { WorkoutReadinessCheckIn } from './readiness-check-ins'
 import type { MuscleGroup } from './muscle-groups'
 import { getAllExercises } from './custom-workouts'
+import { buildTodayHealthContext } from './health-data'
+import type { HealthContext } from './health-data'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,6 +61,14 @@ export interface WorkoutReadinessResult {
   explanation: string
   factors: ReadinessFactor[]
   suggestedAdjustments: ReadinessAdjustment[]
+  /**
+   * Contexto objetivo de Health Data para o dia (Sprint 28 Parte 4) —
+   * puramente informativo, nunca altera `score`/`level`/`recommendation`.
+   * `undefined` quando não há dados de saúde suficientes e confiáveis para o
+   * dia (ver `health-data/consumer-context.ts`), o que preserva o
+   * comportamento de quem nunca usou Health Data.
+   */
+  healthContext?: HealthContext
 }
 
 export type ReadinessOutcome =
@@ -424,6 +434,17 @@ function buildAdjustments(
   return adjustments.slice(0, 3)
 }
 
+// ─── Health Data context (Sprint 28 Parte 4) ───────────────────────────────────
+
+/**
+ * Contexto objetivo do dia, ou `undefined` quando não há dados de saúde
+ * confiáveis o suficiente para exibir (ver regras de gating em
+ * `health-data/consumer-context.ts`). Nunca influencia o score de Readiness.
+ */
+function buildReadinessHealthContext(now: Date): HealthContext | undefined {
+  return buildTodayHealthContext('30d', now)
+}
+
 // ─── Main function ─────────────────────────────────────────────────────────────
 
 export interface ReadinessInput {
@@ -453,6 +474,7 @@ export function calculateReadiness(input: ReadinessInput): WorkoutReadinessResul
         'Faça o check-in rápido para avaliarmos sua prontidão com base em como você está hoje.',
       factors: [],
       suggestedAdjustments: [],
+      healthContext: buildReadinessHealthContext(now),
     }
   }
 
@@ -505,6 +527,7 @@ export function calculateReadiness(input: ReadinessInput): WorkoutReadinessResul
     explanation,
     factors,
     suggestedAdjustments: adjustments,
+    healthContext: buildReadinessHealthContext(now),
   }
 }
 

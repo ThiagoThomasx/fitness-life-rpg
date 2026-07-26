@@ -36,6 +36,7 @@ export function CoachRecommendationCard({ recommendation, onDecide, onProposalCh
   const [applyError, setApplyError] = useState<string | null>(null)
   const explanation = buildExplanation(recommendation)
   const decided = recommendation.status === "aceita" || recommendation.status === "ignorada"
+  const isHealthBased = recommendation.ruleId.startsWith("Coach.Health.")
 
   function handleToggle() {
     const next = !expanded
@@ -95,6 +96,11 @@ export function CoachRecommendationCard({ recommendation, onDecide, onProposalCh
         </div>
       </div>
       <p className="text-xs text-muted">{recommendation.summary}</p>
+      {isHealthBased && (
+        <span className="text-xs text-muted" style={{ fontStyle: "italic" }}>
+          Baseado em dados de saúde
+        </span>
+      )}
 
       <button
         type="button"
@@ -125,6 +131,12 @@ export function CoachRecommendationCard({ recommendation, onDecide, onProposalCh
           <div className="text-xs text-muted">
             <strong className="text-primary">Sugestão:</strong> {explanation.suggestion}
           </div>
+
+          {isHealthBased && (
+            <p className="text-xs text-muted" style={{ fontStyle: "italic" }}>
+              Esses sinais são informativos e não substituem avaliação profissional.
+            </p>
+          )}
 
           {recommendation.actions.length > 0 && (
             <div className="flex flex-wrap gap-2">

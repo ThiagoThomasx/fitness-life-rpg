@@ -315,6 +315,97 @@ describe('Coach.Records.RecentAchievement', () => {
   })
 })
 
+// ─── Coach.Health.* (Sprint 28 Parte 4) ─────────────────────────────────────
+
+function healthPattern(id: string, title: string): AnalyticsInsight {
+  return {
+    id,
+    category: 'fatigue',
+    severity: 'attention',
+    title,
+    explanation: 'explicação',
+    evidence: ['evidência 1', 'evidência 2'],
+    period: '30d',
+  }
+}
+
+describe('Coach.Health.SleepDeficit', () => {
+  it('fires when the fatigue engine flagged a recurring sleep deficit', () => {
+    const pattern = healthPattern('fatigue:health_sleep_deficit:30d', 'Sono abaixo da linha de base por dias seguidos')
+    const signals = buildBaseSignals({
+      recovery: {
+        ...buildBaseSignals().recovery,
+        patterns: [pattern],
+      },
+    })
+    const findings = rule('Coach.Health.SleepDeficit').evaluate(signals)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].category).toBe('recovery')
+    expect(findings[0].evidence).toEqual(pattern.evidence)
+  })
+
+  it('does not fire when no matching pattern is present', () => {
+    expect(rule('Coach.Health.SleepDeficit').evaluate(buildBaseSignals())).toEqual([])
+  })
+})
+
+describe('Coach.Health.RestingHrElevated', () => {
+  it('fires when the fatigue engine flagged elevated resting heart rate', () => {
+    const pattern = healthPattern(
+      'fatigue:health_resting_hr_elevated:30d',
+      'Frequência cardíaca de repouso acima da linha de base por dias seguidos'
+    )
+    const signals = buildBaseSignals({
+      recovery: { ...buildBaseSignals().recovery, patterns: [pattern] },
+    })
+    const findings = rule('Coach.Health.RestingHrElevated').evaluate(signals)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].summary).toBe(pattern.explanation)
+  })
+
+  it('does not fire when no matching pattern is present', () => {
+    expect(rule('Coach.Health.RestingHrElevated').evaluate(buildBaseSignals())).toEqual([])
+  })
+})
+
+describe('Coach.Health.HighExternalActivity', () => {
+  it('fires when the fatigue engine flagged high external activity', () => {
+    const pattern = healthPattern(
+      'fatigue:health_high_external_activity:30d',
+      'Atividade externa acima da linha de base por dias seguidos'
+    )
+    const signals = buildBaseSignals({
+      recovery: { ...buildBaseSignals().recovery, patterns: [pattern] },
+    })
+    const findings = rule('Coach.Health.HighExternalActivity').evaluate(signals)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].weight).toBeLessThan(0.5)
+  })
+
+  it('does not fire when no matching pattern is present', () => {
+    expect(rule('Coach.Health.HighExternalActivity').evaluate(buildBaseSignals())).toEqual([])
+  })
+})
+
+describe('Coach.Health.RecoveryMismatch', () => {
+  it('fires when the fatigue engine flagged a combined recovery mismatch', () => {
+    const pattern = healthPattern(
+      'fatigue:health_recovery_mismatch:30d',
+      'Carga em alta coincidiu com sinais objetivos de recuperação insuficiente'
+    )
+    const signals = buildBaseSignals({
+      recovery: { ...buildBaseSignals().recovery, patterns: [pattern] },
+    })
+    const findings = rule('Coach.Health.RecoveryMismatch').evaluate(signals)
+    expect(findings).toHaveLength(1)
+    expect(findings[0].weight).toBeGreaterThan(0.7)
+  })
+
+  it('does not fire when no matching pattern is present', () => {
+    expect(rule('Coach.Health.RecoveryMismatch').evaluate(buildBaseSignals())).toEqual([])
+  })
+})
+
 describe('rule id / category consistency', () => {
   it('every registered rule has a unique id', () => {
     const ids = COACH_RULES.map((r) => r.id)

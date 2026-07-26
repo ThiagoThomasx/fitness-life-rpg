@@ -20,8 +20,10 @@ import { BodyProgressResetSection } from "@/components/settings/BodyProgressRese
 import { TemplatesProgramsResetSection } from "@/components/settings/TemplatesProgramsResetSection"
 import { WorkoutHistoryResetSection } from "@/components/settings/WorkoutHistoryResetSection"
 import { CoachAdaptiveResetSection } from "@/components/settings/CoachAdaptiveResetSection"
+import { HealthDataResetSection } from "@/components/settings/HealthDataResetSection"
 import { BodyWellnessExportSection } from "@/components/settings/BodyWellnessExportSection"
 import { HealthDataSection } from "@/components/settings/HealthDataSection"
+import { resetHealthData } from "@/lib/health-data"
 import { clearAllPhotos } from "@/lib/body-progress-photo-db"
 import { stripAllPhotoLinks, resetAllBodyProgress } from "@/lib/body-progress-photo-link"
 import { getBodyProgressEntries } from "@/lib/body-progress"
@@ -41,7 +43,7 @@ import {
   type ExportPeriodOption,
 } from "@/lib/body-wellness-export"
 
-type Panel = "idle" | "import-confirm" | "reset-confirm" | "photo-reset-confirm" | "body-reset-confirm" | "templates-programs-reset-confirm" | "workout-history-reset-confirm" | "coach-adaptive-reset-confirm"
+type Panel = "idle" | "import-confirm" | "reset-confirm" | "photo-reset-confirm" | "body-reset-confirm" | "templates-programs-reset-confirm" | "workout-history-reset-confirm" | "coach-adaptive-reset-confirm" | "health-data-reset-confirm"
 
 export default function ConfiguracoesPage() {
   const [panel, setPanel] = useState<Panel>("idle")
@@ -56,6 +58,7 @@ export default function ConfiguracoesPage() {
   const [resetProgramsSelected, setResetProgramsSelected] = useState(true)
   const [workoutHistoryResetText, setWorkoutHistoryResetText] = useState("")
   const [coachAdaptiveResetText, setCoachAdaptiveResetText] = useState("")
+  const [healthDataResetText, setHealthDataResetText] = useState("")
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null)
 
   const refreshStatus = useCallback(() => {
@@ -205,6 +208,15 @@ export default function ConfiguracoesPage() {
     showMessage("ok", "Decisões do Coach e ajustes adaptativos foram apagados. Mudanças já aplicadas continuam valendo.")
   }
 
+  function handleHealthDataResetConfirm() {
+    if (healthDataResetText.trim().toLowerCase() !== "resetar") return
+    resetHealthData()
+    setPanel("idle")
+    setHealthDataResetText("")
+    // Dados de saúde não passam por nenhuma store Zustand — sem necessidade de reload de página.
+    showMessage("ok", "Dados de saúde apagados. Treinos, Readiness e Body Progress não foram afetados.")
+  }
+
   return (
     <div className="page">
       <SettingsHeader />
@@ -286,6 +298,15 @@ export default function ConfiguracoesPage() {
         onResetTextChange={setCoachAdaptiveResetText}
         onConfirm={handleCoachAdaptiveResetConfirm}
         onCancel={() => { setPanel("idle"); setCoachAdaptiveResetText("") }}
+      />
+
+      <HealthDataResetSection
+        isConfirming={panel === "health-data-reset-confirm"}
+        resetText={healthDataResetText}
+        onStart={() => setPanel("health-data-reset-confirm")}
+        onResetTextChange={setHealthDataResetText}
+        onConfirm={handleHealthDataResetConfirm}
+        onCancel={() => { setPanel("idle"); setHealthDataResetText("") }}
       />
 
       <DataResetSection

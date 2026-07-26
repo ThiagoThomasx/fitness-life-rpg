@@ -2,6 +2,7 @@ import type { Exercise } from '@/types/database'
 import { getWorkoutHistory, type CompletedWorkout } from './workout-history'
 import { getAllExercises } from './custom-workouts'
 import { RECOVERY_HOURS, MUSCLE_GROUP_LABELS, normalizeMuscleGroups, type MuscleGroup } from './muscle-groups'
+import { buildTodayHealthContext, type HealthContext } from './health-data'
 
 const ALL_MUSCLE_GROUPS = Object.keys(RECOVERY_HOURS) as MuscleGroup[]
 const PARTIAL_RECOVERY_THRESHOLD = 50
@@ -209,6 +210,18 @@ export function getRecommendedWorkout(
   const top = ranked[0]
   if (!top || top.status === 'active') return null
   return top
+}
+
+/**
+ * Contexto sistêmico de Health Data para "hoje" (Sprint 28 Parte 4) — sono,
+ * FC de repouso e atividade recente. Nunca substitui nem recalcula a
+ * recuperação muscular por grupo (`getMuscleRecoveryStates`); é chamado uma
+ * única vez por tela (não por treino) para evitar recomputar baseline/
+ * tendência em cada item de uma lista. `undefined` quando não há dados de
+ * saúde confiáveis o suficiente para o dia.
+ */
+export function getRecoveryHealthContext(now: Date = new Date()): HealthContext | undefined {
+  return buildTodayHealthContext('30d', now)
 }
 
 export function formatTimeSinceCompleted(lastCompletedAt: string | null, now: Date = new Date()): string {

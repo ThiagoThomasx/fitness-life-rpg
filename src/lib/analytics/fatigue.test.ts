@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { computeFatigueSignals } from './fatigue'
 import type { CompletedWorkout, ExerciseRecord, SetRecord } from '../workout-history'
 import type { WorkoutReadinessCheckIn } from '../readiness-check-ins'
+import { createHealthDataRecord, HEALTH_DATA_RECORDS_KEY } from '../health-data'
 
 const HISTORY_KEY = 'lrpg-fit:workout-history'
 const CHECK_INS_KEY = 'lrpg-fit:readiness-check-ins'
@@ -53,6 +54,7 @@ function resetAll() {
   seedHistory([])
   seedCheckIns([])
   window.localStorage.removeItem(CUSTOM_EXERCISES_KEY)
+  window.localStorage.removeItem(HEALTH_DATA_RECORDS_KEY)
 }
 
 describe('computeFatigueSignals — empty and small data', () => {
@@ -188,5 +190,103 @@ describe('computeFatigueSignals — pattern detectors NOT firing (insufficient d
     ])
     const report = computeFatigueSignals('7d', NOW)
     expect(report.patterns).toEqual([])
+  })
+})
+
+// ─── Health Data patterns (Sprint 28 Parte 4) ──────────────────────────────────
+
+describe('computeFatigueSignals — health data patterns', () => {
+  it('does not fire any health pattern with zero health records', () => {
+    resetAll()
+    const report = computeFatigueSignals('30d', NOW)
+    expect(report.patterns.some((p) => p.id.startsWith('fatigue:health_'))).toBe(false)
+  })
+
+  it('fires sleep deficit pattern only after 3 consecutive days 60+ min below baseline', () => {
+    resetAll()
+    for (let day = 6; day <= 19; day++) {
+      createHealthDataRecord({
+        metric: 'sleep_duration',
+        value: 420,
+        recordedAt: `2026-07-${String(day).padStart(2, '0')}T08:00:00.000Z`,
+        source: 'manual',
+      })
+    }
+    // Only 2 deficit days — should not fire yet.
+    createHealthDataRecord({ metric: 'sleep_duration', value: 340, recordedAt: '2026-07-24T08:00:00.000Z', source: 'manual' })
+    createHealthDataRecord({ metric: 'sleep_duration', value: 340, recordedAt: '2026-07-25T08:00:00.000Z', source: 'manual' })
+    let report = computeFatigueSignals('30d', NOW)
+    expect(report.patterns.some((p) => p.id.startsWith('fatigue:health_sleep_deficit:'))).toBe(false)
+
+    // Add the third consecutive deficit day.
+    createHealthDataRecord({ metric: 'sleep_duration', value: 340, recordedAt: '2026-07-23T08:00:00.000Z', source: 'manual' })
+    report = computeFatigueSignals('30d', NOW)
+    const pattern = report.patterns.find((p) => p.id.startsWith('fatigue:health_sleep_deficit:'))
+    expect(pattern).toBeDefined()
+    expect(pattern?.evidence.length).toBeGreaterThan(0)
+  })
+
+  it('fires resting HR elevated pattern only after 3 consecutive days 5+ bpm above baseline', () => {
+    resetAll()
+    for (let day = 6; day <= 19; day++) {
+      createHealthDataRecord({
+        metric: 'resting_heart_rate',
+        value: 58,
+        recordedAt: `2026-07-${String(day).padStart(2, '0')}T08:00:00.000Z`,
+        source: 'manual',
+      })
+    }
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 64, recordedAt: '2026-07-23T08:00:00.000Z', source: 'manual' })
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 64, recordedAt: '2026-07-24T08:00:00.000Z', source: 'manual' })
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 64, recordedAt: '2026-07-25T08:00:00.000Z', source: 'manual' })
+
+    const report = computeFatigueSignals('30d', NOW)
+    expect(report.patterns.some((p) => p.id.startsWith('fatigue:health_resting_hr_elevated:'))).toBe(true)
+  })
+
+  it('does not fire a false positive from a single isolated elevated day', () => {
+    resetAll()
+    for (let day = 6; day <= 19; day++) {
+      createHealthDataRecord({
+        metric: 'resting_heart_rate',
+        value: 58,
+        recordedAt: `2026-07-${String(day).padStart(2, '0')}T08:00:00.000Z`,
+        source: 'manual',
+      })
+    }
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 64, recordedAt: '2026-07-25T08:00:00.000Z', source: 'manual' })
+
+    const report = computeFatigueSignals('30d', NOW)
+    expect(report.patterns.some((p) => p.id.startsWith('fatigue:health_resting_hr_elevated:'))).toBe(false)
+  })
+
+  it('does not fire when sample size is insufficient for a baseline', () => {
+    resetAll()
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 70, recordedAt: '2026-07-23T08:00:00.000Z', source: 'manual' })
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 70, recordedAt: '2026-07-24T08:00:00.000Z', source: 'manual' })
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 70, recordedAt: '2026-07-25T08:00:00.000Z', source: 'manual' })
+
+    const report = computeFatigueSignals('30d', NOW)
+    expect(report.patterns.some((p) => p.id.startsWith('fatigue:health_'))).toBe(false)
+  })
+
+  it('does not use a day with a medium/high conflict for the recurring window', () => {
+    resetAll()
+    for (let day = 6; day <= 19; day++) {
+      createHealthDataRecord({
+        metric: 'resting_heart_rate',
+        value: 58,
+        recordedAt: `2026-07-${String(day).padStart(2, '0')}T08:00:00.000Z`,
+        source: 'manual',
+      })
+    }
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 64, recordedAt: '2026-07-23T08:00:00.000Z', source: 'manual' })
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 64, recordedAt: '2026-07-24T08:00:00.000Z', source: 'manual' })
+    // Conflicting sources on the most recent day — should exclude it from the reliable window.
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 64, recordedAt: '2026-07-25T08:00:00.000Z', source: 'manual' })
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 90, recordedAt: '2026-07-25T09:00:00.000Z', source: 'csv_import' })
+
+    const report = computeFatigueSignals('30d', NOW)
+    expect(report.patterns.some((p) => p.id.startsWith('fatigue:health_resting_hr_elevated:'))).toBe(false)
   })
 })

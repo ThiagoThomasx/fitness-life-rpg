@@ -541,3 +541,97 @@ describe('exportBackup media info', () => {
     expect(payload.media).toEqual({ bodyPhotoCount: 0, bodyPhotosIncluded: false })
   })
 })
+
+// ─── Sprint 28 Parte 4 — Health Data backup/restore/reset ──────────────────────
+
+describe('Health Data backup round-trip', () => {
+  it('includes health-data-records in export and restores it after reset', async () => {
+    window.localStorage.setItem(
+      'lrpg-fit:health-data-records',
+      JSON.stringify([
+        {
+          id: 'hd-1',
+          metric: 'steps',
+          value: 8000,
+          unit: 'count',
+          recordedAt: '2026-07-20T10:00:00.000Z',
+          source: 'manual',
+          importedAt: '2026-07-20T10:00:00.000Z',
+          quality: 'high',
+        },
+      ])
+    )
+
+    const payload = await exportBackup()
+    expect(payload.data['lrpg-fit:health-data-records']).toBeDefined()
+
+    await resetAllData()
+    expect(window.localStorage.getItem('lrpg-fit:health-data-records')).toBeNull()
+
+    const result = importBackup(payload)
+    expect(result.ok).toBe(true)
+    expect(result.restoredKeys).toContain('lrpg-fit:health-data-records')
+    const restored = JSON.parse(window.localStorage.getItem('lrpg-fit:health-data-records')!)
+    expect(restored).toHaveLength(1)
+    expect(restored[0].id).toBe('hd-1')
+  })
+
+  it('restores an old backup (pre-Sprint-28, no health-data-records key) without failing', async () => {
+    seedSampleData()
+    const payload = await exportBackup()
+    // Simula um backup anterior à Sprint 28 — a chave nem existe no payload.
+    delete (payload.data as Record<string, unknown>)['lrpg-fit:health-data-records']
+
+    await resetAllData()
+    const result = importBackup(payload)
+
+    expect(result.ok).toBe(true)
+    expect(result.skippedKeys).toContain('lrpg-fit:health-data-records')
+    expect(window.localStorage.getItem('lrpg-fit:health-data-records')).toBeNull()
+  })
+
+  it('restore is idempotent — importing the same backup twice yields the same data', async () => {
+    window.localStorage.setItem(
+      'lrpg-fit:health-data-records',
+      JSON.stringify([
+        {
+          id: 'hd-1',
+          metric: 'steps',
+          value: 8000,
+          unit: 'count',
+          recordedAt: '2026-07-20T10:00:00.000Z',
+          source: 'manual',
+          importedAt: '2026-07-20T10:00:00.000Z',
+          quality: 'high',
+        },
+      ])
+    )
+    const payload = await exportBackup()
+
+    importBackup(payload)
+    const firstPass = window.localStorage.getItem('lrpg-fit:health-data-records')
+    importBackup(payload)
+    const secondPass = window.localStorage.getItem('lrpg-fit:health-data-records')
+
+    expect(secondPass).toEqual(firstPass)
+  })
+
+  it('rejects a backup with a non-array value for health-data-records (atomicity)', async () => {
+    const payload: BackupPayload = {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: { 'lrpg-fit:health-data-records': { not: 'an array' } },
+    }
+    const result = importBackup(payload)
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('health-data-records')
+  })
+})
+
+describe('resetAllData removes health-data-records', () => {
+  it('leaves nothing behind for the health data key', async () => {
+    window.localStorage.setItem('lrpg-fit:health-data-records', JSON.stringify([{ id: 'hd-1' }]))
+    await resetAllData()
+    expect(window.localStorage.getItem('lrpg-fit:health-data-records')).toBeNull()
+  })
+})

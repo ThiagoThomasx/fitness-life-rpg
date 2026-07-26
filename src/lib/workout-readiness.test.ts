@@ -8,6 +8,7 @@ import {
   DEFAULT_READINESS_CONFIG,
 } from './workout-readiness'
 import type { WorkoutReadinessCheckIn } from './readiness-check-ins'
+import { createHealthDataRecord } from './health-data'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ describe('calculateReadiness', () => {
       triceps: { recoveryPercent: 100 },
       core: { recoveryPercent: 100 },
     })
+    window.localStorage.clear()
   })
 
   it('returns insufficient_data when no check-in and no history', () => {
@@ -449,3 +451,66 @@ describe('backup compatibility', () => {
     expect(() => computeReadinessStats([])).not.toThrow()
   })
 })
+
+// ─── Health Data context (Sprint 28 Parte 4) ───────────────────────────────────
+
+describe('calculateReadiness — health context integration', () => {
+  beforeEach(() => {
+    mockHistory.mockReturnValue([])
+    mockIntelligence.mockReturnValue([])
+    mockRecovery.mockReturnValue({
+      peito: { recoveryPercent: 100 },
+      costas: { recoveryPercent: 100 },
+      pernas: { recoveryPercent: 100 },
+      ombros: { recoveryPercent: 100 },
+      biceps: { recoveryPercent: 100 },
+      triceps: { recoveryPercent: 100 },
+      core: { recoveryPercent: 100 },
+    })
+    window.localStorage.clear()
+  })
+
+  it('leaves healthContext undefined and score unaffected with zero health records', () => {
+    const withCheckIn = calculateReadiness({
+      checkIn: makeCheckIn({ energy: 5, soreness: 1, sleepQuality: 5, motivation: 5 }),
+    })
+    expect(withCheckIn.healthContext).toBeUndefined()
+    expect(withCheckIn.level).toBe('high')
+
+    const withoutCheckIn = calculateReadiness({ checkIn: null, now: new Date() })
+    expect(withoutCheckIn.healthContext).toBeUndefined()
+  })
+
+  it('surfaces healthContext once a reliable baseline exists, without changing the score', () => {
+    const now = new Date('2026-07-27T08:00:00.000Z')
+    for (let day = 12; day <= 27; day++) {
+      createHealthDataRecord({
+        metric: 'sleep_duration',
+        value: 420,
+        recordedAt: `2026-07-${day}T08:00:00.000Z`,
+        startAt: `2026-07-${day}T00:00:00.000Z`,
+        endAt: `2026-07-${day}T07:00:00.000Z`,
+        source: 'manual',
+      })
+    }
+
+    const checkIn = makeCheckIn({ energy: 5, soreness: 1, sleepQuality: 5, motivation: 5 })
+    const withHealth = calculateReadiness({ checkIn, now })
+    const withoutHealth = calculateReadiness({ checkIn, now: new Date('2000-01-01T00:00:00.000Z') })
+
+    expect(withHealth.healthContext).toBeDefined()
+    expect(withHealth.healthContext?.sleepMinutes?.reliable).toBe(true)
+    // score/level are identical regardless of health data presence — context never feeds the formula.
+    expect(withHealth.score).toBe(withoutHealth.score)
+    expect(withHealth.level).toBe(withoutHealth.level)
+  })
+
+  it('does not surface an unreliable metric (insufficient sample) as healthContext data', () => {
+    const now = new Date('2026-07-27T08:00:00.000Z')
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 60, recordedAt: '2026-07-27T08:00:00.000Z', source: 'manual' })
+
+    const result = calculateReadiness({ checkIn: makeCheckIn(), now })
+    expect(result.healthContext).toBeUndefined()
+  })
+})
+

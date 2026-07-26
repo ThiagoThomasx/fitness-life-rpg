@@ -13,6 +13,40 @@
 
 ### Entregas
 
+#### Sprint 28 Parte 4 — Health Data Integration: Readiness, Recovery, Fatigue, Coach, Backup & QA — 2026-07-26
+
+Conecta a camada de Health Data (Partes 1-3) aos motores existentes de
+forma opcional — nenhum deles passa a depender de Health Data, e o
+comportamento sem nenhum registro de saúde permanece idêntico ao anterior à
+Sprint 28 (verificado por teste em cada integração). Encerra a Sprint 28.
+Ver `SPRINT-28-PART4.md` para o relatório completo.
+
+- **Novo**: `health-data/consumer-context.ts` — Health Context Adapter,
+  única porta de entrada que Readiness/Recovery/Fatigue/Coach usam para
+  consumir Health Data, com gating por qualidade/conflito/amostra/
+  obsolescência.
+- **Readiness** (`workout-readiness.ts`): campo opcional
+  `WorkoutReadinessResult.healthContext` — puramente informativo, nunca
+  entra na fórmula de score.
+- **Recovery** (`workout-recovery.ts`): `getRecoveryHealthContext` — contexto
+  sistêmico de "hoje", chamado uma vez por tela (não por treino).
+- **Fatigue** (`analytics/fatigue.ts`): 4 novos detectores de padrão — sono
+  abaixo da baseline por 3 dias seguidos, FC de repouso elevada por 3 dias
+  seguidos, atividade externa acima da baseline por 3 dias seguidos, e
+  combinação (carga em alta + sono baixo + FC elevada).
+- **Coach** (`coach/rules.ts`): 4 novas regras `Coach.Health.SleepDeficit`,
+  `Coach.Health.RestingHrElevated`, `Coach.Health.HighExternalActivity`,
+  `Coach.Health.RecoveryMismatch` — reaproveitam os padrões de Fatigue,
+  linguagem sempre factual (nunca diagnóstica), disclaimer discreto.
+- **Backup/restore/reset**: `lrpg-fit:health-data-records` adicionada a
+  `STORAGE_KEYS`; `resetHealthData()`; nova seção "Apagar Dados de saúde"
+  em Configurações. Backups anteriores à Sprint 28 continuam restaurando
+  normalmente.
+- **UI mínima**: seção "Dados objetivos" no `ReadinessCard` (sono/FC vs.
+  baseline); badge "Baseado em dados de saúde" no `CoachRecommendationCard`.
+- 34 testes novos, 1393/1393 no total, lint/typecheck/build limpos. QA
+  manual real (check-in de prontidão + fluxo de reset) sem regressão.
+
 #### Sprint 28 Parte 3 — Daily Aggregation, Conflicts, Quality, Baselines & Trends — 2026-07-26
 
 Adiciona a camada analítica sobre a fundação das Partes 1-2: agregação
