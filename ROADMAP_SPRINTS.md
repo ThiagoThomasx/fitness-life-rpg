@@ -434,6 +434,22 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 
 ---
 
+## Sprint 27 — Adaptive Planning 2.0: From Coach Recommendation to Reviewable Plan Change ✅
+**Objetivo:** transformar uma recomendação do Coach numa proposta concreta, revisável (before/after) e versionada, com aprovação explícita obrigatória antes de qualquer mutação real — nunca uma alteração automática. Ver `SPRINT-27.md`, `ADAPTIVE-PLANNING.md`, `ADAPTIVE-PROPOSALS.md`, `ADAPTIVE-VERSIONING.md` e `ADAPTIVE-AUDIT-TRAIL.md` para o relatório completo.
+
+- [x] Auditoria confirmada: Coach nunca aplica mudança nenhuma (só persiste status de decisão); sistema paralelo pré-Coach (`adaptive-recommendations.ts`, Sprint 21) identificado e conscientemente não estendido; nenhum diff engine genérico existia antes desta sprint
+- [x] Parte 1 — Fundação: `types.ts`, `proposal-diff.ts` (motor de diff puro), `applicability.ts`, `proposal-builder.ts`, `storage.ts` (proposals + audit trail), registradas em `backup.ts`
+- [x] Parte 2 — `volume-math.ts` + `volume-proposals.ts` (`reduce_volume`/`increase_volume`), `reschedule-proposals.ts`, `recovery-proposals.ts` (3 opções independentes)
+- [x] Parte 3 — `frequency-proposals.ts`, `exercise-replace-proposals.ts`, `versioning.ts` (reaproveita o version-bump já existente, não reimplementa)
+- [x] Parte 4 — `decisions.ts` (aceitar/rejeitar/revisar depois/expirar), `execution.ts` (único ponto de mutação real, atômico e idempotente), `coach-proposals.ts` (ponte Coach→proposta), UI (`ProposalReviewModal`, botão "Criar proposta", "Ajustes recentes", reset granular em Configurações)
+- [x] QA manual real: fluxo completo testado por interação (recomendação real do Coach → proposta → diff correto → aceitar e aplicar → mutação real confirmada no `localStorage` → audit trail renderizado), zero erros de console
+- [x] Bug real encontrado e corrigido: heurística de redução/aumento de volume não reconhecia a frase real da única regra `volume` do Coach ("Redistribua parte do volume de X...") — corrigido com teste de regressão na frase exata
+- [x] Correção separada: flake pré-existente em `program-instantiation.test.ts` (mistura de `toISOString()` UTC com cálculo de weekday local) — estabilizado
+- [x] 1195/1195 testes (mais de 100 novos), lint/typecheck/build limpos
+- [ ] **Pendências conscientes**: `adjust_frequency`/`review_progression` não têm execução automática (schema/dados insuficientes, documentado); só o fluxo de volume foi testado end-to-end no browser; sem matriz de breakpoints para o novo modal; sem leitor de tela real
+
+---
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:

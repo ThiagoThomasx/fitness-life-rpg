@@ -13,6 +13,42 @@
 
 ### Entregas
 
+#### Sprint 27 — Adaptive Planning 2.0: From Coach Recommendation to Reviewable Plan Change — 2026-07-26
+
+Fecha o loop que a Sprint 26 deixou aberto: o Coach detecta e sugere, mas
+nunca aplica. Esta sprint adiciona a camada de proposta concreta, revisável
+e versionada — aprovação explícita do usuário sempre obrigatória antes de
+qualquer mutação. Ver `SPRINT-27.md`, `ADAPTIVE-PLANNING.md`,
+`ADAPTIVE-PROPOSALS.md`, `ADAPTIVE-VERSIONING.md` e
+`ADAPTIVE-AUDIT-TRAIL.md` para o relatório completo.
+
+- **Novo domínio** `src/lib/adaptive-planning/` (14 módulos): diff engine
+  genérico (primeiro do repositório — os outros domínios só fazem
+  version-bump + clone completo), applicability engine, builders
+  especializados para os 8 tipos de proposta (`reduce_volume`,
+  `increase_volume`, `reschedule_workout`, `insert_recovery`,
+  `adjust_frequency`, `replace_exercise`, `review_progression`,
+  `maintain_plan`), motor de execução atômico e idempotente, e audit trail
+  append-only.
+- **Execução real, mas sempre atrás de aprovação explícita**: `execution.ts`
+  exige `status === 'accepted'` antes de mutar qualquer dado, reaplicar uma
+  proposta já `applied` é um no-op seguro, e falha em qualquer etapa marca
+  a proposta como `failed` sem deixar estado parcialmente escrito.
+- **UI**: botão "Criar proposta" nas recomendações do Coach elegíveis
+  (volume/recuperação), modal de revisão antes/depois com avisos e decisão
+  (aceitar/rejeitar/revisar depois), seção "Ajustes recentes" no Dashboard,
+  reset granular em Configurações.
+- **Bug real encontrado e corrigido em QA manual**: a heurística de
+  reduzir/aumentar volume não reconhecia a frase real da única regra de
+  volume do Coach ("Redistribua parte do volume de X..."), então "Criar
+  proposta" nunca gerava nada na prática — corrigido com teste de
+  regressão fixado na frase exata da regra.
+- **Correção separada**: flake pré-existente em `program-instantiation.test.ts`
+  (`toDateOnly` misturava `toISOString()` UTC com cálculo de weekday em
+  horário local) — estabilizado.
+- 1195/1195 testes (mais de 100 novos cobrindo o domínio inteiro),
+  lint/typecheck/build limpos.
+
 #### Sprint 26 — Coach Mode Foundation: Deterministic Training Coach — 2026-07-26
 
 Motor de interpretação determinístico (sem IA/LLM) que combina sinais já

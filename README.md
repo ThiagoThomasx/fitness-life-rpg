@@ -4,7 +4,7 @@ Um app gamificado de fitness onde treinar, registrar refeições e escrever no d
 
 ## Funcionalidades
 
-- **Dashboard** — visão geral de XP, nível, atributos, missões diárias, seção Coach (recomendações determinísticas explicáveis por prioridade) e seção Analytics (performance, consistência, balanceamento muscular, recuperação e insights observacionais por período)
+- **Dashboard** — visão geral de XP, nível, atributos, missões diárias, seção Coach (recomendações determinísticas explicáveis por prioridade, com proposta de ajuste revisável antes/depois para volume e recuperação) e seção Analytics (performance, consistência, balanceamento muscular, recuperação e insights observacionais por período)
 - **Treinos** — biblioteca de treinos, sessão ativa com cronômetro e detecção de PR
 - **Histórico** — registros de treinos completados com evolução de carga
 - **Diário** — entradas diárias com tags automáticas e XP

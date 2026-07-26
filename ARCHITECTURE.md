@@ -57,6 +57,20 @@ produz. A única exceção com persistência própria é `coach/decisions.ts`
 `adaptive-recommendation-decisions.ts` (Sprint 21): só o ESTADO da decisão
 do usuário é persistido, nunca o resultado de um cálculo.
 
+## `lib/adaptive-planning/*` — Coach recommendation → proposta versionada (Sprint 27)
+
+Traduz uma `CoachRecommendation` já pronta numa proposta concreta e
+revisável (before/after, warnings, aprovação explícita) — nunca recalcula
+sinais, nunca duplica o motor do Coach. Diferente de `analytics`/`coach`,
+este domínio TEM persistência própria: `lrpg-fit:adaptive-plan-proposals` e
+`lrpg-fit:adaptive-plan-audit` (ambas registradas em `backup.ts`
+`STORAGE_KEYS`/`ARRAY_KEYS`). `execution.ts` é o único lugar do app que
+aplica uma proposta de fato — sempre via as funções de escrita já
+existentes (`updatePlannedWorkoutTemplateSnapshot`,
+`reschedulePlannedWorkout`), nunca uma mutação nova e paralela. Ver
+`ADAPTIVE-PLANNING.md`, `ADAPTIVE-PROPOSALS.md`, `ADAPTIVE-VERSIONING.md` e
+`ADAPTIVE-AUDIT-TRAIL.md` para o detalhamento completo.
+
 ## IndexedDB (Sprint 19 Parte 2 — único uso no app)
 
 Fotos privadas de progresso (`src/lib/body-progress-photo-db.ts`) usam IndexedDB (`lrpg-fit-photos`, versão 1, store `photos`) em vez de `localStorage` — blobs de imagem não cabem bem nesse mecanismo (limite de armazenamento menor, custo de serialização, e o requisito explícito de nunca incluir imagens no backup JSON). É o único domínio do app que não segue o padrão `localStorage` acima. `BodyProgressEntry.photoIds` (em `lrpg-fit:body-progress`) guarda apenas os IDs — a resolução para metadados/blob acontece em runtime via `body-progress-photo-link.ts`, nunca persistida cruzada. Ver `DATA_MODEL.md` e `SPRINT-19-PART2.md`.
