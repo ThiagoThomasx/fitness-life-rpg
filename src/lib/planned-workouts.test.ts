@@ -20,6 +20,7 @@ import {
   revertPlannedWorkoutToPending,
   classifyCompletionTiming,
   completePlannedWorkoutExecution,
+  updatePlannedWorkoutTemplateSnapshot,
   type WorkoutTemplateSnapshot,
 } from './planned-workouts'
 
@@ -115,6 +116,33 @@ describe('revertPlannedWorkoutToPending', () => {
   it('refuses to revert a workout that is not in_progress', () => {
     const pw = savePlannedWorkout({ date: '2026-07-20', weekday: 1, name: 'A', templateSnapshot: snapshot(), isOptional: false })
     expect(revertPlannedWorkoutToPending(pw.id)).toBeNull()
+  })
+})
+
+describe('updatePlannedWorkoutTemplateSnapshot', () => {
+  it('replaces snapshot fields without touching status/source', () => {
+    const pw = savePlannedWorkout({ date: '2026-07-20', weekday: 1, name: 'A', templateSnapshot: snapshot(), isOptional: false })
+    const updated = updatePlannedWorkoutTemplateSnapshot(pw.id, {
+      exerciseBlocks: [{ id: 'blk-1', type: 'single', exercise: { id: 'ex-1', exerciseName: 'Supino', sets: 3 } }],
+    })
+    expect(updated?.templateSnapshot.exerciseBlocks[0].exercise.sets).toBe(3)
+    expect(updated?.status).toBe('pending')
+  })
+
+  it('refuses to update a completed workout', () => {
+    const pw = savePlannedWorkout({ date: '2026-07-20', weekday: 1, name: 'A', templateSnapshot: snapshot(), isOptional: false })
+    linkPlannedWorkoutToCompleted(pw.id, 'wh-1')
+    expect(updatePlannedWorkoutTemplateSnapshot(pw.id, { name: 'Novo nome' })).toBeNull()
+  })
+
+  it('refuses to update a cancelled workout', () => {
+    const pw = savePlannedWorkout({ date: '2026-07-20', weekday: 1, name: 'A', templateSnapshot: snapshot(), isOptional: false })
+    cancelPlannedWorkout(pw.id)
+    expect(updatePlannedWorkoutTemplateSnapshot(pw.id, { name: 'Novo nome' })).toBeNull()
+  })
+
+  it('returns null for a nonexistent workout', () => {
+    expect(updatePlannedWorkoutTemplateSnapshot('missing', { name: 'x' })).toBeNull()
   })
 })
 

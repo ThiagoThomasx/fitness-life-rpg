@@ -230,6 +230,34 @@ function updateExecution(
   return { ...workout.execution, ...patch, updatedAt: new Date().toISOString() }
 }
 
+/**
+ * Substitui o conteúdo do snapshot (nome/exerciseBlocks) de uma sessão ainda
+ * não concluída — usado pelo executor do Adaptive Planning (Sprint 27) para
+ * aplicar mudanças de volume/exercício já aprovadas pelo usuário. Nunca
+ * altera `status`/`source`/histórico de remarcação; só o conteúdo do treino
+ * em si. Bloqueado para sessões `done`/`cancelled` — histórico não é
+ * reescrito por esta função.
+ */
+export function updatePlannedWorkoutTemplateSnapshot(
+  id: string,
+  patch: Partial<WorkoutTemplateSnapshot>
+): PlannedWorkout | null {
+  const items = loadPlannedWorkouts()
+  const index = items.findIndex((p) => p.id === id)
+  if (index === -1) return null
+  if (items[index].status === 'done' || items[index].status === 'cancelled') return null
+
+  const updated: PlannedWorkout = {
+    ...items[index],
+    templateSnapshot: { ...items[index].templateSnapshot, ...patch },
+    updatedAt: new Date().toISOString(),
+  }
+  const next = [...items]
+  next[index] = updated
+  persistPlannedWorkouts(next)
+  return updated
+}
+
 /** Sessão fazia parte do plano mas não foi realizada — nunca é chamada de fracasso na UI (Fase 10). */
 export function skipPlannedWorkout(
   id: string,

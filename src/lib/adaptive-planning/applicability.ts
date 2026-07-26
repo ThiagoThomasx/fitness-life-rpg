@@ -18,8 +18,10 @@ export interface ApplicabilityContext {
   rescheduleConflicts?: PlannedWorkout[]
 }
 
+// 'accepted' NÃO é terminal aqui — é justamente o estado esperado antes de
+// `applyProposal` (execution.ts) rodar. Só estados que nunca deveriam gerar
+// uma nova execução entram nesta lista.
 const TERMINAL_STATUSES: ReadonlySet<AdaptivePlanProposal['status']> = new Set<AdaptivePlanProposal['status']>([
-  'accepted',
   'rejected',
   'expired',
   'applied',
