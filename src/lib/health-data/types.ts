@@ -131,3 +131,48 @@ export interface HealthMetricBaseline {
   sampleSize: number
   quality: HealthDataQuality
 }
+
+// ─── Importação (Sprint 28 Parte 2) ────────────────────────────────────────────
+
+export type HealthImportFileKind = 'json' | 'csv'
+
+/** Um registro do arquivo que não pôde ser interpretado/validado. */
+export interface HealthImportError {
+  /** Índice do registro no JSON, ou número da linha (1-based, contando o cabeçalho) no CSV. */
+  index: number
+  reason: string
+  raw?: unknown
+}
+
+/** Um registro válido, mas que já existe (ou se repete dentro do próprio arquivo). */
+export interface HealthImportDuplicate {
+  record: HealthDataRecord
+  reason: string
+}
+
+export interface HealthImportQualityBreakdown {
+  high: number
+  medium: number
+  low: number
+  unknown: number
+}
+
+/**
+ * Modelo puro de prévia — nunca persiste nada. `validRecords` já são
+ * `HealthDataRecord`s completos (validados, normalizados, com qualidade
+ * calculada) prontos para persistência caso o usuário confirme.
+ */
+export interface HealthImportPreview {
+  fileKind: HealthImportFileKind
+  total: number
+  valid: number
+  invalid: number
+  duplicates: number
+  readyToImport: number
+
+  validRecords: HealthDataRecord[]
+  duplicateRecords: HealthImportDuplicate[]
+  invalidRecords: HealthImportError[]
+
+  qualityBreakdown: HealthImportQualityBreakdown
+}

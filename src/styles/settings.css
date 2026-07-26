@@ -167,3 +167,98 @@
   color: var(--color-text-muted);
   text-align: center;
 }
+
+/* ─── Dados de saúde (Sprint 28) ─────────────────────────────────────────── */
+
+.health-import-counts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+}
+
+.health-import-count {
+  text-align: center;
+  padding: var(--space-2);
+  border-radius: var(--radius-control);
+  background: var(--color-bg-subtle);
+}
+
+.health-import-count__value {
+  display: block;
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+}
+
+.health-import-count__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.health-import-list {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  margin-bottom: var(--space-3);
+}
+
+.health-import-list__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.health-import-list__row:last-child {
+  border-bottom: none;
+}
+
+.health-import-list__reason {
+  color: var(--color-text-muted);
+}
+
+.health-data-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.health-data-row:last-child {
+  border-bottom: none;
+}
+
+.health-data-row__metric {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+}
+
+.health-data-row__meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.health-quality-badge {
+  font-size: var(--text-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-round);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+}
+
+.health-quality-badge--high {
+  background: var(--color-accent-subtle, var(--color-bg-subtle));
+  color: var(--color-accent);
+}
+
+.health-quality-badge--low {
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
+}

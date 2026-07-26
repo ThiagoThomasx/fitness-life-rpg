@@ -13,6 +13,38 @@
 
 ### Entregas
 
+#### Sprint 28 Parte 2 — Manual Health Entry & Import Pipeline — 2026-07-26
+
+Adiciona a camada de entrada e importação sobre a fundação da Parte 1: uma
+seção "Dados de saúde" em Configurações com formulário dinâmico por
+métrica, e importação de JSON/CSV com prévia obrigatória, deduplicação e
+persistência atômica. Ver `SPRINT-28-PART2.md`, `HEALTH-DATA-IMPORT.md` e
+`HEALTH-DATA-MANUAL-ENTRY.md` para o relatório completo.
+
+- **UI** (`src/components/settings/`): `HealthDataSection`,
+  `HealthDataManualEntryForm` (sono usa início/fim — duração derivada
+  automaticamente, nunca calculada manualmente pelo usuário),
+  `HealthDataImportPanel` (prévia em `ModalShell` com contagens,
+  exemplos e motivo de cada rejeição/duplicata), `HealthDataRecordList`.
+- **Novo em `src/lib/health-data/`**: `import-json.ts` (schema canônico
+  estrito), `csv-parser.ts` (tokenizador CSV próprio — sem biblioteca nova),
+  `import-csv.ts`, `import-preview.ts`, `import-apply.ts` (atomicidade via
+  snapshot/rollback, mesmo padrão de `backup.ts`), `manual-entry.ts`.
+- **Peso**: entrada manual e importação continuam redirecionando para
+  `createBodyProgressEntry` — nunca duplicado em `health-data-records`.
+  Isso expôs a necessidade de ajustar a chave de deduplicação de peso
+  (`metric+data`, ignorando `source`, já que Body Progress não distingue
+  fonte) e de corrigir `createBodyProgressEntry` (`lib/body-progress.ts`),
+  que antes engolia silenciosamente falhas de escrita em `localStorage` —
+  sem essa correção, o rollback atômico da importação nunca seria
+  acionado quando o peso redirecionado falhasse ao persistir.
+- QA manual real no browser: entrada manual, peso confirmado em Body
+  Progress, importação JSON com reimportação idempotente (duplicados
+  detectados), importação CSV com linhas mistas válidas/inválidas, mobile
+  375px sem overflow. Rollback sob falha de escrita coberto por teste
+  automatizado.
+- 55 testes novos, 1311/1311 no total, lint/typecheck/build limpos.
+
 #### Sprint 28 Parte 1 — Health Data Foundation: schema, validação e storage — 2026-07-26
 
 Primeira parte de uma nova camada local e agnóstica de fonte para dados de

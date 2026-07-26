@@ -15,6 +15,11 @@ function getAllRecordsIncludingAdapters(): HealthDataRecord[] {
   return [...getHealthDataRecords(), ...getWeightRecordsFromBodyProgress()]
 }
 
+/** Todos os registros de todas as métricas, mais recentes primeiro — usado pela lista da UI de Saúde (Parte 2). */
+export function getAllHealthRecords(): HealthDataRecord[] {
+  return getAllRecordsIncludingAdapters().sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))
+}
+
 export function getHealthRecordsByMetric(metric: HealthMetricType): HealthDataRecord[] {
   return getAllRecordsIncludingAdapters()
     .filter((r) => r.metric === metric)

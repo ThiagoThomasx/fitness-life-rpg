@@ -20,6 +20,16 @@ function simpleHash(input: string): string {
  * mesma chave são considerados o mesmo dado, ainda que tenham `id` diferente.
  */
 export function computeDedupKey(record: Pick<HealthDataRecord, 'metric' | 'source' | 'externalId' | 'recordedAt' | 'value' | 'startAt' | 'endAt'>): string {
+  // Peso é um caso especial (Sprint 28 Parte 2): Body Progress — a única
+  // store real de peso — não tem conceito de "fonte". Todo peso derivado de
+  // lá chega aqui como `source: 'body_progress'` (ver `body-progress-adapter.ts`),
+  // então comparar por `source` faria uma reimportação criar um novo
+  // registro a cada vez. Duas entradas de peso no mesmo dia são tratadas
+  // como o mesmo dado, independentemente da fonte declarada.
+  if (record.metric === 'weight') {
+    return `weight-date:${record.recordedAt.slice(0, 10)}`
+  }
+
   if (record.externalId) {
     return `ext:${record.source}:${record.externalId}`
   }

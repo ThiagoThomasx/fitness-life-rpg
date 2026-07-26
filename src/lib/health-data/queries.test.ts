@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { createBodyProgressEntry } from '../body-progress'
 import { createHealthDataRecord } from './storage'
-import { getHealthRecordsByMetric, getHealthRecordsForPeriod, getLatestHealthMetric } from './queries'
+import { getAllHealthRecords, getHealthRecordsByMetric, getHealthRecordsForPeriod, getLatestHealthMetric } from './queries'
 
 beforeEach(() => {
   window.localStorage.clear()
@@ -84,5 +84,21 @@ describe('getHealthRecordsForPeriod', () => {
 
     const records = getHealthRecordsForPeriod('steps', '2026-07-10T00:00:00.000Z', '2026-07-31T23:59:59.000Z')
     expect(records.map((r) => r.value)).toEqual([2000])
+  })
+})
+
+describe('getAllHealthRecords', () => {
+  it('combines every metric, including weight derived from Body Progress, newest first', () => {
+    createHealthDataRecord({ metric: 'steps', value: 8000, recordedAt: '2026-07-20T10:00:00.000Z', source: 'manual' })
+    createBodyProgressEntry({ recordedAt: '2026-07-25', weightKg: 80 })
+    createHealthDataRecord({ metric: 'resting_heart_rate', value: 55, recordedAt: '2026-07-27T10:00:00.000Z', source: 'manual' })
+
+    const records = getAllHealthRecords()
+    expect(records).toHaveLength(3)
+    expect(records[0].metric).toBe('resting_heart_rate')
+  })
+
+  it('returns an empty list when nothing exists', () => {
+    expect(getAllHealthRecords()).toEqual([])
   })
 })

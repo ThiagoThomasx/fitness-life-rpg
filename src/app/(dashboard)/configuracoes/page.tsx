@@ -21,6 +21,7 @@ import { TemplatesProgramsResetSection } from "@/components/settings/TemplatesPr
 import { WorkoutHistoryResetSection } from "@/components/settings/WorkoutHistoryResetSection"
 import { CoachAdaptiveResetSection } from "@/components/settings/CoachAdaptiveResetSection"
 import { BodyWellnessExportSection } from "@/components/settings/BodyWellnessExportSection"
+import { HealthDataSection } from "@/components/settings/HealthDataSection"
 import { clearAllPhotos } from "@/lib/body-progress-photo-db"
 import { stripAllPhotoLinks, resetAllBodyProgress } from "@/lib/body-progress-photo-link"
 import { getBodyProgressEntries } from "@/lib/body-progress"
@@ -227,6 +228,8 @@ export default function ConfiguracoesPage() {
         onConfirm={handleImportConfirm}
         onCancel={() => { setPanel("idle"); setImportFile(null) }}
       />
+
+      <HealthDataSection />
 
       <BodyWellnessExportSection
         onExportBodyCsv={handleBodyProgressCsvExport}

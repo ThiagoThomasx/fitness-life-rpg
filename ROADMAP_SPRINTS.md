@@ -454,7 +454,7 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 **Objetivo:** camada local, neutra e agnóstica de fonte para dados de saúde (passos, sono, peso, FC de repouso, calorias, atividade, bem-estar), pronta para alimentar Readiness/Recovery/Fatigue/Coach sem duplicar cálculo — sem integração real de Health Connect/Samsung Health/Apple Health/Google Fit nesta sprint. Ver `SPRINT-28.md`, `HEALTH-DATA-FOUNDATION.md`, `HEALTH-DATA-SCHEMA.md` e `HEALTH-DATA-QUALITY.md` para o relatório completo.
 
 - [x] Parte 1 — Fundação: auditoria (nenhum dado objetivo de saúde existia; peso já tem fonte de verdade em Body Progress; bem-estar subjetivo já é input do Coach via Readiness); `src/lib/health-data/` (`types`, `validation`, `normalization`, `quality`, `deduplication`, `storage`, `body-progress-adapter`, `queries`); 61 testes novos; 1256/1256 no total; lint/typecheck/build limpos
-- [ ] Parte 2 — Entrada manual (UI) e importação JSON/CSV com preview e atomicidade
+- [x] Parte 2 — Entrada manual (seção "Dados de saúde" em Configurações, formulário dinâmico por métrica) e importação JSON/CSV com prévia obrigatória e persistência atômica; peso continua redirecionado para Body Progress (nunca duplicado); 55 testes novos, 1311/1311 no total; lint/typecheck/build limpos
 - [ ] Parte 3 — Agregação diária, conflito entre fontes, baseline/tendências
 - [ ] Parte 4 — Integração Readiness/Recovery/Fatigue/Coach, backup/restore/reset, QA completo
 

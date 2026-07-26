@@ -6,7 +6,10 @@
 // classifica corpos, prescreve metas de peso ou infere causalidade —
 // tendências vivem em `body-progress-trends.ts`, nunca neste arquivo.
 
-const BODY_PROGRESS_KEY = 'lrpg-fit:body-progress'
+// Exportada (Sprint 28 Parte 2) para que `health-data/import-apply.ts` possa
+// incluir esta chave no snapshot/rollback atômico ao redirecionar peso
+// importado para este mesmo domínio — ver `body-progress-adapter.ts`.
+export const BODY_PROGRESS_KEY = 'lrpg-fit:body-progress'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -68,12 +71,21 @@ function loadEntries(): BodyProgressEntry[] {
   }
 }
 
-function persistEntries(entries: BodyProgressEntry[]): void {
-  if (typeof window === 'undefined') return
+/**
+ * Retorna `false` quando a escrita falha (quota excedida, storage
+ * indisponível). Sprint 28 Parte 2: `createBodyProgressEntry` precisa dessa
+ * informação para que `health-data/import-apply.ts` consiga detectar falha
+ * de persistência e reverter uma importação atomicamente — antes, a falha
+ * era sempre silenciosa e a função de criação nunca sabia se o dado
+ * realmente foi salvo.
+ */
+function persistEntries(entries: BodyProgressEntry[]): boolean {
+  if (typeof window === 'undefined') return true
   try {
     window.localStorage.setItem(BODY_PROGRESS_KEY, JSON.stringify(entries))
+    return true
   } catch {
-    // Storage unavailable — silently skip
+    return false
   }
 }
 
@@ -194,7 +206,8 @@ export function createBodyProgressEntry(input: NewBodyProgressInput): CreateBody
     updatedAt: now,
   }
 
-  persistEntries([entry, ...loadEntries()])
+  const persisted = persistEntries([entry, ...loadEntries()])
+  if (!persisted) return { ok: false, error: 'Falha ao salvar (armazenamento indisponível ou cheio).' }
   return { ok: true, entry }
 }
 

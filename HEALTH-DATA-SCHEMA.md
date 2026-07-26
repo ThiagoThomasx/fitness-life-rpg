@@ -82,3 +82,13 @@ Chave de identidade, da mais para a menos forte:
 
 Nunca depende do `id` interno gerado na criação/importação — reimportar o
 mesmo arquivo/registro não duplica.
+
+**Exceção (Parte 2):** para `metric: 'weight'`, a chave é `metric+data`
+(a parte `YYYY-MM-DD` de `recordedAt`), ignorando `source` — ver
+`HEALTH-DATA-IMPORT.md` para o motivo (Body Progress não tem conceito de
+fonte, e todo peso derivado de lá chega como `source: 'body_progress'`).
+
+## Importação (Parte 2)
+
+Ver `HEALTH-DATA-IMPORT.md` para o schema JSON canônico, as colunas CSV
+aceitas e o modelo `HealthImportPreview`.

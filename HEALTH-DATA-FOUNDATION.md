@@ -94,6 +94,17 @@ nutrição/CalorieFlow, ingestão por foto, notificações push.
 
 ## 5. Pendências (próximas partes desta sprint)
 
-- **Parte 2** — entrada manual (UI), importação JSON/CSV com preview.
+- **Parte 2** ✅ — entrada manual (UI), importação JSON/CSV com preview. Ver `SPRINT-28-PART2.md`, `HEALTH-DATA-IMPORT.md`, `HEALTH-DATA-MANUAL-ENTRY.md`.
 - **Parte 3** — agregação diária, motor de conflito entre fontes, baseline/tendências.
 - **Parte 4** — integração com Readiness/Recovery/Fatigue/Coach, backup/restore/reset, QA completo.
+
+## 6. Atualização pós-Parte 2
+
+A chave de deduplicação de peso foi ajustada para `metric+data` (ignorando
+`source`) — Body Progress não tem conceito de fonte, então a chave
+original (`metric+source+recordedAt`) permitiria reimportação duplicada de
+peso. Ver `HEALTH-DATA-IMPORT.md` §"Deduplicação na importação". Além
+disso, `createBodyProgressEntry` (`lib/body-progress.ts`) agora detecta e
+reporta falha de escrita em `localStorage` — necessário para que a
+importação atômica da Parte 2 consiga acionar rollback quando o peso
+redirecionado falha ao persistir.

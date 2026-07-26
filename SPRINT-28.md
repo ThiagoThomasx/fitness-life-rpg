@@ -82,3 +82,23 @@ Typecheck: ✅
 Tests:     ✅ 1256/1256 (1195 + 61 novos)
 Build:     ✅
 ```
+
+## 6. Parte 2 — Manual Health Entry & Import Pipeline
+
+Ver `SPRINT-28-PART2.md` para o relatório completo desta parte.
+
+Resumo: entrada manual (`Configurações → Dados de saúde`), importação
+JSON/CSV com prévia obrigatória e persistência atômica, tudo construído
+sobre as APIs da Parte 1 sem reimplementar validação/normalização/
+qualidade/deduplicação. Peso continua redirecionado para Body Progress
+(nunca duplicado) tanto na entrada manual quanto na importação — o que
+exigiu um ajuste na chave de deduplicação de peso (ignora `source`) e uma
+correção em `createBodyProgressEntry` (agora detecta falha de escrita, o
+que a atomicidade da importação depende para acionar o rollback).
+
+```text
+Lint:      ✅
+Typecheck: ✅
+Tests:     ✅ 1311/1311 (1256 + 55 novos)
+Build:     ✅
+```
