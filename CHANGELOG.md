@@ -13,6 +13,25 @@
 
 ### Entregas
 
+#### Sprint 29 Parte 3 — Health × Training Relationships & Explainability — 2026-07-26
+
+Adiciona relações estatísticas entre saúde e treino, e explicabilidade de
+uso de dados. Ver `HEALTH-TRAINING-RELATIONSHIPS.md`.
+
+- **Novo**: `health-data/relationships.ts` (`buildHealthTrainingRelationships`)
+  — 4 relações (sono × volume, sono × prontidão relatada, FC de repouso ×
+  prontidão relatada, atividade × carga), amostra mínima de 5 dias por
+  grupo, texto neutro sem causalidade.
+- **Novo**: `health-data/data-usage.ts` (`buildHealthDataUsageExplainability`)
+  — traduz o `HealthContext` do dia (mesmo objeto consumido por
+  Readiness/Recovery/Fatigue/Coach) em `used`/`reasons` por sinal, sem
+  reimplementar gating.
+- **UI**: `HealthRelationshipsSection`, `HealthDataUsageSection`, ambas em
+  `/saude`.
+- 9 testes novos (`relationships.test.ts`, `data-usage.test.ts`),
+  1423/1423 no total. Lint/typecheck/build limpos. QA manual real sem erro
+  de console.
+
 #### Sprint 29 Parte 2 — Health Recovery Dashboard Foundation — 2026-07-26
 
 Transforma os dados locais de saúde (Sprint 28) numa experiência consolidada

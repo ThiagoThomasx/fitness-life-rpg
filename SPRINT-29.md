@@ -38,9 +38,21 @@
 
 Ver `HEALTH-RECOVERY-EXPERIENCE.md`.
 
-## Parte 3 — Health × Training Relationships & Explainability
+## Parte 3 — Health × Training Relationships & Explainability ✅
 
-Pendente.
+**Relações**: `buildHealthTrainingRelationships` (`src/lib/health-data/relationships.ts`) — 4 relações (sono × volume, sono × prontidão relatada, FC de repouso × prontidão relatada, atividade × carga), comparando dois grupos (sinal abaixo/na-ou-acima da baseline), amostra mínima de 5 dias por grupo, texto neutro sem causalidade (testado explicitamente). "Prontidão relatada" usa o campo bruto `energy` do check-in, não o score completo recalculado — decisão documentada.
+
+**Data Usage Explainability**: `buildHealthDataUsageExplainability` (`src/lib/health-data/data-usage.ts`) — traduz o `HealthContext` do dia (mesmo objeto que Readiness/Recovery/Fatigue/Coach consomem) em `used`/`reasons` por sinal, sem reimplementar gating.
+
+**UI**: `HealthRelationshipsSection` e `HealthDataUsageSection`, adicionadas a `/saude` abaixo de Qualidade e Conflitos.
+
+**QA manual real**: dev server, ambas as seções renderizam estados honestos de "amostra insuficiente"/"não utilizado" com motivo, sem erro de console.
+
+**Testes**: 9 novos (`relationships.test.ts` × 5, `data-usage.test.ts` × 4). 1423/1423 no total. Lint/typecheck/build limpos.
+
+**Pendência consciente**: relação "saúde × conclusão de treino" (sessão pulada/reagendada) não implementada — não existe log consultável de sessões puladas hoje; registrado em `HEALTH-TRAINING-RELATIONSHIPS.md` para sprint futura.
+
+Ver `HEALTH-TRAINING-RELATIONSHIPS.md`.
 
 ## Parte 4 — Visual QA, Mobile, Accessibility & Final Hardening
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { buildHealthRecoveryDashboard } from "@/lib/health-data"
+import { buildHealthRecoveryDashboard, buildHealthTrainingRelationships, buildHealthDataUsageExplainability } from "@/lib/health-data"
 import type { AnalyticsPeriod } from "@/lib/analytics/types"
 import { PERIOD_OPTIONS } from "@/components/dashboard/analytics/analytics-ui"
 import { HealthRecoverySummary } from "@/components/health-recovery/HealthRecoverySummary"
@@ -10,6 +10,8 @@ import { HealthRecoveryMetricSection } from "@/components/health-recovery/Health
 import { HealthRecoveryWeightSection } from "@/components/health-recovery/HealthRecoveryWeightSection"
 import { HealthRecoveryQualitySection } from "@/components/health-recovery/HealthRecoveryQualitySection"
 import { HealthRecoveryConflictsSection } from "@/components/health-recovery/HealthRecoveryConflictsSection"
+import { HealthRelationshipsSection } from "@/components/health-recovery/HealthRelationshipsSection"
+import { HealthDataUsageSection } from "@/components/health-recovery/HealthDataUsageSection"
 import { formatMinutesAsHours } from "@/components/health-recovery/health-recovery-ui"
 
 /**
@@ -30,6 +32,8 @@ export default function SaudePage() {
   }, [])
 
   const dashboard = useMemo(() => (mounted ? buildHealthRecoveryDashboard(period) : null), [mounted, period])
+  const relationships = useMemo(() => (mounted ? buildHealthTrainingRelationships(period) : null), [mounted, period])
+  const dataUsage = useMemo(() => (mounted ? buildHealthDataUsageExplainability(period) : null), [mounted, period])
 
   return (
     <main className="page-container">
@@ -131,6 +135,10 @@ export default function SaudePage() {
               <HealthRecoveryQualitySection quality={dashboard.quality} />
 
               <HealthRecoveryConflictsSection conflicts={dashboard.conflicts} />
+
+              {dataUsage && <HealthDataUsageSection usage={dataUsage} />}
+
+              {relationships && <HealthRelationshipsSection relationships={relationships} />}
             </>
           )}
         </div>
