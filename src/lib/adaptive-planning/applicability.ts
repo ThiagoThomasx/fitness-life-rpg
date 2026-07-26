@@ -6,6 +6,7 @@
 
 import type { PlannedWorkout } from '../planned-workouts'
 import type { TrainingProgram } from '../training-programs'
+import { isProgramVersionStale } from './versioning'
 import type { AdaptivePlanProposal, ProposalApplicability } from './types'
 
 export interface ApplicabilityContext {
@@ -63,10 +64,8 @@ export function checkProposalApplicability(
       reasons.push('O programa alvo foi arquivado.')
     }
 
-    if (proposal.target.kind === 'program' && proposal.target.programVersion !== undefined) {
-      if (proposal.target.programVersion !== context.program.version) {
-        reasons.push('O programa foi alterado desde que a proposta foi criada — snapshot obsoleto.')
-      }
+    if (proposal.target.kind === 'program' && isProgramVersionStale(proposal.target, context.program.version)) {
+      reasons.push('O programa foi alterado desde que a proposta foi criada — snapshot obsoleto.')
     }
   }
 
