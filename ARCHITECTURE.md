@@ -71,6 +71,35 @@ existentes (`updatePlannedWorkoutTemplateSnapshot`,
 `ADAPTIVE-PLANNING.md`, `ADAPTIVE-PROPOSALS.md`, `ADAPTIVE-VERSIONING.md` e
 `ADAPTIVE-AUDIT-TRAIL.md` para o detalhamento completo.
 
+## `lib/health-data/*` — camada local de saúde (Sprint 28-29)
+
+Domínio agnóstico de fonte para sinais de saúde (sono, FC de repouso, passos,
+atividade, peso, bem-estar). TEM persistência própria: `lrpg-fit:health-data-records`
+(`storage.ts`, registrada em `backup.ts`). Peso NUNCA é duplicado aqui — é
+derivado sob demanda de `lrpg-fit:body-progress` via `body-progress-adapter.ts`
+(Body Progress continua a única fonte de verdade). Resumos diários,
+baseline, tendência, conflito e qualidade nunca são persistidos — sempre
+derivados sob demanda (`aggregation.ts`/`baseline.ts`/`trends.ts`/
+`conflicts.ts`/`quality-aggregation.ts`), consultados via `analytics-queries.ts`.
+
+`consumer-context.ts` (`buildHealthContext`/`buildTodayHealthContext`) é a
+ÚNICA porta de entrada que Readiness/Recovery/Fatigue/Coach usam para
+consumir Health Data — eles nunca importam os motores de agregação
+diretamente. Nenhuma fonte externa (real ou `MockHealthProvider`, ver
+`provider.ts`/`HEALTH-PROVIDER-INTERFACE.md`) alimenta esses consumidores
+diretamente — tudo passa pela mesma pipeline de importação
+(`import-preview.ts` → `import-apply.ts`).
+
+`recovery-dashboard.ts`, `relationships.ts` e `data-usage.ts` (Sprint 29)
+são agregadores de página puros para a rota `/saude` — não introduzem
+persistência nova, só compõem os motores acima. Ver `HEALTH-DATA-FOUNDATION.md`,
+`HEALTH-DATA-CONSUMERS.md`, `HEALTH-RECOVERY-EXPERIENCE.md` e
+`HEALTH-TRAINING-RELATIONSHIPS.md`.
+
+Decisão de plataforma (Health Connect/Samsung Health/Apple Health): ver
+`docs/adr/ADR-HEALTH-PLATFORM.md` — produto permanece web app, sem
+Capacitor/wrapper nativo nesta fase.
+
 ## IndexedDB (Sprint 19 Parte 2 — único uso no app)
 
 Fotos privadas de progresso (`src/lib/body-progress-photo-db.ts`) usam IndexedDB (`lrpg-fit-photos`, versão 1, store `photos`) em vez de `localStorage` — blobs de imagem não cabem bem nesse mecanismo (limite de armazenamento menor, custo de serialização, e o requisito explícito de nunca incluir imagens no backup JSON). É o único domínio do app que não segue o padrão `localStorage` acima. `BodyProgressEntry.photoIds` (em `lrpg-fit:body-progress`) guarda apenas os IDs — a resolução para metadados/blob acontece em runtime via `body-progress-photo-link.ts`, nunca persistida cruzada. Ver `DATA_MODEL.md` e `SPRINT-19-PART2.md`.

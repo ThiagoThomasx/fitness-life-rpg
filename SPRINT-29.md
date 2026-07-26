@@ -54,6 +54,24 @@ Ver `HEALTH-RECOVERY-EXPERIENCE.md`.
 
 Ver `HEALTH-TRAINING-RELATIONSHIPS.md`.
 
-## Parte 4 — Visual QA, Mobile, Accessibility & Final Hardening
+## Parte 4 — Visual QA, Mobile, Accessibility & Final Hardening ✅
 
-Pendente.
+**Breakpoints testados em `/saude`** (dev server real, dados reais): 320px, 390px, 768px, 1440px — sem overflow horizontal em nenhum (`document.body.scrollWidth <= window.innerWidth` confirmado em todos).
+
+**Acessibilidade**: 1 único `h1` na página; todas as 10 `<section>` têm `aria-label`/`aria-labelledby`; filtro de período com `role="group"` + `aria-pressed`; hierarquia de heading (`h1` → `h3`) consistente com o padrão já existente em todo o app (ex.: Configurações) — não é uma regressão introduzida nesta sprint.
+
+**Data safety**: nenhuma chave de `localStorage` nova foi introduzida nas Partes 2-3 (`recovery-dashboard.ts`/`relationships.ts`/`data-usage.ts` são 100% derivados, sem persistência própria); `resetHealthData`/backup/restore continuam cobertos pelos testes existentes de `backup.test.ts`, sem alteração.
+
+**Documentação final**: `ARCHITECTURE.md` atualizado com a seção `lib/health-data/*`; `CHANGELOG.md` e `ROADMAP_SPRINTS.md` atualizados a cada parte.
+
+**Gates finais**: lint ✅, typecheck ✅, 1423/1423 testes ✅, build ✅.
+
+**Pendências reais** (não maquiadas):
+- Sem screenshot automatizado por breakpoint (Playwright) — QA via `document.body.scrollWidth`/DOM assertions no navegador do dev server, mesmo padrão de rigor, formato diferente.
+- Sem teste de leitor de tela real (NVDA/VoiceOver) — fora do alcance desta sessão.
+- Relação "saúde × conclusão de treino" (sessão pulada/reagendada) não implementada — sem log de sessões puladas hoje (ver `HEALTH-TRAINING-RELATIONSHIPS.md`).
+- Nenhuma integração nativa real (Health Connect/Samsung Health/Apple Health) — decisão consciente do ADR, não uma limitação técnica desta sprint.
+
+## Próximo passo recomendado
+
+**Sprint 30 — Health Import Expansion.** Justificativa: o ADR (`docs/adr/ADR-HEALTH-PLATFORM.md`) recomenda importação de arquivos como estratégia principal para fontes externas; a experiência de Recovery (Partes 2-3) já prova que dados manuais/importados geram valor real (baseline, tendência, relações). O próximo incremento de maior valor é expandir a importação (mais formatos, exportações comuns de apps de saúde populares, talvez importação recorrente/agendada) — não um protótipo de Health Connect, que o ADR explicitamente adia até haver demanda validada.

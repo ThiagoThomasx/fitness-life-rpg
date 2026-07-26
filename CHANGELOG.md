@@ -13,6 +13,21 @@
 
 ### Entregas
 
+#### Sprint 29 Parte 4 — Visual QA, Mobile, Accessibility & Final Hardening — 2026-07-26
+
+Encerra a Sprint 29. Ver `SPRINT-29.md` para o relatório completo.
+
+- QA real em `/saude` nos breakpoints 320/390/768/1440px — sem overflow
+  horizontal em nenhum.
+- Acessibilidade verificada: 1 `h1`, todas as seções com `aria-label`/
+  `aria-labelledby`, filtro de período com `role="group"` + `aria-pressed`.
+- `ARCHITECTURE.md` atualizado com a seção `lib/health-data/*` (domínio,
+  persistência, `consumer-context.ts` como única porta de entrada,
+  agregadores de página da Sprint 29).
+- Gates finais: lint/typecheck/1423 testes/build limpos.
+- Recomendação para a próxima sprint: **Sprint 30 — Health Import
+  Expansion** (não um protótipo de Health Connect — ver ADR).
+
 #### Sprint 29 Parte 3 — Health × Training Relationships & Explainability — 2026-07-26
 
 Adiciona relações estatísticas entre saúde e treino, e explicabilidade de
