@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { applyProposal } from './execution'
+import { applyProposal, previewProposalApplicability } from './execution'
 import { acceptProposal } from './decisions'
 import { getAdaptivePlanAuditTrail, saveAdaptivePlanProposal } from './storage'
 import { buildReduceVolumeProposal } from './volume-proposals'
@@ -162,6 +162,30 @@ describe('applyProposal — maintain_plan', () => {
     const result = applyProposal(proposal.id, NOW)
     expect(result.success).toBe(true)
     expect(result.changedEntityIds).toEqual([])
+  })
+})
+
+describe('previewProposalApplicability', () => {
+  it('resolves the real target and reports applicability without mutating anything', () => {
+    const pw = seedPlannedWorkout()
+    const proposal = buildReduceVolumeProposal(recommendation(), pw, NOW)!
+    saveAdaptivePlanProposal(proposal)
+
+    const preview = previewProposalApplicability(proposal, NOW)
+    expect(preview.applicable).toBe(true)
+
+    const untouched = getPlannedWorkoutById(pw.id)!
+    expect(untouched.templateSnapshot.exerciseBlocks[0].exercise.sets).toBe(4)
+  })
+
+  it('surfaces the blocking reason for a completed workout', () => {
+    const pw = seedPlannedWorkout()
+    const proposal = buildReduceVolumeProposal(recommendation(), pw, NOW)!
+    linkPlannedWorkoutToCompleted(pw.id, 'wh-1')
+
+    const preview = previewProposalApplicability(proposal, NOW)
+    expect(preview.applicable).toBe(false)
+    expect(preview.reasons[0]).toMatch(/já foi concluído/)
   })
 })
 

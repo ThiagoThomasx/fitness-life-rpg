@@ -74,20 +74,19 @@ export function buildMaintainPlanProposal(
 }
 
 /**
- * Categorias do Coach que hoje têm um builder especializado capaz de gerar
- * uma proposta com alteração real. Categorias fora desta lista só podem
- * virar `maintain_plan` — a UI usa isto para decidir se mostra a ação
- * "Criar proposta" com uma alteração de verdade ou só a opção de manter o
- * plano (Fase 26 do spec). Expandido nas Partes 2/3 conforme os builders de
- * volume/reagendamento/frequência/exercício forem implementados.
+ * Categorias que a UI consegue transformar em proposta concreta SÓ a partir
+ * de uma `CoachRecommendation` (via `action.id` apontando pra um treino
+ * planejado — ver `coach-proposals.ts`). `frequency`/`progression`/
+ * `stagnation` já têm builders especializados e testados
+ * (`frequency-proposals.ts`, `exercise-replace-proposals.ts`), mas esses
+ * builders precisam de dados que `CoachRecommendation` não carrega
+ * estruturados (aderência numérica, nome do exercício substituto) — só
+ * `evidence: string[]` em texto livre. Até o Coach expor esses dados de
+ * forma estruturada, a UI só oferece "Criar proposta" para categorias fora
+ * desta lista via `maintain_plan` (Fase 26 do spec: nem toda recomendação
+ * precisa virar uma alteração real).
  */
-const ACTIONABLE_CATEGORIES = new Set<CoachRecommendation['category']>([
-  'volume',
-  'recovery',
-  'frequency',
-  'progression',
-  'stagnation',
-])
+const ACTIONABLE_CATEGORIES = new Set<CoachRecommendation['category']>(['volume', 'recovery'])
 
 export function isProposalActionable(recommendation: CoachRecommendation): boolean {
   return ACTIONABLE_CATEGORIES.has(recommendation.category)

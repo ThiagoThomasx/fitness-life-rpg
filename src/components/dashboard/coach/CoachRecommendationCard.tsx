@@ -4,11 +4,20 @@ import { useState } from "react"
 import Link from "next/link"
 import type { CoachRecommendation } from "@/lib/coach/types"
 import { buildExplanation } from "@/lib/coach/explanations"
+import { isProposalActionable } from "@/lib/adaptive-planning/proposal-builder"
+import { buildProposalsForRecommendation } from "@/lib/adaptive-planning/coach-proposals"
+import { saveAdaptivePlanProposal } from "@/lib/adaptive-planning/storage"
+import { acceptProposal, rejectProposal, reviewProposalLater } from "@/lib/adaptive-planning/decisions"
+import { applyProposal } from "@/lib/adaptive-planning/execution"
+import type { AdaptivePlanProposal } from "@/lib/adaptive-planning/types"
 import { CATEGORY_LABELS, STATUS_LABELS, actionHref, priorityBadgeClass, statusBadgeClass } from "./coach-ui"
+import { ProposalReviewModal } from "./ProposalReviewModal"
 
 type CoachRecommendationCardProps = {
   recommendation: CoachRecommendation
   onDecide: (id: string, status: "visualizada" | "ignorada" | "aceita") => void
+  /** Chamado depois de aceitar/rejeitar/revisar depois uma proposta — deixa a seção pai atualizar "Ajustes recentes". */
+  onProposalChange?: () => void
 }
 
 /**
@@ -20,8 +29,11 @@ type CoachRecommendationCardProps = {
  * automática (regra "NÃO IMPLEMENTAR"), só ações de navegação e a decisão
  * explícita do usuário via os botões Aceitar/Ignorar.
  */
-export function CoachRecommendationCard({ recommendation, onDecide }: CoachRecommendationCardProps) {
+export function CoachRecommendationCard({ recommendation, onDecide, onProposalChange }: CoachRecommendationCardProps) {
   const [expanded, setExpanded] = useState(false)
+  const [reviewProposals, setReviewProposals] = useState<AdaptivePlanProposal[] | null>(null)
+  const [proposalMessage, setProposalMessage] = useState<string | null>(null)
+  const [applyError, setApplyError] = useState<string | null>(null)
   const explanation = buildExplanation(recommendation)
   const decided = recommendation.status === "aceita" || recommendation.status === "ignorada"
 
@@ -31,6 +43,43 @@ export function CoachRecommendationCard({ recommendation, onDecide }: CoachRecom
     if (next && recommendation.status === "nova") {
       onDecide(recommendation.id, "visualizada")
     }
+  }
+
+  function handleCreateProposal() {
+    const proposals = buildProposalsForRecommendation(recommendation)
+    if (proposals.length === 0) {
+      setProposalMessage("Nenhuma proposta automática disponível agora — sem sessão pendente no Planner para aplicar esta mudança.")
+      return
+    }
+    proposals.forEach((proposal) => saveAdaptivePlanProposal(proposal))
+    setProposalMessage(null)
+    setApplyError(null)
+    setReviewProposals(proposals)
+  }
+
+  function handleAcceptProposal(proposal: AdaptivePlanProposal) {
+    const now = new Date()
+    acceptProposal(proposal.id, now)
+    const result = applyProposal(proposal.id, now)
+    if (result.success) {
+      setReviewProposals(null)
+      setApplyError(null)
+      onProposalChange?.()
+    } else {
+      setApplyError(result.error ?? "Não foi possível aplicar a proposta.")
+    }
+  }
+
+  function handleRejectProposal(proposal: AdaptivePlanProposal) {
+    rejectProposal(proposal.id, new Date())
+    setReviewProposals(null)
+    onProposalChange?.()
+  }
+
+  function handleReviewProposalLater(proposal: AdaptivePlanProposal) {
+    reviewProposalLater(proposal.id, new Date())
+    setReviewProposals(null)
+    onProposalChange?.()
   }
 
   return (
@@ -88,16 +137,38 @@ export function CoachRecommendationCard({ recommendation, onDecide }: CoachRecom
           )}
 
           {!decided && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button type="button" className="btn btn--primary btn--sm" onClick={() => onDecide(recommendation.id, "aceita")}>
                 Aceitar
               </button>
               <button type="button" className="btn btn--ghost btn--sm" onClick={() => onDecide(recommendation.id, "ignorada")}>
                 Ignorar
               </button>
+              {isProposalActionable(recommendation) && (
+                <button type="button" className="btn btn--secondary btn--sm" onClick={handleCreateProposal}>
+                  Criar proposta
+                </button>
+              )}
             </div>
           )}
+
+          {proposalMessage && (
+            <p role="status" className="text-xs text-muted">
+              {proposalMessage}
+            </p>
+          )}
         </div>
+      )}
+
+      {reviewProposals && (
+        <ProposalReviewModal
+          proposals={reviewProposals}
+          applyError={applyError}
+          onClose={() => setReviewProposals(null)}
+          onAccept={handleAcceptProposal}
+          onReject={handleRejectProposal}
+          onReviewLater={handleReviewProposalLater}
+        />
       )}
     </div>
   )

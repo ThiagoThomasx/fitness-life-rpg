@@ -6,9 +6,11 @@ import { recordCoachDecision } from "@/lib/coach/decisions"
 import type { CoachDecisionStatus } from "@/lib/coach/decisions"
 import type { AnalyticsPeriod } from "@/lib/analytics/types"
 import type { CoachPriority, CoachRecommendation } from "@/lib/coach/types"
+import { getAdaptivePlanAuditTrail } from "@/lib/adaptive-planning/storage"
 import { SkeletonCard } from "@/components/ui/Skeleton"
 import { PERIOD_OPTIONS } from "@/components/dashboard/analytics/analytics-ui"
 import { CoachRecommendationCard } from "./CoachRecommendationCard"
+import { RecentAdaptiveChangesSection } from "./RecentAdaptiveChangesSection"
 import { PRIORITY_LABELS } from "./coach-ui"
 
 const PRIORITY_GROUPS: CoachPriority[] = ["high", "medium", "low"]
@@ -29,6 +31,7 @@ export function CoachSection() {
   const [mounted, setMounted] = useState(false)
   const [period, setPeriod] = useState<AnalyticsPeriod>("30d")
   const [decisionVersion, setDecisionVersion] = useState(0)
+  const [proposalVersion, setProposalVersion] = useState(0)
   const [showIgnored, setShowIgnored] = useState(false)
 
   useEffect(() => {
@@ -41,9 +44,19 @@ export function CoachSection() {
     [mounted, period, decisionVersion]
   )
 
+  const auditTrail = useMemo(
+    () => (mounted ? getAdaptivePlanAuditTrail() : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- proposalVersion é só um trigger de recálculo.
+    [mounted, proposalVersion]
+  )
+
   function handleDecide(id: string, status: CoachDecisionStatus) {
     recordCoachDecision(id, status)
     setDecisionVersion((v) => v + 1)
+  }
+
+  function handleProposalChange() {
+    setProposalVersion((v) => v + 1)
   }
 
   function visibleRecommendations(recs: CoachRecommendation[]): CoachRecommendation[] {
@@ -107,7 +120,12 @@ export function CoachSection() {
                 </div>
                 <div className="flex flex-col gap-2">
                   {items.map((rec) => (
-                    <CoachRecommendationCard key={rec.id} recommendation={rec} onDecide={handleDecide} />
+                    <CoachRecommendationCard
+                      key={rec.id}
+                      recommendation={rec}
+                      onDecide={handleDecide}
+                      onProposalChange={handleProposalChange}
+                    />
                   ))}
                 </div>
               </div>
@@ -115,6 +133,8 @@ export function CoachSection() {
           })}
         </div>
       )}
+
+      {mounted && <RecentAdaptiveChangesSection entries={auditTrail} />}
     </section>
   )
 }

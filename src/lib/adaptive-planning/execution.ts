@@ -25,6 +25,7 @@ import type {
   ExerciseChangeSnapshot,
   ExerciseTarget,
   PlannedWorkoutTarget,
+  ProposalApplicability,
   ProposalExecutionResult,
   ScheduleChangeSnapshot,
   VolumeChangeSnapshot,
@@ -63,6 +64,17 @@ function resolveApplicabilityContext(proposal: AdaptivePlanProposal, now: Date):
     return { now, program: getTrainingProgramById(proposal.target.programId) }
   }
   return { now }
+}
+
+/**
+ * Passo "preview" do fluxo obrigatório — a UI chama isto para mostrar
+ * avisos/motivos de bloqueio ANTES do usuário decidir, sem mutar nada. Usa a
+ * mesma resolução de contexto que `applyProposal` roda de novo no momento de
+ * aplicar (nunca confia no resultado de um preview antigo).
+ */
+export function previewProposalApplicability(proposal: AdaptivePlanProposal, now: Date = new Date()): ProposalApplicability {
+  const context = resolveApplicabilityContext(proposal, now)
+  return checkProposalApplicability(proposal, context)
 }
 
 function recordAudit(

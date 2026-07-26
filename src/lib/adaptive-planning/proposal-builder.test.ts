@@ -99,4 +99,10 @@ describe('isProposalActionable', () => {
     expect(isProposalActionable(baseRecommendation({ category: 'consistency' }))).toBe(false)
     expect(isProposalActionable(baseRecommendation({ category: 'records' }))).toBe(false)
   })
+
+  it('is false for categories with a builder that still needs structured data the recommendation does not carry', () => {
+    expect(isProposalActionable(baseRecommendation({ category: 'frequency' }))).toBe(false)
+    expect(isProposalActionable(baseRecommendation({ category: 'progression' }))).toBe(false)
+    expect(isProposalActionable(baseRecommendation({ category: 'stagnation' }))).toBe(false)
+  })
 })
