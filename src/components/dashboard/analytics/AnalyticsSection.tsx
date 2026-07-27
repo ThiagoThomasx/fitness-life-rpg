@@ -1,16 +1,27 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import dynamic from "next/dynamic"
 import { buildDashboardAnalytics } from "@/lib/analytics/dashboard"
 import type { AnalyticsPeriod } from "@/lib/analytics/types"
 import { SkeletonCard } from "@/components/ui/Skeleton"
 import { PERIOD_OPTIONS } from "./analytics-ui"
-import { PerformancePanel } from "./PerformancePanel"
 import { ConsistencyPanel } from "./ConsistencyPanel"
-import { MuscleBalancePanel } from "./MuscleBalancePanel"
 import { FatiguePanel } from "./FatiguePanel"
 import { HighlightsPanel } from "./HighlightsPanel"
 import { InsightsPanel } from "./InsightsPanel"
+
+// PerformancePanel e MuscleBalancePanel são os únicos painéis desta seção que
+// importam recharts (~85-90kB gzip). Carregados só sob demanda para não
+// pesar o First Load JS de /dashboard, cuja aba padrão é "highlights".
+const PerformancePanel = dynamic(() => import("./PerformancePanel").then((m) => m.PerformancePanel), {
+  ssr: false,
+  loading: () => <SkeletonCard height="220px" />,
+})
+const MuscleBalancePanel = dynamic(() => import("./MuscleBalancePanel").then((m) => m.MuscleBalancePanel), {
+  ssr: false,
+  loading: () => <SkeletonCard height="220px" />,
+})
 
 type SubTab = "highlights" | "performance" | "consistency" | "muscle" | "fatigue" | "insights"
 

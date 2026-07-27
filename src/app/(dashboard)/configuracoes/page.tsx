@@ -9,6 +9,7 @@ import {
   getStorageStatus,
   type StorageStatus,
 } from "@/lib/backup"
+import { MAX_HEALTH_IMPORT_FILE_BYTES } from "@/lib/health-data/manual-entry"
 import { SettingsHeader } from "@/components/settings/SettingsHeader"
 import { PreferencesLinkCard } from "@/components/settings/PreferencesLinkCard"
 import { StorageStatusSection } from "@/components/settings/StorageStatusSection"
@@ -105,6 +106,11 @@ export default function ConfiguracoesPage() {
   }
 
   function handleFileSelected(file: File) {
+    if (file.size > MAX_HEALTH_IMPORT_FILE_BYTES) {
+      const maxMb = (MAX_HEALTH_IMPORT_FILE_BYTES / (1024 * 1024)).toFixed(0)
+      showMessage("err", `Arquivo muito grande. O limite é ${maxMb}MB.`)
+      return
+    }
     setImportFile(file)
     setPanel("import-confirm")
   }

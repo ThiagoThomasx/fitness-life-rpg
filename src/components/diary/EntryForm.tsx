@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useId, useState } from "react"
 import type { DailyLogEntry } from "@/lib/daily-log"
 import { extractTags } from "@/lib/auto-tags"
 import { EnergyStars } from "./EnergyStars"
@@ -23,6 +23,8 @@ export function EntryForm({ initial, isFirst, xpValue, onSave, onCancel }: Props
   const [mood, setMood] = useState(initial?.mood ?? "😊")
   const [notes, setNotes] = useState(initial?.notes ?? "")
   const previewTags = extractTags(notes)
+  const sleepId = useId()
+  const notesId = useId()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -47,10 +49,11 @@ export function EntryForm({ initial, isFirst, xpValue, onSave, onCancel }: Props
         </div>
 
         <div>
-          <label className="field-label">
+          <label className="field-label" htmlFor={sleepId}>
             Horas de sono: <strong className="text-primary">{sleepHours}h</strong>
           </label>
           <input
+            id={sleepId}
             type="range"
             min={3}
             max={12}
@@ -62,8 +65,9 @@ export function EntryForm({ initial, isFirst, xpValue, onSave, onCancel }: Props
         </div>
 
         <div>
-          <label className="field-label">Notas (opcional)</label>
+          <label className="field-label" htmlFor={notesId}>Notas (opcional)</label>
           <textarea
+            id={notesId}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Como foi seu dia? Como se sentiu?"

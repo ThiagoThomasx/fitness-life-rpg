@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { Blob as NodeBlob } from 'node:buffer'
 import { createBodyProgressEntry, getBodyProgressEntryById, getBodyProgressEntries } from './body-progress'
 import { savePhoto, getPhotoRecord } from './body-progress-photo-db'
@@ -133,11 +133,13 @@ describe('deleteEntryAndPhotos', () => {
 
 describe('resetAllBodyProgress', () => {
   it('deletes every body progress entry and cascades photo deletion when requested', async () => {
-    // createBodyProgressEntry derives its id from Date.now(); a tiny delay avoids
-    // an id collision when two entries are created back-to-back in the same test.
+    // createBodyProgressEntry derives its id from Date.now(); mock it to return
+    // distinct values so the two entries never collide, without waiting on a real timer.
+    const nowSpy = vi.spyOn(Date, 'now')
+    nowSpy.mockReturnValueOnce(1000).mockReturnValueOnce(2000)
     const entryA = createBodyProgressEntry({ recordedAt: '2026-08-01', weightKg: 80 }).entry!
-    await new Promise((r) => setTimeout(r, 2))
     const entryB = createBodyProgressEntry({ recordedAt: '2026-08-02', weightKg: 81 }).entry!
+    nowSpy.mockRestore()
     await savePhoto(makePhotoRecord({ id: 'p1', entryId: entryA.id }))
     await linkPhotoToEntry(entryA.id, 'p1')
 

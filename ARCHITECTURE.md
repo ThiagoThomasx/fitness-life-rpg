@@ -152,3 +152,25 @@ Sessão ativa (UI)
 ## Backup e reset
 
 `lib/backup.ts` expõe export/import/validação de schema/reset, consumido pela rota `/configuracoes`. Esses fluxos já existem e devem apenas ser **revisados visualmente** na Sprint 6 — não recriados.
+
+`STORAGE_KEYS` (`lib/backup.ts`) é a lista canônica das 37 chaves de
+`localStorage` do app — toda chave nova precisa ser adicionada ali para
+entrar no backup/restore/reset completo. Ver `STORAGE-AUDIT.md` (Sprint 31)
+para o inventário completo, cobertura de reset granular por domínio e riscos
+conhecidos (restore parcial não limpa chaves ausentes; sem `version`/`migrate`
+no `persist()` do Zustand).
+
+## Rotas — loading e error boundaries
+
+Desde a Sprint 31, `src/app/(dashboard)/loading.tsx` e
+`src/app/(dashboard)/error.tsx` cobrem as 21 rotas do grupo `(dashboard)` com
+um boundary compartilhado (skeleton de carregamento + tela de erro com opção
+de "Tentar novamente"). Antes disso, nenhuma rota do app tinha
+`loading.tsx`/`error.tsx` próprio.
+
+## Auditoria Sprint 31 (Release Candidate v2)
+
+Ver `SPRINT-31.md` para o relatório completo de auditoria cross-domínio
+(arquitetura, dados, segurança, acessibilidade, performance, testes) e
+`ARCHITECTURE-AUDIT.md` para o detalhe de dead code, acoplamento, rotas,
+arquivos/funções grandes e duplicação de lógica encontrados nesta fase.

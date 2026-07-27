@@ -45,7 +45,11 @@ Veja [`docs/DEPLOY.md`](docs/DEPLOY.md) para instruções de deploy na Vercel ou
 
 ## QA
 
-Veja [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) para o checklist de validação antes do deploy.
+Veja [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) para o checklist de validação antes do deploy e [`QA-CHECKLIST.md`](QA-CHECKLIST.md) para o checklist de release cross-domínio (Sprint 31 — Release Candidate v2).
+
+## Release Candidate v2
+
+Estado atual do projeto: **v2.0.0-rc1**. Ver [`RELEASE-CANDIDATE-V2.md`](RELEASE-CANDIDATE-V2.md) para o resumo executivo e [`SPRINT-31.md`](SPRINT-31.md) para a auditoria completa (arquitetura, dados/backup, segurança, acessibilidade, performance, testes).
 
 ## Navegação
 
@@ -76,5 +80,10 @@ Todos os dados ficam no `localStorage` do browser sob o prefixo `lrpg-fit:*`:
 | `lrpg-fit:weekly-plan` / `lrpg-fit:campaigns` | Plano semanal e campanhas |
 | `lrpg-fit:preferences` | Preferências e onboarding |
 | `lrpg-fit:custom-workouts` / `lrpg-fit:custom-exercises` | Workout builder |
+
+Tabela acima é ilustrativa — a lista completa e atual das 37 chaves ativas
+(inclui saúde, ciclos de treino, metas, programas, coach adaptativo e mais)
+está em `STORAGE_KEYS` (`src/lib/backup.ts`) e documentada em
+[`STORAGE-AUDIT.md`](STORAGE-AUDIT.md).
 
 Use a página **Dados & Backup** (`/configuracoes`) para exportar um `.json` com todos os dados, importar um backup anterior ou resetar tudo com confirmação.

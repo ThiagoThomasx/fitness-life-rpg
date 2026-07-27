@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
   createCycleReview,
   updateCycleReview,
@@ -44,11 +44,13 @@ describe('createCycleReview', () => {
 })
 
 describe('getReviewsByCycle', () => {
-  it('returns only reviews for the given cycle, oldest first', async () => {
+  it('returns only reviews for the given cycle, oldest first', () => {
+    vi.useFakeTimers()
     createCycleReview({ cycleId: 'cycle-1', phase: 'mid_cycle' })
     createCycleReview({ cycleId: 'cycle-2', phase: 'mid_cycle' })
-    await new Promise((r) => setTimeout(r, 2))
+    vi.advanceTimersByTime(2)
     createCycleReview({ cycleId: 'cycle-1', phase: 'end_cycle' })
+    vi.useRealTimers()
 
     const reviews = getReviewsByCycle('cycle-1')
     expect(reviews).toHaveLength(2)

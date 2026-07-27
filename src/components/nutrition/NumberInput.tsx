@@ -1,5 +1,7 @@
 "use client"
 
+import { useId } from "react"
+
 type Props = {
   label: string
   value: number
@@ -10,11 +12,13 @@ type Props = {
 }
 
 export function NumberInput({ label, value, onChange, unit, min = 0, max = 9999 }: Props) {
+  const inputId = useId()
   return (
     <div className="number-input">
-      <label className="field-label">{label}</label>
+      <label className="field-label" htmlFor={inputId}>{label}</label>
       <div className="number-input__control">
         <input
+          id={inputId}
           type="number"
           value={value}
           min={min}

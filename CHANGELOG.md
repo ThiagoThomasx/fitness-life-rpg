@@ -13,6 +13,52 @@
 
 ### Entregas
 
+#### Sprint 31 — Release Candidate v2: Cross-Domain QA, Hardening & Release Readiness — 2026-07-27
+
+Sprint de consolidação (não de features): auditoria cross-domínio de todo o
+projeto (não só Health Data), paralelizada em 6 frentes — arquitetura/dead
+code/rotas, dados/storage/backup/restore/reset, segurança, acessibilidade,
+performance/bundle, cobertura de testes. Ver `SPRINT-31.md`,
+`RELEASE-CANDIDATE-V2.md`, `ARCHITECTURE-AUDIT.md`, `STORAGE-AUDIT.md`,
+`PERFORMANCE-AUDIT.md`, `ACCESSIBILITY-AUDIT-V2.md`.
+
+- **Performance**: `PerformancePanel`/`MuscleBalancePanel` (únicos
+  consumidores de `recharts` na seção Analytics do Dashboard) convertidos
+  para `next/dynamic` — First Load JS de `/dashboard` caiu de 299 kB para
+  189 kB (-37%).
+- **Acessibilidade**: `EnergyStars`/`MoodPicker` (Diário) ganharam
+  `aria-label`/`aria-pressed`/`role="group"` (antes inutilizáveis por leitor
+  de tela — seleção comunicada só por opacidade); labels de `EntryForm`
+  (sono, notas) e `NumberInput` (Nutrição) associados via `useId()`/
+  `htmlFor`; contraste de `--color-text-muted` elevado de ~3.8:1 para
+  ~4.6:1+ (afetava 294 ocorrências em 108 arquivos).
+- **Robustez de rotas**: `loading.tsx` + `error.tsx` adicionados ao grupo
+  `(dashboard)` — nenhuma das 21 rotas do app tinha boundary de
+  loading/erro antes desta sprint.
+- **Segurança/dados**: import de backup (`configuracoes/page.tsx`) ganhou
+  limite de tamanho de arquivo (5MB), mesma proteção que já existia no
+  import de Health Data.
+- **Testes**: 2 testes com dependência de `setTimeout` real (colisão de ID
+  baseada em `Date.now()`) convertidos para determinísticos
+  (`vi.spyOn`/`vi.useFakeTimers`) — `body-progress-photo-link.test.ts`,
+  `training-cycle-reviews.test.ts`.
+- **Auditoria sem correção nesta sprint** (riscos residuais documentados,
+  não bloqueantes): restore de backup parcial não limpa chaves ausentes do
+  payload; `persist()` do Zustand sem `version`/`migrate`; helpers
+  matemáticos duplicados em ~10 arquivos de engines; `sessao/page.tsx` e
+  `plano/page.tsx` com funções/arquivos grandes; 7 engines determinísticos
+  sem teste direto (`attributes.ts`, `progression.ts`,
+  `health-data/stats.ts`, `recommendations.ts`, `recommendation-assembly.ts`,
+  `weekly-plan.ts`, `weekly-progress.ts`, `auto-tags.ts`).
+- **Testes**: 1616/1616 (mesma contagem — 2 estabilizados, nenhum novo
+  adicionado, conforme política de bugfix da sprint). Lint/typecheck/build
+  limpos. QA manual real: reset completo testado ponta a ponta via
+  navegador (seed → reset → confirmação por leitura direta do
+  `localStorage`); dashboard e diário verificados sem regressão de console;
+  responsivo verificado em 375px sem overflow.
+- **Avaliação**: pronto para Release Candidate v2 (`v2.0.0-rc1`). Ver
+  `RELEASE-CANDIDATE-V2.md` para a lista completa de riscos residuais.
+
 #### Sprint 30 Parte 4 — Health Data Backup, Mobile, Accessibility & Final QA — 2026-07-27
 
 Fecha a Sprint 30 auditando e endurecendo o domínio de Health Data

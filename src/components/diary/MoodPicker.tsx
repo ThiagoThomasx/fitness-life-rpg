@@ -15,13 +15,14 @@ type Props = {
 
 export function MoodPicker({ value, onChange }: Props) {
   return (
-    <div className="mood-picker">
+    <div className="mood-picker" role="group" aria-label="Humor">
       {MOODS.map((m) => (
         <button
           key={m.emoji}
           type="button"
           onClick={() => onChange?.(m.emoji)}
-          title={m.label}
+          aria-label={m.label}
+          aria-pressed={value === m.emoji}
           className={value === m.emoji ? "mood-chip mood-chip--active" : "mood-chip"}
         >
           {m.emoji}

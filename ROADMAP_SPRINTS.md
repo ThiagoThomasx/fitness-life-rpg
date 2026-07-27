@@ -478,6 +478,22 @@ Esta sprint encerra a modernização do fluxo principal do produto. As próximas
 - [x] Parte 3 — Export foundation (`export/filters|canonical-json|canonical-csv|csv-safety|filenames|preview|download`), format adapters (`export/adapters.ts`: canonical-json/canonical-csv/mapped-csv atrás de uma interface única, nenhum parser reimplementado), motor de equivalência semântica (`export/round-trip.ts`, com o caso especial de peso via Body Progress), painel de exportação em Configurações (`HealthDataExportPanel`); round-trip real testado ponta a ponta pelo pipeline de importação já existente (nenhuma rota paralela); 79 testes novos, 1607/1607 no total; lint/typecheck/build limpos. Ver `HEALTH-DATA-EXPORT.md`
 - [x] Parte 4 — Auditoria de backup/reset do domínio Health Data: presets de importação (`lrpg-fit:health-import-presets`) adicionados a `STORAGE_KEYS`/`ARRAY_KEYS` de `backup.ts` (gap: não entravam no backup nem eram removidos pelo reset completo), restore tolerante a preset individualmente inválido (`ImportResult.invalidPresetsSkipped`), novo reset granular "Configurações de importação" (`HealthImportSettingsResetSection`, usando `resetHealthImportPresets()` que já existia sem UI), correção de foco na exclusão de preset; 9 testes novos, 1616/1616 no total; QA real no navegador; lint/typecheck/build limpos. Ver `SPRINT-30-PART4.md`, `HEALTH-DATA-BACKUP.md`. Sprint 30 encerrada — recomendação: Sprint 31 — Release Candidate v2
 
+## Sprint 31 — Release Candidate v2: Cross-Domain QA, Hardening & Release Readiness ✅
+**Objetivo:** consolidação, não features — auditoria cross-domínio de todo o projeto (arquitetura, dados/storage/backup, segurança, acessibilidade, performance/bundle, cobertura de testes) e correção apenas de bugs reais confirmados. Ver `SPRINT-31.md`, `RELEASE-CANDIDATE-V2.md`, `ARCHITECTURE-AUDIT.md`, `STORAGE-AUDIT.md`, `PERFORMANCE-AUDIT.md`, `ACCESSIBILITY-AUDIT-V2.md` para o relatório completo.
+
+- [x] Baseline confirmado antes de qualquer mudança: lint/typecheck/1616 testes/build limpos
+- [x] Auditoria paralelizada em 6 frentes (arquitetura/rotas, dados/storage, segurança, acessibilidade, performance, testes), cada achado verificado por leitura de código + grep, nunca especulação
+- [x] Performance: `next/dynamic` para `PerformancePanel`/`MuscleBalancePanel` no Dashboard — First Load JS de `/dashboard` caiu de 299 kB para 189 kB
+- [x] Acessibilidade: `EnergyStars`/`MoodPicker` com `aria-label`/`aria-pressed`/`role="group"`; labels de `EntryForm`/`NumberInput` associados via `useId()`; contraste de `--color-text-muted` elevado a AA (3.8:1 → ~4.6:1+, afetava 294 ocorrências)
+- [x] Robustez: `loading.tsx`/`error.tsx` adicionados ao grupo `(dashboard)` — nenhuma das 21 rotas tinha boundary antes
+- [x] Segurança/dados: cap de tamanho de arquivo no import de backup (paridade com Health Data)
+- [x] Testes: 2 testes com `setTimeout` real (colisão de ID por `Date.now()`) tornados determinísticos; 1616/1616 mantidos
+- [x] QA real no navegador: reset completo ponta a ponta (seed → reset → confirmação via `localStorage`), dashboard/diário sem regressão de console, responsivo 375px sem overflow
+- [x] Nenhuma lógica de negócio alterada (cálculo de XP/PR/badge/coach/backup intocados) — apenas markup/acessibilidade, code-splitting, boundaries de rota e um guard defensivo
+- [ ] **Pendências conscientes** (não bloqueantes, documentadas em `RELEASE-CANDIDATE-V2.md`): restore de backup parcial não limpa chaves ausentes (decisão de produto pendente); `persist()` do Zustand sem `version`/`migrate`; helpers matemáticos duplicados em ~10 arquivos de engines; `sessao/page.tsx`/`plano/page.tsx` com funções/arquivos grandes; 7 engines sem teste direto; round-trip de backup via upload de arquivo real não testado manualmente (limitação de ferramenta); live regions de sucesso/erro montadas condicionalmente
+
+**Avaliação**: pronto para Release Candidate v2 (`v2.0.0-rc1`).
+
 ## Feature Freeze (vigente até a Sprint 6 aceita)
 
 **Importante:** as features abaixo **já estão implementadas e permanecem no app** — o freeze significa que não recebem expansão funcional nem features novas durante o redesign, apenas ajustes mínimos de compatibilidade visual/estrutural:
