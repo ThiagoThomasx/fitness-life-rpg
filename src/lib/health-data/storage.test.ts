@@ -156,4 +156,17 @@ describe('resetHealthData', () => {
     expect(() => resetHealthData()).not.toThrow()
     expect(getHealthDataRecords()).toEqual([])
   })
+
+  it('never touches health import presets — the two granular resets are isolated', () => {
+    window.localStorage.setItem(
+      'lrpg-fit:health-import-presets',
+      JSON.stringify([{ id: 'preset-1', name: 'Preset' }])
+    )
+    createHealthDataRecord(stepsInput)
+
+    resetHealthData()
+
+    expect(getHealthDataRecords()).toEqual([])
+    expect(window.localStorage.getItem('lrpg-fit:health-import-presets')).not.toBeNull()
+  })
 })

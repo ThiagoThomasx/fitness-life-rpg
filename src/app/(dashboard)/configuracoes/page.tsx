@@ -21,10 +21,11 @@ import { TemplatesProgramsResetSection } from "@/components/settings/TemplatesPr
 import { WorkoutHistoryResetSection } from "@/components/settings/WorkoutHistoryResetSection"
 import { CoachAdaptiveResetSection } from "@/components/settings/CoachAdaptiveResetSection"
 import { HealthDataResetSection } from "@/components/settings/HealthDataResetSection"
+import { HealthImportSettingsResetSection } from "@/components/settings/HealthImportSettingsResetSection"
 import { HealthRecoveryLinkCard } from "@/components/settings/HealthRecoveryLinkCard"
 import { BodyWellnessExportSection } from "@/components/settings/BodyWellnessExportSection"
 import { HealthDataSection } from "@/components/settings/HealthDataSection"
-import { resetHealthData } from "@/lib/health-data"
+import { resetHealthData, resetHealthImportPresets } from "@/lib/health-data"
 import { clearAllPhotos } from "@/lib/body-progress-photo-db"
 import { stripAllPhotoLinks, resetAllBodyProgress } from "@/lib/body-progress-photo-link"
 import { getBodyProgressEntries } from "@/lib/body-progress"
@@ -44,7 +45,7 @@ import {
   type ExportPeriodOption,
 } from "@/lib/body-wellness-export"
 
-type Panel = "idle" | "import-confirm" | "reset-confirm" | "photo-reset-confirm" | "body-reset-confirm" | "templates-programs-reset-confirm" | "workout-history-reset-confirm" | "coach-adaptive-reset-confirm" | "health-data-reset-confirm"
+type Panel = "idle" | "import-confirm" | "reset-confirm" | "photo-reset-confirm" | "body-reset-confirm" | "templates-programs-reset-confirm" | "workout-history-reset-confirm" | "coach-adaptive-reset-confirm" | "health-data-reset-confirm" | "health-import-settings-reset-confirm"
 
 export default function ConfiguracoesPage() {
   const [panel, setPanel] = useState<Panel>("idle")
@@ -60,6 +61,7 @@ export default function ConfiguracoesPage() {
   const [workoutHistoryResetText, setWorkoutHistoryResetText] = useState("")
   const [coachAdaptiveResetText, setCoachAdaptiveResetText] = useState("")
   const [healthDataResetText, setHealthDataResetText] = useState("")
+  const [healthImportSettingsResetText, setHealthImportSettingsResetText] = useState("")
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null)
 
   const refreshStatus = useCallback(() => {
@@ -218,6 +220,14 @@ export default function ConfiguracoesPage() {
     showMessage("ok", "Dados de saúde apagados. Treinos, Readiness e Body Progress não foram afetados.")
   }
 
+  function handleHealthImportSettingsResetConfirm() {
+    if (healthImportSettingsResetText.trim().toLowerCase() !== "resetar") return
+    resetHealthImportPresets()
+    setPanel("idle")
+    setHealthImportSettingsResetText("")
+    showMessage("ok", "Configurações de importação apagadas. Registros de saúde já importados não foram afetados.")
+  }
+
   return (
     <div className="page">
       <SettingsHeader />
@@ -310,6 +320,15 @@ export default function ConfiguracoesPage() {
         onResetTextChange={setHealthDataResetText}
         onConfirm={handleHealthDataResetConfirm}
         onCancel={() => { setPanel("idle"); setHealthDataResetText("") }}
+      />
+
+      <HealthImportSettingsResetSection
+        isConfirming={panel === "health-import-settings-reset-confirm"}
+        resetText={healthImportSettingsResetText}
+        onStart={() => setPanel("health-import-settings-reset-confirm")}
+        onResetTextChange={setHealthImportSettingsResetText}
+        onConfirm={handleHealthImportSettingsResetConfirm}
+        onCancel={() => { setPanel("idle"); setHealthImportSettingsResetText("") }}
       />
 
       <DataResetSection

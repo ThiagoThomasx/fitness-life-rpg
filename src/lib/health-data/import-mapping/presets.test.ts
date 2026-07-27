@@ -95,6 +95,16 @@ describe('resetHealthImportPresets', () => {
     resetHealthImportPresets()
     expect(loadHealthImportPresets()).toHaveLength(0)
   })
+
+  it('never touches health data records — the two granular resets are isolated', () => {
+    createHealthImportPreset(baseInput)
+    window.localStorage.setItem('lrpg-fit:health-data-records', JSON.stringify([{ id: 'hd-1' }]))
+
+    resetHealthImportPresets()
+
+    expect(loadHealthImportPresets()).toHaveLength(0)
+    expect(window.localStorage.getItem('lrpg-fit:health-data-records')).not.toBeNull()
+  })
 })
 
 describe('loadHealthImportPresets', () => {

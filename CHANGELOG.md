@@ -13,6 +13,37 @@
 
 ### Entregas
 
+#### Sprint 30 Parte 4 — Health Data Backup, Mobile, Accessibility & Final QA — 2026-07-27
+
+Fecha a Sprint 30 auditando e endurecendo o domínio de Health Data
+(importação → export → round-trip → backup → restore → reset), sem
+formato novo, feature nova ou redesign. Ver `SPRINT-30-PART4.md` e
+`HEALTH-DATA-BACKUP.md`.
+
+- **Gap corrigido**: `lrpg-fit:health-import-presets` não estava em
+  `STORAGE_KEYS` (`backup.ts`) — presets de mapeamento não entravam no
+  backup, não eram restaurados e sobreviviam a um reset completo
+  (`resetAllData()`). Adicionada a `STORAGE_KEYS`/`ARRAY_KEYS`, sem
+  incrementar `BACKUP_VERSION` (mesmo padrão de `health-data-records` na
+  Sprint 28).
+- **Restore tolerante a preset inválido**: diferente de todas as outras
+  chaves (que rejeitam o backup inteiro em caso de formato errado),
+  presets individualmente malformados são filtrados sem bloquear o resto
+  do restore — `ImportResult.invalidPresetsSkipped` reporta quantos foram
+  descartados. Reaproveita `isValidStoredMapping` já existente.
+- **Gap corrigido**: `resetHealthImportPresets()` existia na lib desde a
+  Sprint 30 Parte 1/2 mas não tinha UI. Novo
+  `HealthImportSettingsResetSection.tsx` ("Apagar Configurações de
+  importação"), wireado em Configurações, mesmo padrão de confirmação por
+  texto das demais seções de reset.
+- **Acessibilidade**: `HealthImportPresetsSection` agora devolve o foco ao
+  botão "Excluir" ao cancelar a confirmação de exclusão de um preset.
+- **Testes**: 9 novos (backup round-trip de presets, filtro de preset
+  inválido, isolamento mútuo entre `resetHealthData()` e
+  `resetHealthImportPresets()`) — 1616/1616 no total. Lint/typecheck/build
+  limpos. QA funcional real no navegador (fluxo de reset de configurações
+  de importação, sem erros de console).
+
 #### Sprint 30 Parte 3 — Health Data Export, Round-Trip Portability & Format Adapters — 2026-07-26
 
 Adiciona o lado inverso da importação (Parte 1/2): exportar Health Data

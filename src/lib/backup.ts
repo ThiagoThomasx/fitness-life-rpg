@@ -1,4 +1,5 @@
 import { clearAllPhotos, countPhotos } from './body-progress-photo-db'
+import { isValidStoredMapping } from './health-data/import-mapping/presets'
 
 export const BACKUP_VERSION = 1
 
@@ -37,6 +38,7 @@ export const STORAGE_KEYS = [
   'lrpg-fit:adaptive-plan-proposals',
   'lrpg-fit:adaptive-plan-audit',
   'lrpg-fit:health-data-records',
+  'lrpg-fit:health-import-presets',
 ] as const
 
 export type StorageKey = typeof STORAGE_KEYS[number]
@@ -111,6 +113,8 @@ export interface ImportResult {
   error?: string
   restoredKeys: string[]
   skippedKeys: string[]
+  /** Presets de importação com formato inválido, ignorados individualmente (não bloqueiam o restore). */
+  invalidPresetsSkipped?: number
 }
 
 export function validateBackupPayload(raw: unknown): raw is BackupPayload {
@@ -148,6 +152,7 @@ const ARRAY_KEYS: ReadonlySet<StorageKey> = new Set<StorageKey>([
   'lrpg-fit:adaptive-plan-proposals',
   'lrpg-fit:adaptive-plan-audit',
   'lrpg-fit:health-data-records',
+  'lrpg-fit:health-import-presets',
 ])
 
 // Chaves cujo valor persistido deve ser um objeto (inclui o envelope
@@ -224,7 +229,18 @@ export function importBackup(payload: BackupPayload): ImportResult {
     }
   }
 
-  const data = payload.data as Record<string, unknown>
+  const data: Record<string, unknown> = { ...(payload.data as Record<string, unknown>) }
+
+  // Presets inválidos são descartados individualmente (nunca bloqueiam o
+  // restore inteiro) — diferente de todas as outras chaves, que rejeitam o
+  // backup completo se o formato estiver errado (seção 11).
+  let invalidPresetsSkipped = 0
+  const rawPresets = data['lrpg-fit:health-import-presets']
+  if (Array.isArray(rawPresets)) {
+    const validPresets = rawPresets.filter(isValidStoredMapping)
+    invalidPresetsSkipped = rawPresets.length - validPresets.length
+    data['lrpg-fit:health-import-presets'] = validPresets
+  }
 
   // Valida TUDO antes de escrever qualquer coisa: garante atomicidade — um
   // backup parcialmente corrompido não deve alterar nenhum dado existente.
@@ -277,7 +293,12 @@ export function importBackup(payload: BackupPayload): ImportResult {
     }
   }
 
-  return { ok: true, restoredKeys, skippedKeys }
+  return {
+    ok: true,
+    restoredKeys,
+    skippedKeys,
+    ...(invalidPresetsSkipped > 0 ? { invalidPresetsSkipped } : {}),
+  }
 }
 
 export function parseBackupFile(text: string): BackupPayload | null {

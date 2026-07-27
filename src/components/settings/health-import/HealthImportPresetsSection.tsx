@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   deleteHealthImportPreset,
   duplicateHealthImportPreset,
@@ -22,6 +22,7 @@ export function HealthImportPresetsSection() {
   const [renameText, setRenameText] = useState("")
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const deleteTriggerRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
 
   const load = useCallback(() => setPresets(loadHealthImportPresets()), [])
 
@@ -51,6 +52,10 @@ export function HealthImportPresetsSection() {
     duplicateHealthImportPreset(preset.id, `Cópia de ${preset.name}`)
     load()
     showMessage("Preset duplicado.")
+  }
+
+  function returnFocusToTrigger(presetId: string) {
+    deleteTriggerRefs.current.get(presetId)?.focus()
   }
 
   function handleDelete(preset: HealthImportMapping) {
@@ -108,16 +113,35 @@ export function HealthImportPresetsSection() {
                 </div>
 
                 {confirmingDeleteId === preset.id ? (
-                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                  <div role="group" aria-label={`Confirmar exclusão de ${preset.name}`} style={{ display: "flex", gap: 8, marginTop: 8 }}>
                     <span style={{ fontSize: "var(--text-xs)", flex: 1 }}>Excluir este preset?</span>
-                    <button type="button" className="btn btn--secondary" onClick={() => handleDelete(preset)}>Confirmar exclusão</button>
-                    <button type="button" className="btn btn--ghost" onClick={() => setConfirmingDeleteId(null)}>Cancelar</button>
+                    <button type="button" className="btn btn--secondary" autoFocus onClick={() => handleDelete(preset)}>Confirmar exclusão</button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      onClick={() => {
+                        setConfirmingDeleteId(null)
+                        returnFocusToTrigger(preset.id)
+                      }}
+                    >
+                      Cancelar
+                    </button>
                   </div>
                 ) : (
                   <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
                     <button type="button" className="btn btn--ghost" onClick={() => startRename(preset)}>Renomear</button>
                     <button type="button" className="btn btn--ghost" onClick={() => handleDuplicate(preset)}>Duplicar</button>
-                    <button type="button" className="btn btn--ghost" onClick={() => setConfirmingDeleteId(preset.id)}>Excluir</button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      ref={(el) => {
+                        if (el) deleteTriggerRefs.current.set(preset.id, el)
+                        else deleteTriggerRefs.current.delete(preset.id)
+                      }}
+                      onClick={() => setConfirmingDeleteId(preset.id)}
+                    >
+                      Excluir
+                    </button>
                   </div>
                 )}
               </>

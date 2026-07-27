@@ -1,11 +1,18 @@
-# Health Data Backup, Restore & Reset (Sprint 28 Parte 4)
+# Health Data Backup, Restore & Reset (Sprint 28 Parte 4; presets — Sprint 30 Parte 4)
 
-## Chave persistida
+## Chaves persistidas
 
-`lrpg-fit:health-data-records` (array de `HealthDataRecord`) — a única
-chave de Health Data que existe. Nunca há uma segunda chave: summaries
-diários, baselines, tendências e conflitos são sempre derivados sob
-demanda por `health-data/analytics-queries.ts`, nunca persistidos.
+- `lrpg-fit:health-data-records` (array de `HealthDataRecord`) — os
+  registros de saúde propriamente ditos.
+- `lrpg-fit:health-import-presets` (array de `HealthImportMapping`) —
+  mapeamentos de importação salvos (Sprint 30 Parte 1/2). Adicionada ao
+  backup na Sprint 30 Parte 4 (ver seção "Presets de importação" abaixo).
+
+Nunca há uma terceira chave: summaries diários, baselines, tendências e
+conflitos são sempre derivados sob demanda por
+`health-data/analytics-queries.ts`, nunca persistidos. Nenhuma preferência
+de import/export (último formato usado, delimiter, timezone) é persistida
+hoje.
 
 ## Backup (`backup.ts`)
 
@@ -73,8 +80,33 @@ demais seções de reset.
 ## Reset completo (`resetAllData`)
 
 Já cobre Health Data automaticamente — `resetAllData()` itera
-`STORAGE_KEYS`, que agora inclui `lrpg-fit:health-data-records`. Nenhuma
-mudança adicional foi necessária.
+`STORAGE_KEYS`, que agora inclui `lrpg-fit:health-data-records` e
+`lrpg-fit:health-import-presets`. Nenhuma mudança adicional foi necessária.
+
+## Presets de importação (Sprint 30 Parte 4)
+
+`lrpg-fit:health-import-presets` está em `STORAGE_KEYS` e em `ARRAY_KEYS`,
+mas com uma diferença importante em relação a todas as outras chaves: um
+preset individualmente inválido **não bloqueia o restore inteiro**. Antes
+de qualquer validação estrutural, `importBackup` filtra o array de presets
+com `isValidStoredMapping` (reaproveitada de `import-mapping/presets.ts`),
+removendo entradas malformadas e contando quantas foram descartadas em
+`ImportResult.invalidPresetsSkipped`. O restante do backup (incluindo
+presets válidos e todas as outras chaves) segue o fluxo normal de
+atomicidade — presets são o único domínio com essa tolerância granular.
+
+Nenhum preset é aplicado automaticamente durante um restore: restaurar a
+chave apenas grava o array de presets de volta em `localStorage`, nunca
+dispara uma importação de arquivo.
+
+Reset granular equivalente ao de Health Data:
+`import-mapping/presets.ts` → `resetHealthImportPresets()`, wireado em
+`components/settings/HealthImportSettingsResetSection.tsx`
+(`panel === "health-import-settings-reset-confirm"` em
+`configuracoes/page.tsx`). Apaga só os presets — nunca os registros de
+saúde já importados por eles. `resetHealthData()` e
+`resetHealthImportPresets()` são mutuamente isolados (testado nos dois
+sentidos em `storage.test.ts` e `presets.test.ts`).
 
 ## Testes
 
@@ -83,4 +115,8 @@ antigo sem a chave, idempotência do restore, rejeição de payload com valor
 não-array (atomicidade), `resetAllData` removendo a chave.
 
 `health-data/storage.test.ts` — `resetHealthData()` remove todos os
-registros e é seguro chamar quando não há nada para resetar.
+registros, é seguro chamar quando não há nada para resetar, e nunca toca
+`lrpg-fit:health-import-presets`.
+
+`health-data/import-mapping/presets.test.ts` — `resetHealthImportPresets()`
+nunca toca `lrpg-fit:health-data-records`.

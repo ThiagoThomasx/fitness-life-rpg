@@ -635,3 +635,113 @@ describe('resetAllData removes health-data-records', () => {
     expect(window.localStorage.getItem('lrpg-fit:health-data-records')).toBeNull()
   })
 })
+
+// ─── Sprint 30 Parte 4 — Health import presets backup/restore/reset ───────────
+
+const validPreset = {
+  id: 'preset-1',
+  name: 'Apple Health CSV',
+  sourceFormat: 'csv',
+  columns: { recordedAt: 'date', value: 'steps' },
+  static: { metric: 'steps' },
+  decimalSeparator: '.',
+  delimiter: ',',
+  transformations: [],
+  createdAt: '2026-07-01T00:00:00.000Z',
+  updatedAt: '2026-07-01T00:00:00.000Z',
+}
+
+describe('Health import presets backup round-trip', () => {
+  it('includes health-import-presets in export and restores it after reset', async () => {
+    window.localStorage.setItem('lrpg-fit:health-import-presets', JSON.stringify([validPreset]))
+
+    const payload = await exportBackup()
+    expect(payload.data['lrpg-fit:health-import-presets']).toBeDefined()
+
+    await resetAllData()
+    expect(window.localStorage.getItem('lrpg-fit:health-import-presets')).toBeNull()
+
+    const result = importBackup(payload)
+    expect(result.ok).toBe(true)
+    expect(result.restoredKeys).toContain('lrpg-fit:health-import-presets')
+    const restored = JSON.parse(window.localStorage.getItem('lrpg-fit:health-import-presets')!)
+    expect(restored).toHaveLength(1)
+    expect(restored[0].id).toBe('preset-1')
+  })
+
+  it('restores an old backup without the presets key without failing', async () => {
+    seedSampleData()
+    const payload = await exportBackup()
+    delete (payload.data as Record<string, unknown>)['lrpg-fit:health-import-presets']
+
+    await resetAllData()
+    const result = importBackup(payload)
+
+    expect(result.ok).toBe(true)
+    expect(result.skippedKeys).toContain('lrpg-fit:health-import-presets')
+  })
+
+  it('drops individually invalid presets but keeps valid ones and the rest of the restore succeeds', async () => {
+    const payload: BackupPayload = {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: {
+        'lrpg-fit:health-import-presets': [validPreset, { not: 'a preset' }],
+      },
+    }
+
+    const result = importBackup(payload)
+
+    expect(result.ok).toBe(true)
+    expect(result.invalidPresetsSkipped).toBe(1)
+    const restored = JSON.parse(window.localStorage.getItem('lrpg-fit:health-import-presets')!)
+    expect(restored).toEqual([validPreset])
+  })
+
+  it('does not apply an invalid preset automatically and does not touch health-data-records', async () => {
+    window.localStorage.setItem('lrpg-fit:health-data-records', JSON.stringify([{ id: 'hd-untouched' }]))
+    const payload: BackupPayload = {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: { 'lrpg-fit:health-import-presets': [{ not: 'a preset' }] },
+    }
+
+    const result = importBackup(payload)
+
+    expect(result.ok).toBe(true)
+    expect(result.invalidPresetsSkipped).toBe(1)
+    expect(JSON.parse(window.localStorage.getItem('lrpg-fit:health-import-presets')!)).toEqual([])
+    expect(JSON.parse(window.localStorage.getItem('lrpg-fit:health-data-records')!)).toEqual([{ id: 'hd-untouched' }])
+  })
+
+  it('restore is idempotent for presets — importing the same backup twice yields the same data', async () => {
+    window.localStorage.setItem('lrpg-fit:health-import-presets', JSON.stringify([validPreset]))
+    const payload = await exportBackup()
+
+    importBackup(payload)
+    const firstPass = window.localStorage.getItem('lrpg-fit:health-import-presets')
+    importBackup(payload)
+    const secondPass = window.localStorage.getItem('lrpg-fit:health-import-presets')
+
+    expect(secondPass).toEqual(firstPass)
+  })
+
+  it('rejects a backup with a non-array value for health-import-presets (atomicity)', async () => {
+    const payload: BackupPayload = {
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: { 'lrpg-fit:health-import-presets': { not: 'an array' } },
+    }
+    const result = importBackup(payload)
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('health-import-presets')
+  })
+})
+
+describe('resetAllData removes health-import-presets', () => {
+  it('leaves nothing behind for the presets key', async () => {
+    window.localStorage.setItem('lrpg-fit:health-import-presets', JSON.stringify([validPreset]))
+    await resetAllData()
+    expect(window.localStorage.getItem('lrpg-fit:health-import-presets')).toBeNull()
+  })
+})

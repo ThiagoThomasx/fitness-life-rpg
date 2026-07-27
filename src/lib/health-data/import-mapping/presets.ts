@@ -6,7 +6,8 @@ import type { HealthImportMapping, NewHealthImportMappingInput } from './types'
 
 export const HEALTH_IMPORT_PRESETS_KEY = 'lrpg-fit:health-import-presets'
 
-function isValidStoredMapping(raw: unknown): raw is HealthImportMapping {
+/** Exportado para `backup.ts` — permite filtrar presets inválidos preset-a-preset no restore (seção 11), em vez de rejeitar o backup inteiro. */
+export function isValidStoredMapping(raw: unknown): raw is HealthImportMapping {
   if (typeof raw !== 'object' || raw === null) return false
   const r = raw as Record<string, unknown>
   return (
